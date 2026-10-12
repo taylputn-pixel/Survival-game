@@ -15,9 +15,9 @@ Every session working on this project must:
    - Add a row to the **Decision log** (Date · Decision · Why) for every meaningful decision, newest first. When a decision changes, add a new row; don't rewrite old rows.
 3. **Test every idea** against: *Does this make you feel like you're living Grandma's life, at her pace?* If an idea adds pressure, danger, or optimizing, it goes on the later list or gets dropped.
 
-## Current phase: Phase 0, Prototype
+## Current phase: Phase 1, Vertical slice
 
-Goal: walk around, pick up a cucumber, put it in a basket, carry it to the counter, and slice it at the cutting board station. It must feel good with both mouse and controller.
+Goal: one full loop from seed to sealed jar. Plant cucumbers and dill, tend them, harvest, make dill pickles, can them, shelve them, and find Grandma's first note. Menus, rebinding, and a PC button-prompt style choice (Auto, Xbox, PlayStation, Switch) land late in the phase. The checklist is in the design doc under Roadmap.
 
 ## Key decisions (summary; reasons are in the doc's Decision log)
 
@@ -33,8 +33,9 @@ Goal: walk around, pick up a cucumber, put it in a basket, carry it to the count
 
 ## Code conventions
 
-- C# scripts live in `Assets/_Project/Scripts/`, grouped by system (`Player/`, `Interaction/`, `Stations/`, `Carrying/`, `Time/`, `Data/`).
+- C# scripts live in `Assets/_Project/Scripts/`, grouped by system (`Player/`, `Interaction/`, `Stations/`, `Carrying/`, `Garden/`, `Time/`, `Data/`).
 - Use the **new Input System** only, with one action map that works for both keyboard/mouse and gamepad.
+- Never hard-code a key or button name in on-screen text; prompts go through the prompt-icon system (coming in Phase 1).
 - Gameplay numbers (speeds, durations, capacities, mode values) live in ScriptableObjects under `Assets/_Project/Data/`, never hard-coded.
 - Keep the scripts small and readable; match the style of the code around them.
 - Prefer composition: stations, containers, and pickups are components on GameObjects.
@@ -46,7 +47,7 @@ Assets/_Project/
   Scripts/      gameplay code, grouped by system
   Data/         ScriptableObject assets (items, recipes, mode profiles)
   Prefabs/
-  Scenes/       Prototype.unity is the Phase 0 scene
+  Scenes/       Prototype.unity is the test scene
   Art/          models, materials, textures
   Audio/
 ```

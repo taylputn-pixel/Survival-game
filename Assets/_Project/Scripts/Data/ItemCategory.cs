@@ -10,5 +10,6 @@ namespace GrandmasHouse.Data
         Egg,
         Tool,
         Container,
+        Seed,
     }
 }
