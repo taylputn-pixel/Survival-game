@@ -100,12 +100,18 @@ namespace GrandmasHouse.Carrying
         // Called by a container: the item becomes part of it and glides into its slot.
         public void MoveInto(Container container, Vector3 localPosition, Quaternion localRotation, float glideSeconds, bool collidersOn)
         {
-            StopAllCoroutines();
             InContainer = container;
+            AttachTo(container.transform, localPosition, localRotation, glideSeconds, collidersOn);
+        }
+
+        // Glides the item onto something that holds it in place, like a cutting board.
+        public void AttachTo(Transform parent, Vector3 localPosition, Quaternion localRotation, float glideSeconds, bool collidersOn)
+        {
+            StopAllCoroutines();
             body.isKinematic = true;
             body.interpolation = RigidbodyInterpolation.None;
             SetCollidersEnabled(false);
-            transform.SetParent(container.transform, worldPositionStays: true);
+            transform.SetParent(parent, worldPositionStays: true);
             StartCoroutine(Glide(localPosition, localRotation, glideSeconds, local: true, collidersOn: collidersOn));
         }
 

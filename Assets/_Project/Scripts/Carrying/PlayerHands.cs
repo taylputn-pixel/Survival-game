@@ -20,6 +20,16 @@ namespace GrandmasHouse.Carrying
         public Pickup Held { get; private set; }
         public bool IsEmpty => Held == null;
         public Focus CurrentFocus { get; private set; }
+        public Transform ViewPoint => viewPoint;
+        public FirstPersonController Controller => controller;
+
+        // Hands the held item over to something else (a station, a board).
+        public Pickup TakeHeld()
+        {
+            Pickup item = Held;
+            Held = null;
+            return item;
+        }
 
         InputAction interactAction;
         IInteractable lookTarget;

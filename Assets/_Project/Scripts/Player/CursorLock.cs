@@ -7,8 +7,9 @@ namespace GrandmasHouse.Player
     // (handy in the editor); clicking the game view locks it again.
     public class CursorLock : MonoBehaviour
     {
-        // Stations set this to false when they need a free cursor.
         public bool Locked { get; private set; }
+        // Stations use Escape to leave, so they turn off Escape-to-unlock while active.
+        public bool BlockUnlock { get; set; }
 
         void Start() => SetLocked(true);
 
@@ -17,7 +18,7 @@ namespace GrandmasHouse.Player
             var keyboard = Keyboard.current;
             var mouse = Mouse.current;
 
-            if (Locked && keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
+            if (Locked && !BlockUnlock && keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
             {
                 SetLocked(false);
             }

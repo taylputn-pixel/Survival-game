@@ -44,6 +44,17 @@ namespace GrandmasHouse.Data
         [Tooltip("How long a set-down item takes to glide from your hand to its spot.")]
         [Range(0.05f, 0.5f)] public float placeGlideSeconds = 0.2f;
 
+        [Header("Stations")]
+        [Tooltip("How long the camera takes to glide into and out of a station's working view.")]
+        [Range(0.15f, 1.2f)] public float stationCameraSeconds = 0.45f;
+        [Tooltip("Cursor movement per pixel of mouse movement, as a fraction of the screen height.")]
+        public float stationMouseSpeed = 0.0011f;
+        [Tooltip("Cursor speed at full stick, in screen heights per second.")]
+        public float stationStickSpeed = 0.9f;
+        [Tooltip("Gamepad only: how close (in screen heights) the cursor must be before it drifts onto a tool.")]
+        public float stationSnapRadius = 0.06f;
+        public float stationSnapStrength = 10f;
+
         [Header("Feel")]
         [Tooltip("Gentle head bob while walking. 0 turns it off.")]
         [Range(0f, 0.08f)] public float headBobAmount = 0.025f;
