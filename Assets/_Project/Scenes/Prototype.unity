@@ -5285,6 +5285,7 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: e68f130955f30ca438ccc0109a110e38, type: 2}
   viewPoint: {fileID: 1857106661}
   reticle: {fileID: 371697905}
+  clock: {fileID: 2003454500}
   itemSlot: {fileID: 1008906961}
   knife: {fileID: 2082594432}
   knifeRest: {fileID: 1535342604}
@@ -6500,6 +6501,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.DayCycle.DayClock
   settings: {fileID: 11400000, guid: 6a172224b2751ee42a188ccd18aa325e, type: 2}
+  mode: {fileID: 11400000, guid: 3c98f4c6da098ea4ebfb086ab6c3ca47, type: 2}
   startHour: 7
 --- !u!4 &2003454501
 Transform:

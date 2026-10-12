@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
+using GrandmasHouse.DayCycle;
 using GrandmasHouse.Interaction;
 using GrandmasHouse.Player;
 using UnityEngine;
@@ -17,6 +18,8 @@ namespace GrandmasHouse.Stations
         [Tooltip("Where the camera sits while working here.")]
         [SerializeField] Transform viewPoint;
         [SerializeField] protected Reticle reticle;
+        [Tooltip("Paused while working here, if the mode says so.")]
+        [SerializeField] DayClock clock;
 
         protected bool IsWorking => isActive && !leaving;
         protected Camera View { get; private set; }
@@ -59,6 +62,7 @@ namespace GrandmasHouse.Stations
             controller.InputEnabled = false;
             cursorLock.BlockUnlock = true;
             CursorPoint = new Vector2(0.5f, 0.5f);
+            clock.PausedForWork = true;
             isActive = true;
             leaving = false;
             OnEnter();
@@ -112,6 +116,7 @@ namespace GrandmasHouse.Stations
             {
                 View.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
                 isActive = false;
+                clock.PausedForWork = false;
                 controller.InputEnabled = true;
                 cursorLock.BlockUnlock = false;
             }

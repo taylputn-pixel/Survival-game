@@ -180,4 +180,4 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   nightAmbientIntensity: 0.3
-  testSpeedMultiplier: 60
+  testSpeedMultiplier: 1

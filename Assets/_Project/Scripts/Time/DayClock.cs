@@ -11,8 +11,12 @@ namespace GrandmasHouse.DayCycle
     public class DayClock : MonoBehaviour
     {
         [SerializeField] TimeSettings settings;
+        [SerializeField] ModeProfile mode;
         [Tooltip("The hour the game starts at.")]
         [SerializeField] float startHour = 7f;
+
+        // Set by a station while you're working at it.
+        public bool PausedForWork { get; set; }
 
         public float Hour { get; private set; }
         public int Day { get; private set; } = 1;
@@ -33,7 +37,7 @@ namespace GrandmasHouse.DayCycle
 
         void Update()
         {
-            if (IsNight)
+            if (IsNight || (PausedForWork && mode.pauseClockAtStations))
             {
                 return;
             }
