@@ -31,6 +31,17 @@ namespace GrandmasHouse.Carrying
             return item;
         }
 
+        // Puts something back in your empty hands (a filled watering can).
+        public void Give(Pickup item)
+        {
+            if (Held != null)
+            {
+                return;
+            }
+            item.transform.SetParent(null, worldPositionStays: true);
+            Hold(item);
+        }
+
         InputAction interactAction;
         IInteractable lookTarget;
         RaycastHit surfaceHit;

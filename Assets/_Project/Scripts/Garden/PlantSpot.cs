@@ -10,9 +10,35 @@ namespace GrandmasHouse.Garden
         [SerializeField] Material soilMaterial;
         [Tooltip("Shows where to plant while the spot is empty.")]
         [SerializeField] GameObject marker;
+        [Tooltip("A patch of soil that darkens as the spot is watered.")]
+        [SerializeField] Renderer wetPatch;
+        [SerializeField] GardenSettings settings;
 
         public CropData Crop { get; private set; }
         public bool IsEmpty => Crop == null;
+        // 0 is dry, 1 is well watered.
+        public float Water { get; private set; }
+
+        MaterialPropertyBlock block;
+
+        void Awake()
+        {
+            block = new MaterialPropertyBlock();
+            ShowWater();
+        }
+
+        public void AddWater(float amount)
+        {
+            Water = Mathf.Clamp01(Water + amount);
+            ShowWater();
+        }
+
+        void ShowWater()
+        {
+            wetPatch.GetPropertyBlock(block);
+            block.SetColor("_BaseColor", Color.Lerp(soilMaterial.color, settings.wetSoilColor, Water));
+            wetPatch.SetPropertyBlock(block);
+        }
 
         // Press a hole into the soil, drop the seed in, and cover it over.
         public void Plant(CropData crop, float seconds)
