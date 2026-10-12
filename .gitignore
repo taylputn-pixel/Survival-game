@@ -42,3 +42,6 @@ sysinfo.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# MCP screenshots
+/Captures/
