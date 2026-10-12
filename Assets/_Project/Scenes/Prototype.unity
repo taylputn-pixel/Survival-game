@@ -3537,6 +3537,7 @@ GameObject:
   m_Component:
   - component: {fileID: 589195393}
   - component: {fileID: 589195392}
+  - component: {fileID: 589195394}
   m_Layer: 0
   m_Name: GardenBed
   m_TagString: Untagged
@@ -3561,18 +3562,11 @@ MonoBehaviour:
   reticle: {fileID: 371697905}
   clock: {fileID: 2003454500}
   garden: {fileID: 11400000, guid: 3cf29fe1dd41dea4a86839dad920ea1a, type: 2}
-  spots:
-  - {fileID: 1068465817}
-  - {fileID: 724670325}
-  - {fileID: 1413299384}
-  - {fileID: 99950623}
-  - {fileID: 2139251265}
-  - {fileID: 1585487818}
-  - {fileID: 1184569753}
-  - {fileID: 1526381454}
+  bed: {fileID: 589195394}
   spotRadius: 0.06
   plantSeconds: 0.35
   wateringMargin: 0.15
+  canYaw: -75
 --- !u!4 &589195393
 Transform:
   m_ObjectHideFlags: 0
@@ -3593,8 +3587,35 @@ Transform:
   - {fileID: 1303067612}
   - {fileID: 2102866268}
   - {fileID: 154445741}
+  - {fileID: 1698664844}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &589195394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 589195391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad3418b0bd3367042bceec0c60522b0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Garden.GardenBed
+  settings: {fileID: 11400000, guid: 3cf29fe1dd41dea4a86839dad920ea1a, type: 2}
+  clock: {fileID: 2003454500}
+  spots:
+  - {fileID: 1068465817}
+  - {fileID: 724670325}
+  - {fileID: 1413299384}
+  - {fileID: 99950623}
+  - {fileID: 2139251265}
+  - {fileID: 1585487818}
+  - {fileID: 1184569753}
+  - {fileID: 1526381454}
+  weedPrefab: {fileID: 450337071063329581, guid: c31f5753534e8204d8396478a051ac19, type: 3}
+  weedPile: {fileID: 1698664844}
+  pileSize: 12
 --- !u!1 &663973948
 GameObject:
   m_ObjectHideFlags: 0
@@ -14447,6 +14468,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1670529014}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1698664843
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1698664844}
+  m_Layer: 0
+  m_Name: WeedPile
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1698664844
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1698664843}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 1.45}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 589195393}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1705459562
 GameObject:
   m_ObjectHideFlags: 0

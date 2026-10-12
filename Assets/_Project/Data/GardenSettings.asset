@@ -19,4 +19,10 @@ MonoBehaviour:
   pourHeight: 0.22
   pourTilt: 45
   canFollowSharpness: 14
+  startingWeeds: 4
+  weedsPerNight: 2
+  maxWeeds: 10
+  weedSpacing: 0.12
+  pullDistance: 0.1
+  weedMaxAge: 3
   wetSoilColor: {r: 0.17, g: 0.11, b: 0.07, a: 1}

@@ -7,13 +7,14 @@ using UnityEngine;
 namespace GrandmasHouse.Stations
 {
     // A raised garden bed. Step up holding a seed packet to plant seeds one at
-    // a time in the marked spots, or holding the watering can to water: hold
-    // Interact to tip the can and sweep the stream across the bed.
+    // a time in the marked spots, holding the watering can to water (hold
+    // Interact to tip the can and sweep the stream across the bed), or with
+    // empty hands to weed (grab a weed and pull back to get it out by the root).
     public class GardenBedStation : Station
     {
         [SerializeField] GardenSettings garden;
-        [SerializeField] PlantSpot[] spots;
-        [Tooltip("How close the cursor must be to a spot to plant there, in screen heights.")]
+        [SerializeField] GardenBed bed;
+        [Tooltip("How close the cursor must be to a spot or weed to work on it, in screen heights.")]
         [SerializeField] float spotRadius = 0.06f;
         [SerializeField] float plantSeconds = 0.35f;
         [Tooltip("How far past the outer spots the can may reach, in meters.")]
@@ -31,14 +32,17 @@ namespace GrandmasHouse.Stations
         float tilt;
         bool waitForRelease;
 
+        Weed grabbed;
+        float grabCursorY;
+
         SeedPacket Packet => hands != null && hands.Held != null ? hands.Held.GetComponent<SeedPacket>() : null;
-        Plane Soil => new Plane(transform.up, spots[0].transform.position);
+        IReadOnlyList<PlantSpot> Spots => bed.Spots;
 
         public override bool CanInteract(PlayerHands player)
         {
             if (player.IsEmpty)
             {
-                return false;
+                return bed.Weeds.Count > 0;
             }
             if (player.Held.GetComponent<WateringCan>() != null)
             {
@@ -52,7 +56,7 @@ namespace GrandmasHouse.Stations
         {
             hands = player;
             enteredFrame = Time.frameCount;
-            if (player.Held.GetComponent<WateringCan>() != null)
+            if (!player.IsEmpty && player.Held.GetComponent<WateringCan>() != null)
             {
                 TakeCan();
             }
@@ -65,7 +69,18 @@ namespace GrandmasHouse.Stations
             {
                 yield break;
             }
-            foreach (var spot in spots)
+            if (hands.IsEmpty)
+            {
+                if (grabbed == null)
+                {
+                    foreach (var weed in bed.Weeds)
+                    {
+                        yield return weed.transform.position;
+                    }
+                }
+                yield break;
+            }
+            foreach (var spot in Spots)
             {
                 if (spot.IsEmpty)
                 {
@@ -76,6 +91,7 @@ namespace GrandmasHouse.Stations
 
         protected override void OnLeave()
         {
+            LetGoOfWeed();
             if (can != null)
             {
                 can.SetPouring(false);
@@ -90,6 +106,11 @@ namespace GrandmasHouse.Stations
             if (can != null)
             {
                 Water();
+                return;
+            }
+            if (hands.IsEmpty)
+            {
+                PullWeeds();
                 return;
             }
 
@@ -135,7 +156,7 @@ namespace GrandmasHouse.Stations
         void Water()
         {
             Ray ray = CursorRay();
-            if (Soil.Raycast(ray, out float distance))
+            if (bed.Soil.Raycast(ray, out float distance))
             {
                 aimPoint = ClampToBed(ray.GetPoint(distance));
             }
@@ -154,8 +175,8 @@ namespace GrandmasHouse.Stations
             }
 
             // Water lands under the spout.
-            Vector3 landing = Soil.ClosestPointOnPlane(can.Spout.position);
-            foreach (var spot in spots)
+            Vector3 landing = bed.Soil.ClosestPointOnPlane(can.Spout.position);
+            foreach (var spot in Spots)
             {
                 Vector3 offset = spot.transform.position - landing;
                 if (Vector3.ProjectOnPlane(offset, transform.up).magnitude < garden.pourRadius)
@@ -187,47 +208,89 @@ namespace GrandmasHouse.Stations
         Vector3 BedCenter()
         {
             Vector3 sum = Vector3.zero;
-            foreach (var spot in spots)
+            foreach (var spot in Spots)
             {
                 sum += spot.transform.position;
             }
-            return sum / spots.Length;
+            return sum / Spots.Count;
         }
 
         Vector3 ClampToBed(Vector3 point)
         {
-            Vector3 local = transform.InverseTransformPoint(point);
-            Vector3 min = Vector3.positiveInfinity;
-            Vector3 max = Vector3.negativeInfinity;
-            foreach (var spot in spots)
+            bed.GetSoilBounds(out Vector3 min, out Vector3 max, wateringMargin);
+            Vector3 local = bed.transform.InverseTransformPoint(point);
+            local.x = Mathf.Clamp(local.x, min.x, max.x);
+            local.z = Mathf.Clamp(local.z, min.z, max.z);
+            return bed.transform.TransformPoint(local);
+        }
+
+        void PullWeeds()
+        {
+            if (grabbed == null)
             {
-                Vector3 p = transform.InverseTransformPoint(spot.transform.position);
-                min = Vector3.Min(min, p);
-                max = Vector3.Max(max, p);
+                Weed target = Closest(bed.Weeds, w => w.transform.position);
+                reticle.Highlight = target != null;
+                if (Time.frameCount != enteredFrame && target != null && UseAction.WasPressedThisFrame())
+                {
+                    grabbed = target;
+                    grabCursorY = CursorPoint.y;
+                }
+                return;
             }
-            local.x = Mathf.Clamp(local.x, min.x - wateringMargin, max.x + wateringMargin);
-            local.z = Mathf.Clamp(local.z, min.z - wateringMargin, max.z + wateringMargin);
-            return transform.TransformPoint(local);
+
+            if (!UseAction.IsPressed())
+            {
+                LetGoOfWeed();
+                return;
+            }
+
+            // Pull back toward you (mouse or stick down) to work it loose.
+            float pulled = (grabCursorY - CursorPoint.y) / (garden.pullDistance * grabbed.Size);
+            grabbed.SetPull(pulled, holding: true);
+            if (pulled >= 1f)
+            {
+                bed.PullOut(grabbed);
+                grabbed = null;
+            }
+        }
+
+        void LetGoOfWeed()
+        {
+            if (grabbed != null)
+            {
+                grabbed.SetPull(0f, holding: false);
+                grabbed = null;
+            }
         }
 
         PlantSpot SpotUnderCursor()
         {
-            PlantSpot closest = null;
+            var empty = new List<PlantSpot>();
+            foreach (var spot in Spots)
+            {
+                if (spot.IsEmpty)
+                {
+                    empty.Add(spot);
+                }
+            }
+            return Closest(empty, spot => spot.transform.position);
+        }
+
+        // The thing nearest the cursor on screen, if it's close enough.
+        T Closest<T>(IEnumerable<T> things, System.Func<T, Vector3> positionOf) where T : class
+        {
+            T closest = null;
             float best = spotRadius;
             float aspect = (float)Screen.width / Screen.height;
-            foreach (var spot in spots)
+            foreach (var thing in things)
             {
-                if (!spot.IsEmpty)
-                {
-                    continue;
-                }
-                Vector3 screen = View.WorldToViewportPoint(spot.transform.position);
+                Vector3 screen = View.WorldToViewportPoint(positionOf(thing));
                 Vector2 offset = (Vector2)screen - CursorPoint;
                 float distance = new Vector2(offset.x * aspect, offset.y).magnitude;
                 if (screen.z > 0f && distance < best)
                 {
                     best = distance;
-                    closest = spot;
+                    closest = thing;
                 }
             }
             return closest;
@@ -235,7 +298,7 @@ namespace GrandmasHouse.Stations
 
         bool HasEmptySpot()
         {
-            foreach (var spot in spots)
+            foreach (var spot in Spots)
             {
                 if (spot.IsEmpty)
                 {

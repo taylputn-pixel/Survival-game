@@ -21,6 +21,19 @@ namespace GrandmasHouse.Data
         public float pourTilt = 45f;
         public float canFollowSharpness = 14f;
 
+        [Header("Weeds")]
+        [Tooltip("Weeds already in the bed on the first day (the garden sat untended).")]
+        public int startingWeeds = 4;
+        [Tooltip("New weeds that come up each night.")]
+        public int weedsPerNight = 2;
+        public int maxWeeds = 10;
+        [Tooltip("How far weeds keep from planting spots and each other, in meters.")]
+        public float weedSpacing = 0.12f;
+        [Tooltip("How far you pull back to get a young weed out by the root, in screen heights. Older weeds take a little more.")]
+        public float pullDistance = 0.1f;
+        [Tooltip("Weeds get bigger each night they're left, up to this many nights.")]
+        public int weedMaxAge = 3;
+
         [Header("Soil")]
         public Color wetSoilColor = new Color(0.17f, 0.11f, 0.07f);
     }
