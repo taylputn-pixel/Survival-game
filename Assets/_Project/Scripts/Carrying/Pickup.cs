@@ -1,39 +1,63 @@
+using System;
 using System.Collections;
+using GrandmasHouse.Data;
 using GrandmasHouse.Interaction;
 using UnityEngine;
 
 namespace GrandmasHouse.Carrying
 {
-    // Something small enough to carry in your hands: produce, jars, tools.
+    // Something small enough to carry in your hands: produce, jars, tools,
+    // or a container like a basket.
     [RequireComponent(typeof(Rigidbody))]
     public class Pickup : MonoBehaviour, IInteractable
     {
         [SerializeField] string displayName = "Item";
+        [SerializeField] ItemCategory category = ItemCategory.Other;
         [Tooltip("Extra rotation while held, so long items like cucumbers sit naturally in view.")]
         [SerializeField] Vector3 heldRotation;
+        [Tooltip("Stay level while carried instead of tilting with your view (baskets, crates).")]
+        [SerializeField] bool keepUpright;
+        [Tooltip("Use a different hold spot than the default in PlayerSettings.")]
+        [SerializeField] bool useCustomHoldOffset;
+        [SerializeField] Vector3 customHoldOffset = new Vector3(0f, -0.45f, 0.55f);
 
         public string DisplayName => displayName;
+        public ItemCategory Category => category;
         public Quaternion HeldRotation => Quaternion.Euler(heldRotation);
+        public bool KeepUpright => keepUpright;
+        // How the item rests when set down (e.g. a cucumber lies on its side).
+        public Quaternion RestTilt { get; private set; }
+        // Distance from the item's center down to its bottom when resting.
+        public float RestHalfHeight { get; private set; }
+        public Container OwnContainer { get; private set; }
+        public Container InContainer { get; private set; }
+
+        // True when picked up, false once it's resting somewhere again.
+        public event Action<bool> HeldChanged;
 
         Rigidbody body;
         Collider[] colliders;
         Renderer[] renderers;
-        // How the item rests when set down (e.g. a cucumber lies on its side).
-        Quaternion restTilt;
 
         void Awake()
         {
             body = GetComponent<Rigidbody>();
             body.interpolation = RigidbodyInterpolation.None;
+            // Cached now, before anything is put inside, so a container's
+            // contents are never treated as part of the container itself.
             colliders = GetComponentsInChildren<Collider>();
             renderers = GetComponentsInChildren<Renderer>();
+            OwnContainer = GetComponent<Container>();
             Vector3 euler = transform.rotation.eulerAngles;
-            restTilt = Quaternion.Euler(euler.x, 0f, euler.z);
+            RestTilt = Quaternion.Euler(euler.x, 0f, euler.z);
+            RestHalfHeight = transform.position.y - WorldBounds().min.y;
         }
 
-        public bool CanInteract(PlayerHands hands) => hands.IsEmpty;
+        public Vector3 HoldOffset(Vector3 defaultOffset) => useCustomHoldOffset ? customHoldOffset : defaultOffset;
 
-        public void Interact(PlayerHands hands) => hands.Hold(this);
+        public bool CanInteract(PlayerHands hands) => hands.CanHandle(this);
+
+        public void Interact(PlayerHands hands) => hands.Handle(this);
 
         public void OnPickedUp()
         {
@@ -42,6 +66,7 @@ namespace GrandmasHouse.Carrying
             // Interpolation would fight the code that moves the item by hand.
             body.interpolation = RigidbodyInterpolation.None;
             SetCollidersEnabled(false);
+            HeldChanged?.Invoke(true);
         }
 
         // Sets the item down resting on a surface, facing the given direction.
@@ -52,33 +77,13 @@ namespace GrandmasHouse.Carrying
             Quaternion startRotation = transform.rotation;
 
             // Try the final pose to measure how far the item must sit above the surface.
-            Quaternion endRotation = Quaternion.Euler(0f, yaw, 0f) * restTilt;
+            Quaternion endRotation = Quaternion.Euler(0f, yaw, 0f) * RestTilt;
             transform.SetPositionAndRotation(surfacePoint, endRotation);
             Vector3 endPosition = surfacePoint + Vector3.up * (surfacePoint.y - WorldBounds().min.y);
             transform.SetPositionAndRotation(startPosition, startRotation);
 
             StopAllCoroutines();
-            StartCoroutine(GlideTo(endPosition, endRotation, glideSeconds));
-        }
-
-        IEnumerator GlideTo(Vector3 endPosition, Quaternion endRotation, float seconds)
-        {
-            Vector3 startPosition = transform.position;
-            Quaternion startRotation = transform.rotation;
-
-            for (float time = 0f; time < seconds; time += Time.deltaTime)
-            {
-                // Ease out: quick at first, gentle as it touches down.
-                float t = 1f - Mathf.Pow(1f - time / seconds, 3f);
-                transform.SetPositionAndRotation(
-                    Vector3.LerpUnclamped(startPosition, endPosition, t),
-                    Quaternion.SlerpUnclamped(startRotation, endRotation, t));
-                yield return null;
-            }
-
-            transform.SetPositionAndRotation(endPosition, endRotation);
-            SetCollidersEnabled(true);
-            body.isKinematic = true;
+            StartCoroutine(Glide(endPosition, endRotation, glideSeconds, local: false, collidersOn: true));
         }
 
         // Lets go in mid-air, so the item falls and settles on its own.
@@ -89,6 +94,67 @@ namespace GrandmasHouse.Carrying
             body.interpolation = RigidbodyInterpolation.Interpolate;
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
+            HeldChanged?.Invoke(false);
+        }
+
+        // Called by a container: the item becomes part of it and glides into its slot.
+        public void MoveInto(Container container, Vector3 localPosition, Quaternion localRotation, float glideSeconds, bool collidersOn)
+        {
+            StopAllCoroutines();
+            InContainer = container;
+            body.isKinematic = true;
+            body.interpolation = RigidbodyInterpolation.None;
+            SetCollidersEnabled(false);
+            transform.SetParent(container.transform, worldPositionStays: true);
+            StartCoroutine(Glide(localPosition, localRotation, glideSeconds, local: true, collidersOn: collidersOn));
+        }
+
+        public void LeaveContainer()
+        {
+            InContainer = null;
+            transform.SetParent(null, worldPositionStays: true);
+        }
+
+        public void SetCollidersEnabled(bool enabled)
+        {
+            foreach (var c in colliders)
+            {
+                c.enabled = enabled;
+            }
+        }
+
+        IEnumerator Glide(Vector3 endPosition, Quaternion endRotation, float seconds, bool local, bool collidersOn)
+        {
+            Vector3 startPosition = local ? transform.localPosition : transform.position;
+            Quaternion startRotation = local ? transform.localRotation : transform.rotation;
+
+            for (float time = 0f; time < seconds; time += Time.deltaTime)
+            {
+                // Ease out: quick at first, gentle as it touches down.
+                float t = 1f - Mathf.Pow(1f - time / seconds, 3f);
+                SetPose(Vector3.LerpUnclamped(startPosition, endPosition, t), Quaternion.SlerpUnclamped(startRotation, endRotation, t), local);
+                yield return null;
+            }
+
+            SetPose(endPosition, endRotation, local);
+            SetCollidersEnabled(collidersOn);
+            body.isKinematic = true;
+            if (!local)
+            {
+                HeldChanged?.Invoke(false);
+            }
+        }
+
+        void SetPose(Vector3 position, Quaternion rotation, bool local)
+        {
+            if (local)
+            {
+                transform.SetLocalPositionAndRotation(position, rotation);
+            }
+            else
+            {
+                transform.SetPositionAndRotation(position, rotation);
+            }
         }
 
         Bounds WorldBounds()
@@ -99,14 +165,6 @@ namespace GrandmasHouse.Carrying
                 bounds.Encapsulate(renderers[i].bounds);
             }
             return bounds;
-        }
-
-        void SetCollidersEnabled(bool enabled)
-        {
-            foreach (var c in colliders)
-            {
-                c.enabled = enabled;
-            }
         }
     }
 }
