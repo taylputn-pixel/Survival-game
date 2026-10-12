@@ -32,6 +32,18 @@ namespace GrandmasHouse.Data
         [Tooltip("Vertical field of view. Wide views make rooms feel small and far away.")]
         [Range(50f, 80f)] public float fieldOfView = 60f;
 
+        [Header("Hands")]
+        [Tooltip("How far away you can reach to pick up or set down, in meters.")]
+        public float reach = 2.2f;
+        [Tooltip("Where a held item sits, relative to the camera (right, up, forward).")]
+        public Vector3 holdOffset = new Vector3(0.22f, -0.2f, 0.5f);
+        [Tooltip("How snugly a held item follows your view. Higher is tighter.")]
+        public float holdFollowSharpness = 16f;
+        [Tooltip("Surfaces steeper than this can't hold an item. 1 = flat only.")]
+        [Range(0.3f, 1f)] public float minSurfaceUpness = 0.6f;
+        [Tooltip("How long a set-down item takes to glide from your hand to its spot.")]
+        [Range(0.05f, 0.5f)] public float placeGlideSeconds = 0.2f;
+
         [Header("Feel")]
         [Tooltip("Gentle head bob while walking. 0 turns it off.")]
         [Range(0f, 0.08f)] public float headBobAmount = 0.025f;
