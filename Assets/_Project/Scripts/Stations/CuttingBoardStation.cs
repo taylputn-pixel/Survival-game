@@ -39,6 +39,12 @@ namespace GrandmasHouse.Stations
         int enteredFrame;
         Transform pile;
         int pileCount;
+        readonly List<Transform> pileSlices = new List<Transform>();
+        readonly HashSet<Transform> tumbling = new HashSet<Transform>();
+
+        // Cut slices resting on the board, ready to be packed.
+        public int SliceCount => pileSlices.Count - tumbling.Count;
+        public Vector3 PilePosition => slicePile.position;
         readonly List<float> thicknesses = new List<float>();
 
         bool HasSomethingToCut => item != null;
@@ -249,11 +255,34 @@ namespace GrandmasHouse.Stations
             int i = pileCount++;
             Vector3 spot = new Vector3((i % 4) * d * 0.8f, thickness / 2f + (i / 12) * 0.004f, ((i / 4) % 3) * d * 0.8f);
             slice.SetParent(pile, true);
+            pileSlices.Add(slice);
             StartCoroutine(Tumble(slice, spot, Quaternion.Euler(0f, i * 47f, 0f)));
+        }
+
+        // Hands over up to this many settled slices, newest first (another
+        // station, like jar packing, takes them from here).
+        public List<Transform> TakeSlices(int count)
+        {
+            var taken = new List<Transform>();
+            for (int i = pileSlices.Count - 1; i >= 0 && taken.Count < count; i--)
+            {
+                Transform slice = pileSlices[i];
+                if (!tumbling.Contains(slice))
+                {
+                    pileSlices.RemoveAt(i);
+                    taken.Add(slice);
+                }
+            }
+            if (pileSlices.Count == 0)
+            {
+                pileCount = 0;
+            }
+            return taken;
         }
 
         IEnumerator Tumble(Transform slice, Vector3 localEnd, Quaternion localEndRotation)
         {
+            tumbling.Add(slice);
             Vector3 start = slice.localPosition;
             Quaternion startRotation = slice.localRotation;
             const float seconds = 0.25f;
@@ -265,6 +294,7 @@ namespace GrandmasHouse.Stations
                 yield return null;
             }
             slice.SetLocalPositionAndRotation(localEnd, localEndRotation);
+            tumbling.Remove(slice);
         }
 
         void FinishItem()

@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb4b8b46663cf1c45ad7e49c6467dca8, type: 3}
+  m_Name: Recipe_DillPickleChips
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.RecipeData
+  displayName: Dill Pickle Chips
+  slicesPerJar: 20
+  needsDill: 1
+  brineLine: 0.88
+  brineEnough: 0.75
+  processMinutes: 10
+  cardText: 'Dill Pickle Chips
+
+    (stand-in until Grandma''s own card is added)
+
+
+    Makes
+    about 6 pints.
+
+    4 lbs small pickling cucumbers, sliced 1/4 inch
+
+    6 heads
+    fresh dill
+
+    6 cloves garlic
+
+
+    Brine: 3 cups white vinegar, 3 cups water,
+    1/4 cup pickling salt. Bring to a boil.
+
+
+    Put a head of dill and a clove
+    of garlic in each hot jar. Pack the cucumbers in snug. Pour the hot brine over,
+    leaving 1/2 inch at the top. Wipe the rims, put on lids and rings, and process
+    pints 10 minutes in a boiling water bath.'
