@@ -117,6 +117,7 @@ namespace GrandmasHouse.Kitchen
                 chip.GetComponent<Renderer>().sharedMaterial = chipMaterial;
                 chip.transform.localScale = new Vector3(chipSize.x, chipSize.y / 2f, chipSize.x);
                 chip.transform.SetParent(inside, false);
+                NoShadows(chip.transform);
                 Vector2 jitter = Random.insideUnitCircle * (innerRadius - 0.026f);
                 chip.transform.SetLocalPositionAndRotation(
                     new Vector3(jitter.x, 0.004f + i * sliceStep, jitter.y),
@@ -130,6 +131,16 @@ namespace GrandmasHouse.Kitchen
             IsSealed = state.sealedUp;
             lid.gameObject.SetActive(HasLid);
             ShowBrine();
+        }
+
+        // Small things packed inside the glass would shimmer with their own
+        // shadows, so they don't cast any.
+        static void NoShadows(Transform t)
+        {
+            foreach (var r in t.GetComponentsInChildren<Renderer>())
+            {
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
         }
 
         // An open jar can be poured out at the sink and packed again.
@@ -163,6 +174,7 @@ namespace GrandmasHouse.Kitchen
             var end = new Vector3(jitter.x, y, jitter.y);
             var tilt = Quaternion.Euler(Random.Range(-25f, 25f), Random.Range(0f, 360f), Random.Range(-25f, 25f));
             slice.SetParent(inside, worldPositionStays: true);
+            NoShadows(slice);
             StartCoroutine(Drop(slice, end, tilt, delay));
         }
 
@@ -172,6 +184,7 @@ namespace GrandmasHouse.Kitchen
             HasDill = true;
             dill.AttachTo(inside, new Vector3(innerRadius * 0.4f, 0.01f, 0f), Quaternion.Euler(0f, 0f, 8f), 0.35f, collidersOn: false);
             dill.transform.localScale = Vector3.Scale(dill.transform.localScale, new Vector3(0.6f, 0.9f, 0.6f));
+            NoShadows(dill.transform);
         }
 
         public void AddBrine(float amount)
