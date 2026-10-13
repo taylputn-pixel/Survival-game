@@ -12,7 +12,7 @@ namespace GrandmasHouse.Stations
     // warming shelf, add scoops of salt, turn the burner on, and wait for the
     // boil. Boiling brine is ready to pour into jars at the packing towel.
     [RequireComponent(typeof(Cookware))]
-    public class BrinePotStation : Station, IPickupGuard, IItemState
+    public class BrinePotStation : Station, IPickupGuard, IItemState, IEmptyable
     {
         [SerializeField] RecipeData recipe;
         [Tooltip("The brine's surface; it rises as you pour and sits on the bottom when empty.")]
@@ -98,6 +98,17 @@ namespace GrandmasHouse.Stations
             hands = player;
             enteredFrame = Time.frameCount;
             Enter(player);
+        }
+
+        public bool HasContents => Liquid > 0f || Salt > 0;
+
+        // Poured out at the sink, to start the brine over.
+        public void Empty()
+        {
+            Vinegar = Water = 0f;
+            Salt = 0;
+            Heat = 0f;
+            ShowLiquid();
         }
 
         // Pouring brine out into a jar uses some up.

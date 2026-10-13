@@ -8,7 +8,7 @@ namespace GrandmasHouse.Kitchen
     // What's inside a glass jar: slices packed in, a head of dill, and brine.
     // Everything is visible through the glass.
     [RequireComponent(typeof(Pickup))]
-    public class JarContents : MonoBehaviour, IItemState
+    public class JarContents : MonoBehaviour, IItemState, IEmptyable
     {
         [Tooltip("The bottom of the inside of the jar.")]
         [SerializeField] Transform inside;
@@ -131,6 +131,28 @@ namespace GrandmasHouse.Kitchen
             lid.gameObject.SetActive(HasLid);
             ShowBrine();
         }
+
+        // An open jar can be poured out at the sink and packed again.
+        public bool HasContents => !HasLid && (SliceCount > 0 || HasDill || BrineLevel > 0f);
+
+        public void Empty()
+        {
+            for (int i = inside.childCount - 1; i >= 0; i--)
+            {
+                Transform child = inside.GetChild(i);
+                if (child != brine)
+                {
+                    Destroy(child.gameObject);
+                }
+            }
+            SliceCount = 0;
+            HasDill = false;
+            BrineLevel = 0f;
+            ShowBrine();
+        }
+
+        // A jar has no spout to stream from; it just empties.
+        public void SetPouring(bool pouring) { }
 
         // A slice drops in and settles on the pile inside, a little askew.
         public void AddSlice(Transform slice, float delay)

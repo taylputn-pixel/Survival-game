@@ -46,7 +46,8 @@ namespace GrandmasHouse.Carrying
             // Cached now, before anything is put inside, so a container's
             // contents are never treated as part of the container itself.
             colliders = GetComponentsInChildren<Collider>();
-            renderers = GetComponentsInChildren<Renderer>();
+            // Only solid parts count toward its size; steam and water streams don't.
+            renderers = System.Array.FindAll(GetComponentsInChildren<Renderer>(), r => r is MeshRenderer || r is SkinnedMeshRenderer);
             OwnContainer = GetComponent<Container>();
             Vector3 euler = transform.rotation.eulerAngles;
             RestTilt = Quaternion.Euler(euler.x, 0f, euler.z);

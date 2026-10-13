@@ -12410,6 +12410,7 @@ GameObject:
   - component: {fileID: 640818710}
   - component: {fileID: 640818709}
   - component: {fileID: 640818708}
+  - component: {fileID: 640818711}
   m_Layer: 0
   m_Name: Sink
   m_TagString: Untagged
@@ -12500,7 +12501,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 1, y: 3, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!33 &640818710
 MeshFilter:
@@ -12510,6 +12511,23 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 640818706}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &640818711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 640818706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96994c3237f8be444a007df6907090c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Kitchen.Sink
+  drain: {fileID: 675029751}
+  tipSeconds: 0.35
+  pourSeconds: 0.8
+  tipAngle: 115
+  holdHeight: 0.22
 --- !u!1 &644880027
 GameObject:
   m_ObjectHideFlags: 0
@@ -12860,6 +12878,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3245634449401834378, guid: e0f6817d9b17a0541b4ab27bae8008ad, type: 3}
   m_PrefabInstance: {fileID: 199176474875646046}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &675029750
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 675029751}
+  m_Layer: 0
+  m_Name: Drain
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &675029751
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 675029750}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.7, y: 0.9, z: 3.58}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1555677737}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &680201576
 GameObject:
   m_ObjectHideFlags: 0
@@ -23740,6 +23789,7 @@ Transform:
   - {fileID: 1760506650}
   - {fileID: 287700098}
   - {fileID: 1428192258}
+  - {fileID: 675029751}
   m_Father: {fileID: 1783469348}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1555779633
