@@ -47,7 +47,7 @@ Assets/_Project/
   Scripts/      gameplay code, grouped by system
   Data/         ScriptableObject assets (items, recipes, mode profiles)
   Prefabs/
-  Scenes/       Prototype.unity is the test scene
+  Scenes/       Homestead.unity is the main scene (kitchen, pantry, bedroom, garden); Prototype.unity is the old test room
   Art/          models, materials, textures
   Audio/
 ```
