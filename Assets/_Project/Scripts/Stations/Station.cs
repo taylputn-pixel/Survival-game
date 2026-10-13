@@ -19,7 +19,7 @@ namespace GrandmasHouse.Stations
         [SerializeField] Transform viewPoint;
         [SerializeField] protected Reticle reticle;
         [Tooltip("Paused while working here, if the mode says so.")]
-        [SerializeField] DayClock clock;
+        [SerializeField] protected DayClock clock;
 
         protected bool IsWorking => isActive && !leaving;
         protected Camera View { get; private set; }

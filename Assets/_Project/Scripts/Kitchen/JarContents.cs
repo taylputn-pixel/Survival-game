@@ -20,14 +20,13 @@ namespace GrandmasHouse.Kitchen
 
         [Tooltip("The lid and ring, hidden until the jar is closed up.")]
         [SerializeField] Transform lid;
-        [SerializeField] float lidSeconds = 0.5f;
-        [Tooltip("How long after the lid goes on before it seals with a ping.")]
-        [SerializeField] float pingDelay = 1.2f;
+        [SerializeField] float lidSeconds = 0.25f;
 
         public int SliceCount { get; private set; }
         public bool HasLid { get; private set; }
+        // Through the water bath and out to cool.
+        public bool IsProcessed { get; private set; }
         public bool IsSealed { get; private set; }
-        public event System.Action Sealed;
         public bool HasDill { get; private set; }
         // 0 is empty, 1 is right to the rim.
         public float BrineLevel { get; private set; }
@@ -41,7 +40,7 @@ namespace GrandmasHouse.Kitchen
             lid.gameObject.SetActive(false);
         }
 
-        // The lid drops on, the ring twists down, and a moment later it seals.
+        // The lid drops on in one motion.
         public void PutOnLid()
         {
             if (HasLid)
@@ -49,26 +48,32 @@ namespace GrandmasHouse.Kitchen
                 return;
             }
             HasLid = true;
-            StartCoroutine(Closing());
+            StartCoroutine(LidDrop());
         }
 
-        IEnumerator Closing()
+        // Out of the canner: as it cools, the lid seals with a ping.
+        public void CoolAndSeal(float seconds)
+        {
+            IsProcessed = true;
+            StartCoroutine(Cooling(seconds));
+        }
+
+        IEnumerator LidDrop()
         {
             Vector3 seated = lid.localPosition;
             lid.gameObject.SetActive(true);
             for (float time = 0f; time < lidSeconds; time += Time.deltaTime)
             {
-                float t = time / lidSeconds;
-                float drop = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.4f));
-                lid.localPosition = seated + Vector3.up * (1f - drop) * 0.05f;
-                // Two turns of the ring once it's down.
-                float twist = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.4f, 1f, t)) * 720f;
-                lid.localRotation = Quaternion.Euler(0f, twist, 0f);
+                float t = Mathf.SmoothStep(0f, 1f, time / lidSeconds);
+                lid.localPosition = seated + Vector3.up * (1f - t) * 0.04f;
                 yield return null;
             }
-            lid.SetLocalPositionAndRotation(seated, Quaternion.identity);
+            lid.localPosition = seated;
+        }
 
-            yield return new WaitForSeconds(pingDelay);
+        IEnumerator Cooling(float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
             // Ping: the center of the lid pulls down as it seals.
             Vector3 size = lid.localScale;
             for (float time = 0f; time < 0.15f; time += Time.deltaTime)
@@ -78,7 +83,6 @@ namespace GrandmasHouse.Kitchen
             }
             lid.localScale = size;
             IsSealed = true;
-            Sealed?.Invoke();
         }
 
         // A slice drops in and settles on the pile inside, a little askew.

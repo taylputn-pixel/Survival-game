@@ -10,7 +10,7 @@ namespace GrandmasHouse.Stations
     // Set an empty jar on it (and a head of dill beside it), step up, then:
     // drop in the dill, scoop slices from the board into the jar a handful
     // at a time, hold Interact on the brine pot to pour up to the line, and
-    // put a lid on from the stack. It seals with a ping and is done.
+    // put a lid on from the stack. Then it's ready for the canner.
     public class JarPackingStation : Station
     {
         [SerializeField] RecipeData recipe;
@@ -158,8 +158,9 @@ namespace GrandmasHouse.Stations
             base.Update();
             MovePot();
 
-            // Once sealed and you've stepped back, the jar can be picked up.
-            if (jar != null && jar.IsSealed && !IsWorking && !takeable)
+            // Once the lid is on and you've stepped back, the jar can be
+            // picked up and carried to the canner.
+            if (jar != null && jar.HasLid && !IsWorking && !takeable)
             {
                 takeable = true;
                 jarItem.SetCollidersEnabled(true);
