@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using GrandmasHouse.Data;
 using GrandmasHouse.DayCycle;
+using GrandmasHouse.Saving;
 using UnityEngine;
 
 namespace GrandmasHouse.Garden
 {
     // The soil of one raised bed: its planting spots and the weeds that come
     // up between them overnight.
-    public class GardenBed : MonoBehaviour
+    public class GardenBed : MonoBehaviour, ISaveable
     {
         [SerializeField] GardenSettings settings;
         [SerializeField] DayClock clock;
@@ -31,6 +32,58 @@ namespace GrandmasHouse.Garden
             for (int i = 0; i < settings.startingWeeds; i++)
             {
                 SpawnWeed(Random.Range(0, settings.weedMaxAge + 1));
+            }
+        }
+
+        [System.Serializable]
+        class WeedState
+        {
+            public Vector3 position;
+            public float yaw;
+            public int age;
+        }
+
+        [System.Serializable]
+        class State
+        {
+            public List<PlantSpot.State> spots = new List<PlantSpot.State>();
+            public List<WeedState> weeds = new List<WeedState>();
+        }
+
+        public string SaveKey => "garden:" + name;
+
+        public string Capture()
+        {
+            var state = new State();
+            foreach (var spot in spots)
+            {
+                state.spots.Add(spot.Capture());
+            }
+            foreach (var weed in weeds)
+            {
+                state.weeds.Add(new WeedState { position = weed.transform.localPosition, yaw = weed.transform.localEulerAngles.y, age = weed.Age });
+            }
+            return JsonUtility.ToJson(state);
+        }
+
+        public void Restore(string json)
+        {
+            var state = JsonUtility.FromJson<State>(json);
+            for (int i = 0; i < spots.Length && i < state.spots.Count; i++)
+            {
+                spots[i].Restore(state.spots[i]);
+            }
+            foreach (var weed in weeds)
+            {
+                Destroy(weed.gameObject);
+            }
+            weeds.Clear();
+            foreach (var saved in state.weeds)
+            {
+                Weed weed = Instantiate(weedPrefab, transform);
+                weed.transform.SetLocalPositionAndRotation(saved.position, Quaternion.Euler(0f, saved.yaw, 0f));
+                weed.Sprout(saved.age, settings.weedMaxAge);
+                weeds.Add(weed);
             }
         }
 

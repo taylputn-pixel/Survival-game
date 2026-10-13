@@ -53,6 +53,22 @@ namespace GrandmasHouse.Carrying
             RestHalfHeight = transform.position.y - WorldBounds().min.y;
         }
 
+        // Lying still where it was put (rather than tumbling with physics).
+        public bool IsResting => body.isKinematic;
+        public bool CollidersOn => colliders.Length > 0 && colliders[0].enabled;
+
+        // Used when loading a save: puts the item back exactly as it was.
+        public void SetResting(bool resting, bool collidersOn)
+        {
+            StopAllCoroutines();
+            body.isKinematic = resting;
+            body.interpolation = resting ? RigidbodyInterpolation.None : RigidbodyInterpolation.Interpolate;
+            // The physics body must move with it, or it pulls the item back to where it was.
+            body.position = transform.position;
+            body.rotation = transform.rotation;
+            SetCollidersEnabled(collidersOn);
+        }
+
         public Vector3 HoldOffset(Vector3 defaultOffset) => useCustomHoldOffset ? customHoldOffset : defaultOffset;
 
         public bool CanInteract(PlayerHands hands) => hands.CanHandle(this);

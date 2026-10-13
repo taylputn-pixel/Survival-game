@@ -1,5 +1,6 @@
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
+using GrandmasHouse.Saving;
 using UnityEngine;
 
 namespace GrandmasHouse.Garden
@@ -7,7 +8,7 @@ namespace GrandmasHouse.Garden
     // A metal watering can. Fill it at the spigot; it pours from the spout
     // until it runs dry. You can see how much is left by looking inside.
     [RequireComponent(typeof(Pickup))]
-    public class WateringCan : MonoBehaviour
+    public class WateringCan : MonoBehaviour, IItemState
     {
         [SerializeField] GardenSettings settings;
         [Tooltip("The tip of the spout. Its forward axis points the way water comes out.")]
@@ -32,6 +33,14 @@ namespace GrandmasHouse.Garden
             block = new MaterialPropertyBlock();
             ShowLevel();
             SetPouring(false);
+        }
+
+        public string Capture() => level.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        public void Restore(string json)
+        {
+            level = float.Parse(json, System.Globalization.CultureInfo.InvariantCulture);
+            ShowLevel();
         }
 
         public void Fill(float amount)

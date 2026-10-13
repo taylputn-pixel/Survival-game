@@ -1,6 +1,7 @@
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Interaction;
 using GrandmasHouse.Player;
+using GrandmasHouse.Saving;
 using GrandmasHouse.Stations;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -76,6 +77,10 @@ namespace GrandmasHouse.UI
 
         void QuitToTitle()
         {
+            if (SaveManager.Instance != null)
+            {
+                SaveManager.Instance.Save();
+            }
             Time.timeScale = 1f;
             SceneManager.LoadScene(titleScene);
         }

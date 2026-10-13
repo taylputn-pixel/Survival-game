@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using GrandmasHouse.Carrying;
+using GrandmasHouse.Saving;
 using UnityEngine;
 
 namespace GrandmasHouse.Stations
@@ -8,7 +9,7 @@ namespace GrandmasHouse.Stations
     // Lay produce on the board, step up, pick up the knife, and chop it into
     // slices. Each press is one chop where the knife is; slices tumble to a
     // pile at the side of the board.
-    public class CuttingBoardStation : Station
+    public class CuttingBoardStation : Station, ISaveable, IAfterLoad
     {
         [Tooltip("Center of the board's top. Its X axis is the direction of cutting.")]
         [SerializeField] Transform itemSlot;
@@ -26,6 +27,11 @@ namespace GrandmasHouse.Stations
         [SerializeField] float chopSeconds = 0.2f;
         [Tooltip("How close the cursor must be to the knife to pick it up, in screen heights.")]
         [SerializeField] float knifeGrabRadius = 0.07f;
+
+        [Header("Rebuilding saved chips")]
+        [SerializeField] Material chipMaterial;
+        [Tooltip("Diameter and thickness of a saved chip, in meters.")]
+        [SerializeField] Vector2 chipSize = new Vector2(0.05f, 0.006f);
 
         Pickup item;
         Sliceable sliceable;
@@ -83,6 +89,50 @@ namespace GrandmasHouse.Stations
         {
             knifeHeld = false;
             chopTime = -1f;
+        }
+
+        // Chips waiting on the board are saved as a count and laid out again.
+        public string SaveKey => "board:" + name;
+        public string Capture() => pileSlices.Count.ToString();
+
+        public void Restore(string json)
+        {
+            foreach (var slice in pileSlices)
+            {
+                Destroy(slice.gameObject);
+            }
+            pileSlices.Clear();
+            tumbling.Clear();
+            pileCount = 0;
+            int count = int.Parse(json);
+            if (count == 0)
+            {
+                return;
+            }
+            pile = new GameObject("Slices").transform;
+            pile.SetParent(slicePile, false);
+            for (int i = 0; i < count; i++)
+            {
+                Transform slice = MakeRound("Slice", chipMaterial).transform;
+                slice.SetParent(pile, false);
+                slice.localScale = new Vector3(chipSize.x, chipSize.y / 2f, chipSize.x);
+                int n = pileCount++;
+                float d = chipSize.x;
+                slice.SetLocalPositionAndRotation(
+                    new Vector3((n % 4) * d * 0.8f, chipSize.y / 2f + (n / 12) * 0.004f, ((n / 4) % 3) * d * 0.8f),
+                    Quaternion.Euler(0f, n * 47f, 0f));
+                pileSlices.Add(slice);
+            }
+        }
+
+        // A cucumber left lying on the board is picked up where it was.
+        public void AfterLoad()
+        {
+            var lying = itemSlot.GetComponentInChildren<Pickup>();
+            if (lying != null && lying.GetComponent<Sliceable>() != null)
+            {
+                LayOnBoard(lying);
+            }
         }
 
         void LayOnBoard(Pickup produce)

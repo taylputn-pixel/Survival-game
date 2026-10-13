@@ -1,5 +1,6 @@
 using System.Collections;
 using GrandmasHouse.Carrying;
+using GrandmasHouse.Saving;
 using UnityEngine;
 
 namespace GrandmasHouse.Kitchen
@@ -7,7 +8,7 @@ namespace GrandmasHouse.Kitchen
     // What's inside a glass jar: slices packed in, a head of dill, and brine.
     // Everything is visible through the glass.
     [RequireComponent(typeof(Pickup))]
-    public class JarContents : MonoBehaviour
+    public class JarContents : MonoBehaviour, IItemState
     {
         [Tooltip("The bottom of the inside of the jar.")]
         [SerializeField] Transform inside;
@@ -21,6 +22,10 @@ namespace GrandmasHouse.Kitchen
         [Tooltip("The lid and ring, hidden until the jar is closed up.")]
         [SerializeField] Transform lid;
         [SerializeField] float lidSeconds = 0.25f;
+        [Header("Rebuilding a saved jar")]
+        [SerializeField] Material chipMaterial;
+        [Tooltip("Diameter and thickness of a pickle chip, in meters.")]
+        [SerializeField] Vector2 chipSize = new Vector2(0.05f, 0.006f);
 
         public int SliceCount { get; private set; }
         public bool HasLid { get; private set; }
@@ -83,6 +88,48 @@ namespace GrandmasHouse.Kitchen
             }
             lid.localScale = size;
             IsSealed = true;
+        }
+
+        [System.Serializable]
+        class State
+        {
+            public int slices;
+            public bool dill;
+            public float brine;
+            public bool lid;
+            public bool processed;
+            public bool sealedUp;
+        }
+
+        public string Capture() => JsonUtility.ToJson(new State
+        {
+            slices = SliceCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed,
+        });
+
+        public void Restore(string json)
+        {
+            var state = JsonUtility.FromJson<State>(json);
+            for (int i = 0; i < state.slices; i++)
+            {
+                var chip = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                chip.name = "Slice";
+                Destroy(chip.GetComponent<Collider>());
+                chip.GetComponent<Renderer>().sharedMaterial = chipMaterial;
+                chip.transform.localScale = new Vector3(chipSize.x, chipSize.y / 2f, chipSize.x);
+                chip.transform.SetParent(inside, false);
+                Vector2 jitter = Random.insideUnitCircle * (innerRadius - 0.026f);
+                chip.transform.SetLocalPositionAndRotation(
+                    new Vector3(jitter.x, 0.004f + i * sliceStep, jitter.y),
+                    Quaternion.Euler(Random.Range(-25f, 25f), Random.Range(0f, 360f), Random.Range(-25f, 25f)));
+            }
+            SliceCount = state.slices;
+            HasDill = state.dill;
+            BrineLevel = state.brine;
+            HasLid = state.lid;
+            IsProcessed = state.processed;
+            IsSealed = state.sealedUp;
+            lid.gameObject.SetActive(HasLid);
+            ShowBrine();
         }
 
         // A slice drops in and settles on the pile inside, a little askew.

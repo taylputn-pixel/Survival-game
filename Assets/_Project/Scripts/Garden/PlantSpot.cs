@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
+using GrandmasHouse.Saving;
 using UnityEngine;
 
 namespace GrandmasHouse.Garden
@@ -9,7 +10,7 @@ namespace GrandmasHouse.Garden
     // One place in a garden bed where a single plant can grow. A watered plant
     // moves up one stage each night; a dry one just waits (it never dies in
     // Cozy). Once ready, it holds its harvest for you to pick by hand.
-    public class PlantSpot : MonoBehaviour
+    public class PlantSpot : MonoBehaviour, IAfterLoad
     {
         [SerializeField] Material soilMaterial;
         [Tooltip("Shows where to plant while the spot is empty.")]
@@ -69,6 +70,69 @@ namespace GrandmasHouse.Garden
             wetPatch.GetPropertyBlock(block);
             block.SetColor("_BaseColor", Color.Lerp(soilMaterial.color, settings.wetSoilColor, Water));
             wetPatch.SetPropertyBlock(block);
+        }
+
+        [System.Serializable]
+        public class State
+        {
+            public string crop;
+            public int stage = -1;
+            public float water;
+            public bool harvested;
+            public float yaw;
+        }
+
+        public State Capture() => new State
+        {
+            crop = Crop != null ? Crop.name : "",
+            stage = Stage,
+            water = Water,
+            harvested = harvested,
+            yaw = plant != null ? plant.transform.localEulerAngles.y : 0f,
+        };
+
+        // Puts the plant back as it was; the picking on it comes back with the items.
+        public void Restore(State state)
+        {
+            StopAllCoroutines();
+            if (plant != null) Destroy(plant);
+            if (mound != null) Destroy(mound);
+            plant = null;
+            mound = null;
+            harvestPoints.Clear();
+            ripe.Clear();
+
+            Crop = string.IsNullOrEmpty(state.crop) ? null : SaveManager.Catalog.Crop(state.crop);
+            Water = state.water;
+            harvested = state.harvested;
+            Stage = -1;
+            marker.SetActive(Crop == null);
+            if (Crop != null)
+            {
+                if (state.stage >= 0)
+                {
+                    ShowStage(state.stage);
+                    plant.transform.localRotation = Quaternion.Euler(0f, state.yaw, 0f);
+                }
+                else
+                {
+                    MakeMound(1f);
+                }
+            }
+            ShowWater();
+        }
+
+        public void AfterLoad()
+        {
+            ripe.Clear();
+            foreach (var point in harvestPoints)
+            {
+                var item = point.GetComponentInChildren<Pickup>();
+                if (item != null)
+                {
+                    ripe.Add(item);
+                }
+            }
         }
 
         // Called once each night, before the soil dries out again.
@@ -167,6 +231,16 @@ namespace GrandmasHouse.Garden
             marker.SetActive(true);
         }
 
+        void MakeMound(float grown)
+        {
+            mound = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            mound.name = "Mound";
+            Destroy(mound.GetComponent<Collider>());
+            mound.transform.SetParent(transform, false);
+            mound.GetComponent<Renderer>().sharedMaterial = soilMaterial;
+            mound.transform.localScale = new Vector3(0.07f, 0.025f, 0.07f) * grown;
+        }
+
         IEnumerator Planting(CropData crop, float seconds)
         {
             var seed = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -177,11 +251,7 @@ namespace GrandmasHouse.Garden
             var seedMaterial = new Material(soilMaterial) { color = crop.seedColor };
             seed.GetComponent<Renderer>().sharedMaterial = seedMaterial;
 
-            mound = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            mound.name = "Mound";
-            Destroy(mound.GetComponent<Collider>());
-            mound.transform.SetParent(transform, false);
-            mound.GetComponent<Renderer>().sharedMaterial = soilMaterial;
+            MakeMound(0f);
             var moundSize = new Vector3(0.07f, 0.025f, 0.07f);
 
             // The seed falls from a little above, then the soil closes over it.

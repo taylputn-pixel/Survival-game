@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.Kitchen;
+using GrandmasHouse.Saving;
 using UnityEngine;
 
 namespace GrandmasHouse.Stations
@@ -11,7 +12,7 @@ namespace GrandmasHouse.Stations
     // drop in the dill, scoop slices from the board into the jar a handful
     // at a time, hold Interact on the brine pot to pour up to the line, and
     // put a lid on from the stack. Then it's ready for the canner.
-    public class JarPackingStation : Station
+    public class JarPackingStation : Station, IAfterLoad
     {
         [SerializeField] RecipeData recipe;
         [Tooltip("Slices are taken from this board's pile.")]
@@ -179,6 +180,21 @@ namespace GrandmasHouse.Stations
             {
                 takeable = true;
                 jarItem.SetCollidersEnabled(true);
+            }
+        }
+
+        // A jar or dill left on the towel is picked up where it was.
+        public void AfterLoad()
+        {
+            var jarOnTowel = jarSpot.GetComponentInChildren<JarContents>();
+            if (jarOnTowel != null)
+            {
+                SetJar(jarOnTowel.GetComponent<Pickup>());
+            }
+            var dillWaiting = herbSpot.GetComponentInChildren<Pickup>();
+            if (dillWaiting != null)
+            {
+                dill = dillWaiting;
             }
         }
 

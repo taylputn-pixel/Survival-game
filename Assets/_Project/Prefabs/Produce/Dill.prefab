@@ -282,6 +282,7 @@ GameObject:
   - component: {fileID: 6029876102944317010}
   - component: {fileID: 2515077346309309894}
   - component: {fileID: 4686656390913155349}
+  - component: {fileID: 3946676156625124332}
   m_Layer: 9
   m_Name: Dill
   m_TagString: Untagged
@@ -384,6 +385,19 @@ MonoBehaviour:
   keepUpright: 0
   useCustomHoldOffset: 0
   customHoldOffset: {x: 0, y: -0.45, z: 0.55}
+--- !u!114 &3946676156625124332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1023861984879337987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bc5b7a654c9fd844a81cf16800fed79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Saving.SavedItem
+  key: Dill
 --- !u!1 &1437974844563766279
 GameObject:
   m_ObjectHideFlags: 0

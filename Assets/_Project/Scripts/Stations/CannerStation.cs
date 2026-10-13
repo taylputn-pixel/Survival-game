@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.Kitchen;
+using GrandmasHouse.Saving;
 using UnityEngine;
 
 namespace GrandmasHouse.Stations
@@ -12,7 +13,7 @@ namespace GrandmasHouse.Stations
     // time (you can walk away; sleeping finishes it too). Then take the lid
     // off and lift each jar out onto the cooling towel, where it pings as it
     // seals.
-    public class CannerStation : Station
+    public class CannerStation : Station, ISaveable, IAfterLoad
     {
         [SerializeField] RecipeData recipe;
         [Tooltip("Spots in the rack, one jar each.")]
@@ -45,6 +46,47 @@ namespace GrandmasHouse.Stations
 
         void OnEnable() => clock.NewDay += FinishOvernight;
         void OnDisable() => clock.NewDay -= FinishOvernight;
+
+        [System.Serializable]
+        class State
+        {
+            public bool lidOn;
+            public bool boiling;
+            public bool done;
+            public float boilLeft;
+        }
+
+        public string SaveKey => "canner:" + name;
+        public string Capture() => JsonUtility.ToJson(new State { lidOn = lidOn, boiling = boiling, done = done, boilLeft = boilLeft });
+
+        public void Restore(string json)
+        {
+            var state = JsonUtility.FromJson<State>(json);
+            lidOn = state.lidOn;
+            boiling = state.boiling;
+            done = state.done;
+            boilLeft = state.boilLeft;
+            Transform pose = lidOn ? lidOnPose : lidOffPose;
+            canLid.SetPositionAndRotation(pose.position, pose.rotation);
+            if (boiling)
+            {
+                steam.Play();
+            }
+        }
+
+        // Jars left in the rack go back in the rack.
+        public void AfterLoad()
+        {
+            rack.Clear();
+            foreach (var slot in rackSlots)
+            {
+                var jar = slot.GetComponentInChildren<Pickup>();
+                if (jar != null)
+                {
+                    rack[slot] = jar;
+                }
+            }
+        }
 
         void Start()
         {
