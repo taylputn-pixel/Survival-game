@@ -10,14 +10,14 @@ namespace GrandmasHouse.Stations
     // A dish towel on the counter between the cutting board and the stove.
     // Set an empty jar on it (and a head of dill beside it), step up, then:
     // drop in the dill, scoop slices from the board into the jar a handful
-    // at a time, hold Interact on the brine pot to pour up to the line, and
-    // put a lid on from the stack. Then it's ready for the canner.
+    // at a time, hold Interact on a pot of boiling brine on the stove to pour
+    // up to the line, and put a lid on from the stack. Then it's ready for
+    // the canner.
     public class JarPackingStation : Station, IAfterLoad
     {
         [SerializeField] RecipeData recipe;
         [Tooltip("Slices are taken from this board's pile.")]
         [SerializeField] CuttingBoardStation board;
-        [SerializeField] BrinePot pot;
         [Tooltip("Where the jar stands on the towel.")]
         [SerializeField] Transform jarSpot;
         [Tooltip("Where a head of dill waits beside the jar.")]
@@ -44,6 +44,10 @@ namespace GrandmasHouse.Stations
         float tilt;
         bool loggedQuality;
         bool takeable;
+        // The pot being poured from, and where it rested on the stove.
+        BrinePotStation pot;
+        Vector3 potRestPosition;
+        Quaternion potRestRotation;
 
         public override bool CanInteract(PlayerHands hands)
         {
@@ -106,9 +110,10 @@ namespace GrandmasHouse.Stations
             {
                 yield return lidStack.position;
             }
-            if (!jar.HasLid)
+            BrinePotStation ready = BrinePotStation.ReadyPot();
+            if (!jar.HasLid && ready != null)
             {
-                yield return pot.transform.position;
+                yield return ready.transform.position;
             }
         }
 
@@ -153,12 +158,15 @@ namespace GrandmasHouse.Stations
                     jar.PutOnLid();
                 }
             }
-            else if (!jar.HasLid && CursorNear(pot.transform.position))
+            else if (!jar.HasLid && BrinePotStation.ReadyPot() is BrinePotStation ready && CursorNear(ready.transform.position))
             {
                 reticle.Highlight = true;
                 UseHint = "Pour brine";
                 if (pressed)
                 {
+                    pot = ready;
+                    potRestPosition = pot.transform.position;
+                    potRestRotation = pot.transform.rotation;
                     pouring = true;
                     reticle.Hidden = true;
                 }
@@ -237,7 +245,7 @@ namespace GrandmasHouse.Stations
 
         void Pour()
         {
-            if (!UseAction.IsPressed())
+            if (!UseAction.IsPressed() || !pot.IsReady)
             {
                 StopPouring();
                 return;
@@ -246,7 +254,10 @@ namespace GrandmasHouse.Stations
             pot.SetPouring(tipped);
             if (tipped)
             {
+                // The pot only loses what the jar actually takes.
+                float before = jar.BrineLevel;
                 jar.AddBrine(pourRate * Time.deltaTime);
+                pot.Use((jar.BrineLevel - before) * recipe.potPerJar);
             }
         }
 
@@ -257,34 +268,31 @@ namespace GrandmasHouse.Stations
                 return;
             }
             pouring = false;
-            pot.SetPouring(false);
+            if (pot != null)
+            {
+                pot.SetPouring(false);
+            }
             reticle.Hidden = false;
             LogQuality();
         }
 
-        // The pot lifts off the stove, swings over the jar and tips; let go
-        // and it goes back to its burner.
+        // The pot lifts off its burner, swings over the jar and tips; let go
+        // and it goes back.
         void MovePot()
         {
-            bool pourPose = pouring && IsWorking;
-            tilt = Mathf.MoveTowards(tilt, pourPose ? pourTilt : 0f, pourTilt / 0.35f * Time.deltaTime);
-
-            Vector3 position = pot.RestPosition;
-            Quaternion rotation = pot.RestRotation;
-            if (jar != null && (pourPose || tilt > 0f))
+            if (pot == null)
             {
-                Vector3 toJar = Vector3.ProjectOnPlane(jar.Mouth - pot.RestPosition, Vector3.up);
-                float yaw = Mathf.Atan2(-toJar.z, toJar.x) * Mathf.Rad2Deg;
-                rotation = Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(0f, 0f, -tilt);
-                Vector3 lipLocal = Quaternion.Inverse(pot.transform.rotation) * (pot.Lip.position - pot.transform.position);
-                Vector3 lipTarget = jar.Mouth + Vector3.up * pourHeight;
-                position = Vector3.Lerp(pot.RestPosition, lipTarget - rotation * lipLocal, Mathf.Clamp01(tilt / (pourTilt * 0.5f)));
+                return;
             }
-
-            float follow = 1f - Mathf.Exp(-potFollowSharpness * Time.deltaTime);
-            pot.transform.SetPositionAndRotation(
-                Vector3.Lerp(pot.transform.position, position, follow),
-                Quaternion.Slerp(pot.transform.rotation, rotation, follow));
+            bool pourPose = pouring && IsWorking && jar != null;
+            tilt = Mathf.MoveTowards(tilt, pourPose ? pourTilt : 0f, pourTilt / 0.35f * Time.deltaTime);
+            Vector3 target = jar != null ? jar.Mouth : potRestPosition;
+            Pouring.Follow(pot.transform, pot.Lip, potRestPosition, potRestRotation, target, tilt, pourTilt, pourHeight, potFollowSharpness);
+            if (!pouring && tilt <= 0f && (pot.transform.position - potRestPosition).sqrMagnitude < 0.000001f)
+            {
+                pot.transform.SetPositionAndRotation(potRestPosition, potRestRotation);
+                pot = null;
+            }
         }
 
         void LogQuality()

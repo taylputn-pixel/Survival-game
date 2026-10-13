@@ -27,6 +27,10 @@ MonoBehaviour:
     prefab: {fileID: 1568808308163170717, guid: 5996480cf9678f7499b719b7d02eb0d3, type: 3}
   - key: DillSeeds
     prefab: {fileID: 6306953650404750413, guid: e0f6817d9b17a0541b4ab27bae8008ad, type: 3}
+  - key: Canner
+    prefab: {fileID: 4984928928878257701, guid: 3b2cf2fdf55b52e4fae2339e9e8cb85e, type: 3}
+  - key: BrinePot
+    prefab: {fileID: 2411204137799612233, guid: eb3c44db33557e944921b331a8412c09, type: 3}
   crops:
   - {fileID: 11400000, guid: 5e15d42a32eb7a64e9c79284b28618b4, type: 2}
   - {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}

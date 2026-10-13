@@ -71,7 +71,17 @@ namespace GrandmasHouse.Carrying
 
         public Vector3 HoldOffset(Vector3 defaultOffset) => useCustomHoldOffset ? customHoldOffset : defaultOffset;
 
-        public bool CanInteract(PlayerHands hands) => hands.CanHandle(this);
+        public bool CanInteract(PlayerHands hands)
+        {
+            foreach (var guard in GetComponents<IPickupGuard>())
+            {
+                if (!guard.AllowPickup(hands))
+                {
+                    return false;
+                }
+            }
+            return hands.CanHandle(this);
+        }
 
         public void Interact(PlayerHands hands) => hands.Handle(this);
 

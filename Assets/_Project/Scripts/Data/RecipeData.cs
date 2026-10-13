@@ -20,6 +20,16 @@ namespace GrandmasHouse.Data
         [Tooltip("Brine at least this high counts as filled and ready to can.")]
         [Range(0f, 1f)] public float brineEnough = 0.75f;
 
+        [Header("Brine")]
+        [Tooltip("Share of the brine that's vinegar; the rest is water.")]
+        [Range(0f, 1f)] public float vinegarShare = 0.5f;
+        [Tooltip("Scoops of salt for a pot of brine.")]
+        public int saltScoops = 2;
+        [Tooltip("Seconds on a lit burner to bring a full pot to a boil.")]
+        public float heatSeconds = 8f;
+        [Tooltip("How much of a full pot one pint of brine uses.")]
+        [Range(0f, 1f)] public float potPerJar = 0.2f;
+
         [Header("Canning")]
         [Tooltip("Minutes in the boiling water bath.")]
         public float processMinutes = 10f;

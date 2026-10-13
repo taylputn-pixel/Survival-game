@@ -43,6 +43,9 @@ namespace GrandmasHouse.Stations
 
         protected virtual void Awake()
         {
+            // Stations on carried items (a pot, the canner) find the scene's pieces themselves.
+            if (reticle == null) reticle = FindFirstObjectByType<Reticle>();
+            if (clock == null) clock = FindFirstObjectByType<DayClock>();
             UseAction = InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
             lookAction = InputSystem.actions.FindAction("Player/Look", throwIfNotFound: true);
             backAction = InputSystem.actions.FindAction("Player/Back", throwIfNotFound: true);
@@ -84,6 +87,15 @@ namespace GrandmasHouse.Stations
         }
 
         protected Ray CursorRay() => View.ViewportPointToRay(CursorPoint);
+
+        // Whether the cursor is on something, within a radius in screen heights.
+        protected bool IsCursorNear(Vector3 worldPoint, float radius)
+        {
+            Vector3 screen = View.WorldToViewportPoint(worldPoint);
+            float aspect = (float)Screen.width / Screen.height;
+            Vector2 offset = (Vector2)screen - CursorPoint;
+            return screen.z > 0f && new Vector2(offset.x * aspect, offset.y).magnitude < radius;
+        }
 
         protected virtual void Update()
         {
