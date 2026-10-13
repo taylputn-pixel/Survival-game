@@ -14,7 +14,7 @@ namespace GrandmasHouse.Data
         [Tooltip("How fast a spot soaks up water while you pour on it (1 = fully watered).")]
         public float waterPerSecond = 0.9f;
         [Tooltip("How far from where the water lands a spot still gets watered, in meters.")]
-        public float pourRadius = 0.14f;
+        public float pourRadius = 0.18f;
         [Tooltip("How high above the soil the spout is held while pouring, in meters.")]
         public float pourHeight = 0.22f;
         [Tooltip("How far the can tips forward to pour, in degrees.")]

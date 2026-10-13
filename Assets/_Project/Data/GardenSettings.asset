@@ -15,7 +15,7 @@ MonoBehaviour:
   canPourSeconds: 12
   canFillSeconds: 1.6
   waterPerSecond: 0.9
-  pourRadius: 0.14
+  pourRadius: 0.18
   pourHeight: 0.22
   pourTilt: 45
   canFollowSharpness: 14

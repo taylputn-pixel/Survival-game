@@ -28,6 +28,7 @@ namespace GrandmasHouse.Stations
         Pickup canItem;
         WateringCan can;
         Vector3 spoutOffset;
+        Vector3 spoutForward;
         Vector3 aimPoint;
         float tilt;
         bool waitForRelease;
@@ -158,10 +159,11 @@ namespace GrandmasHouse.Stations
             canItem = hands.TakeHeld();
             can = canItem.GetComponent<WateringCan>();
             spoutOffset = Quaternion.Inverse(canItem.transform.rotation) * (can.Spout.position - canItem.transform.position);
+            spoutForward = Quaternion.Inverse(canItem.transform.rotation) * can.Spout.forward;
             aimPoint = BedCenter();
             tilt = 0f;
             waitForRelease = true;
-            reticle.Hidden = true;
+            // The dot stays, marking where the water will land.
         }
 
         void Water()
@@ -186,7 +188,8 @@ namespace GrandmasHouse.Stations
             }
 
             // Water lands under the spout.
-            Vector3 landing = bed.Soil.ClosestPointOnPlane(can.Spout.position);
+            // Water lands where the stream actually falls, a little past the spout.
+            Vector3 landing = can.LandingOn(bed.Soil);
             foreach (var spot in Spots)
             {
                 Vector3 offset = spot.transform.position - landing;
@@ -208,7 +211,13 @@ namespace GrandmasHouse.Stations
             float yaw = View.transform.eulerAngles.y + canYaw;
             Quaternion rotation = Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(tilt, 0f, 0f);
             float lift = garden.pourHeight + (1f - tilt / garden.pourTilt) * 0.08f;
+            // Hold the can back so the stream, not the spout, lands on the cursor.
             Vector3 spoutTip = aimPoint + transform.up * lift;
+            Vector3 drift = can.Landing(spoutTip, rotation * spoutForward * can.StreamSpeed, bed.Soil) - bed.Soil.ClosestPointOnPlane(spoutTip);
+            if (tilt > 0f)
+            {
+                spoutTip -= drift * Mathf.Clamp01(tilt / garden.pourTilt);
+            }
             Vector3 position = spoutTip - rotation * spoutOffset;
 
             Transform t = canItem.transform;
