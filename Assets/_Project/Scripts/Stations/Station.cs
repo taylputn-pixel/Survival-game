@@ -28,6 +28,8 @@ namespace GrandmasHouse.Stations
         public bool Working => IsWorking;
 
         protected bool IsWorking => isActive && !leaving;
+        // Where the camera goes; a station can pick a different spot (the stove front).
+        protected virtual Transform ViewPoint => viewPoint;
         protected Camera View { get; private set; }
         // The station cursor, in viewport coordinates (0..1).
         protected Vector2 CursorPoint { get; private set; }
@@ -127,8 +129,8 @@ namespace GrandmasHouse.Stations
             blend = Mathf.Clamp01(blend + (leaving ? -step : step));
             float t = blend * blend * (3f - 2f * blend);
             View.transform.SetPositionAndRotation(
-                Vector3.Lerp(cameraHome.position, viewPoint.position, t),
-                Quaternion.Slerp(cameraHome.rotation, viewPoint.rotation, t));
+                Vector3.Lerp(cameraHome.position, ViewPoint.position, t),
+                Quaternion.Slerp(cameraHome.rotation, ViewPoint.rotation, t));
 
             if (leaving && blend <= 0f)
             {

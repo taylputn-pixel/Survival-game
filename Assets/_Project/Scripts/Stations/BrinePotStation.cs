@@ -41,6 +41,7 @@ namespace GrandmasHouse.Stations
         Cookware cookware;
         PlayerHands hands;
         StoveStaples staples;
+        StoveView stoveView;
         StoveStaples.Source pouringFrom;
         MaterialPropertyBlock block;
         int enteredFrame;
@@ -74,6 +75,7 @@ namespace GrandmasHouse.Stations
             cookware = GetComponent<Cookware>();
             block = new MaterialPropertyBlock();
             staples = FindFirstObjectByType<StoveStaples>();
+            stoveView = FindFirstObjectByType<StoveView>();
             stream.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             steam.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             ShowLiquid();
@@ -83,6 +85,9 @@ namespace GrandmasHouse.Stations
         void OnDisable() => all.Remove(this);
 
         public bool AllowPickup(PlayerHands player) => !cookware.OnStove;
+
+        // One view of the whole stove front: the shelf, every burner, and the knobs.
+        protected override Transform ViewPoint => stoveView != null ? stoveView.transform : base.ViewPoint;
 
         public override bool CanInteract(PlayerHands player) => cookware.OnStove && player.IsEmpty;
 
