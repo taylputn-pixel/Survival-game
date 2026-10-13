@@ -45,7 +45,7 @@ namespace GrandmasHouse.Stations
         bool loggedQuality;
         bool takeable;
         // The pot being poured from, and where it rested on the stove.
-        BrinePotStation pot;
+        CookingPotStation pot;
         Vector3 potRestPosition;
         Quaternion potRestRotation;
 
@@ -110,7 +110,7 @@ namespace GrandmasHouse.Stations
             {
                 yield return lidStack.position;
             }
-            BrinePotStation ready = BrinePotStation.ReadyPot();
+            CookingPotStation ready = CookingPotStation.ReadyPot();
             if (!jar.HasLid && ready != null)
             {
                 yield return ready.transform.position;
@@ -158,7 +158,7 @@ namespace GrandmasHouse.Stations
                     jar.PutOnLid();
                 }
             }
-            else if (!jar.HasLid && BrinePotStation.ReadyPot() is BrinePotStation ready && CursorNear(ready.transform.position))
+            else if (!jar.HasLid && CookingPotStation.ReadyPot() is CookingPotStation ready && CursorNear(ready.transform.position))
             {
                 reticle.Highlight = true;
                 UseHint = "Pour brine";

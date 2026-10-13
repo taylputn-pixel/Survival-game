@@ -3,7 +3,7 @@ using UnityEngine;
 namespace GrandmasHouse.Kitchen
 {
     // What Grandma keeps on the warming shelf over the stove: a jug of
-    // vinegar, a pitcher of water, and the salt box. The brine pot's
+    // vinegar, a pitcher of water, and the salt box. The cooking pot's
     // station reaches up for them.
     public class StoveStaples : MonoBehaviour
     {

@@ -6854,7 +6854,7 @@ GameObject:
   - component: {fileID: 2411204137799612233}
   - component: {fileID: 4418070455874618186}
   m_Layer: 9
-  m_Name: BrinePot
+  m_Name: CookingPot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6945,7 +6945,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 610db5c3f2b775245905ca05cb5d723f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Carrying.Pickup
-  displayName: Brine Pot
+  displayName: Cooking Pot
   category: 0
   heldRotation: {x: 0, y: 0, z: 0}
   keepUpright: 1
@@ -6976,7 +6976,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5bc5b7a654c9fd844a81cf16800fed79, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Saving.SavedItem
-  key: BrinePot
+  key: CookingPot
 --- !u!114 &4418070455874618186
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -7,12 +7,13 @@ using UnityEngine;
 
 namespace GrandmasHouse.Stations
 {
-    // The enamel pot for pickling brine. Set it on a burner and step up:
-    // pour vinegar to the low line and water to the high line from the
-    // warming shelf, add scoops of salt, turn the burner on, and wait for the
-    // boil. Boiling brine is ready to pour into jars at the packing towel.
+    // Grandma's enamel cooking pot. Brine is the first thing made in it (more
+    // recipes come with meals). Set it on a burner and step up: pour vinegar
+    // to the low line and water to the high line from the warming shelf, add
+    // scoops of salt, turn the burner on, and wait for the boil. Boiling
+    // brine is ready to pour into jars at the packing towel.
     [RequireComponent(typeof(Cookware))]
-    public class BrinePotStation : Station, IPickupGuard, IItemState, IEmptyable
+    public class CookingPotStation : Station, IPickupGuard, IItemState, IEmptyable
     {
         [SerializeField] RecipeData recipe;
         [Tooltip("The brine's surface; it rises as you pour and sits on the bottom when empty.")]
@@ -36,7 +37,7 @@ namespace GrandmasHouse.Stations
         [SerializeField] Color waterColor = new Color(0.78f, 0.88f, 0.92f, 0.5f);
         [SerializeField] Color brineColor = new Color(0.86f, 0.83f, 0.5f, 0.6f);
 
-        static readonly List<BrinePotStation> all = new List<BrinePotStation>();
+        static readonly List<CookingPotStation> all = new List<CookingPotStation>();
 
         Cookware cookware;
         PlayerHands hands;
@@ -57,7 +58,7 @@ namespace GrandmasHouse.Stations
         public Transform Lip => lip;
 
         // A pot of boiling brine on the stove, if there is one.
-        public static BrinePotStation ReadyPot()
+        public static CookingPotStation ReadyPot()
         {
             foreach (var pot in all)
             {
@@ -91,7 +92,7 @@ namespace GrandmasHouse.Stations
 
         public override bool CanInteract(PlayerHands player) => cookware.OnStove && player.IsEmpty;
 
-        public override string PromptVerb(PlayerHands player) => "Make brine";
+        public override string PromptVerb(PlayerHands player) => "Cook";
 
         public override void Interact(PlayerHands player)
         {

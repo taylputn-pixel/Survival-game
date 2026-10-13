@@ -4,7 +4,7 @@ namespace GrandmasHouse.Kitchen
 {
     // The shared motion for pouring by hand: lift a vessel from where it
     // rests, swing its lip over the target, and tip it. Let go and it goes
-    // back. Used for the brine pot, the vinegar jug, and the water pitcher.
+    // back. Used for the cooking pot, the vinegar jug, and the water pitcher.
     public static class Pouring
     {
         // Moves `vessel` a step toward its pouring pose for this much tilt (0 = resting).

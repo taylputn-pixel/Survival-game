@@ -16527,7 +16527,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 7319769395798254818, guid: eb3c44db33557e944921b331a8412c09, type: 3}
       propertyPath: m_Name
-      value: Brine Pot
+      value: Cooking Pot
       objectReference: {fileID: 0}
     - target: {fileID: 8906276771316239783, guid: eb3c44db33557e944921b331a8412c09, type: 3}
       propertyPath: m_LocalPosition.x

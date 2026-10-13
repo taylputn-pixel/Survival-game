@@ -29,6 +29,8 @@ MonoBehaviour:
     prefab: {fileID: 6306953650404750413, guid: e0f6817d9b17a0541b4ab27bae8008ad, type: 3}
   - key: Canner
     prefab: {fileID: 4984928928878257701, guid: 3b2cf2fdf55b52e4fae2339e9e8cb85e, type: 3}
+  - key: CookingPot
+    prefab: {fileID: 2411204137799612233, guid: eb3c44db33557e944921b331a8412c09, type: 3}
   - key: BrinePot
     prefab: {fileID: 2411204137799612233, guid: eb3c44db33557e944921b331a8412c09, type: 3}
   crops:
