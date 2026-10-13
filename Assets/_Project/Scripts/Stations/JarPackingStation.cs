@@ -37,6 +37,7 @@ namespace GrandmasHouse.Stations
         [SerializeField] float potFollowSharpness = 10f;
 
         Pickup jarItem;
+        PlayerHands player;
         JarContents jar;
         Pickup dill;
         int enteredFrame;
@@ -79,6 +80,7 @@ namespace GrandmasHouse.Stations
                 }
                 return;
             }
+            player = hands;
             enteredFrame = Time.frameCount;
             Enter(hands);
         }
@@ -109,6 +111,10 @@ namespace GrandmasHouse.Stations
             if (CanPutOnLid())
             {
                 yield return lidStack.position;
+            }
+            if (jar.HasLid)
+            {
+                yield return jar.Mouth;
             }
             CookingPotStation ready = CookingPotStation.ReadyPot();
             if (!jar.HasLid && ready != null)
@@ -147,6 +153,15 @@ namespace GrandmasHouse.Stations
                 {
                     jar.AddDill(dill);
                     dill = null;
+                }
+            }
+            else if (jar.HasLid && CursorNear(jar.Mouth))
+            {
+                reticle.Highlight = true;
+                UseHint = "Pick up jar";
+                if (pressed)
+                {
+                    TakeJar();
                 }
             }
             else if (CanPutOnLid() && CursorNear(lidStack.position))
@@ -204,6 +219,15 @@ namespace GrandmasHouse.Stations
             {
                 dill = dillWaiting;
             }
+        }
+
+        // Step back from the towel with the lidded jar already in hand.
+        void TakeJar()
+        {
+            Pickup item = jarItem;
+            Leave();
+            item.SetCollidersEnabled(true);
+            player.Give(item);
         }
 
         void SetJar(Pickup item)
