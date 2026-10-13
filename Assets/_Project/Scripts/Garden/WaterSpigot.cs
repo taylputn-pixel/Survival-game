@@ -32,6 +32,8 @@ namespace GrandmasHouse.Garden
 
         public void Interact(PlayerHands hands) => StartCoroutine(Filling(hands));
 
+        public string PromptVerb(PlayerHands hands) => "Fill";
+
         IEnumerator Filling(PlayerHands hands)
         {
             busy = true;

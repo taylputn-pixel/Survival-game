@@ -78,6 +78,15 @@ namespace GrandmasHouse.Stations
             Enter(hands);
         }
 
+        public override string PromptVerb(PlayerHands hands)
+        {
+            if (hands.IsEmpty)
+            {
+                return "Pack jar";
+            }
+            return hands.Held.GetComponent<JarContents>() != null ? "Set jar down" : "Set dill down";
+        }
+
         protected override IEnumerable<Vector3> SnapTargets()
         {
             if (pouring)
@@ -108,14 +117,17 @@ namespace GrandmasHouse.Stations
         {
             if (pouring)
             {
+                UseHint = "Hold to pour";
                 Pour();
                 return;
             }
+            UseHint = null;
 
             bool pressed = Time.frameCount != enteredFrame && UseAction.WasPressedThisFrame();
             if (CanTakeSlices() && CursorNear(board.PilePosition))
             {
                 reticle.Highlight = true;
+                UseHint = "Scoop chips";
                 if (pressed)
                 {
                     ScoopSlices();
@@ -124,6 +136,7 @@ namespace GrandmasHouse.Stations
             else if (dill != null && !jar.HasDill && !jar.HasLid && CursorNear(dill.transform.position))
             {
                 reticle.Highlight = true;
+                UseHint = "Add dill";
                 if (pressed)
                 {
                     jar.AddDill(dill);
@@ -133,6 +146,7 @@ namespace GrandmasHouse.Stations
             else if (CanPutOnLid() && CursorNear(lidStack.position))
             {
                 reticle.Highlight = true;
+                UseHint = "Put on lid";
                 if (pressed)
                 {
                     jar.PutOnLid();
@@ -141,6 +155,7 @@ namespace GrandmasHouse.Stations
             else if (!jar.HasLid && CursorNear(pot.transform.position))
             {
                 reticle.Highlight = true;
+                UseHint = "Pour brine";
                 if (pressed)
                 {
                     pouring = true;

@@ -8,5 +8,7 @@ namespace GrandmasHouse.Interaction
     {
         bool CanInteract(PlayerHands hands);
         void Interact(PlayerHands hands);
+        // The word shown next to the button icon, like "Pick up" or "Read".
+        string PromptVerb(PlayerHands hands) => "Use";
     }
 }

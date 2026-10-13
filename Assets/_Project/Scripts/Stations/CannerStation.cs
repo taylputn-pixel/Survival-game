@@ -76,6 +76,8 @@ namespace GrandmasHouse.Stations
             Enter(hands);
         }
 
+        public override string PromptVerb(PlayerHands hands) => hands.IsEmpty ? "Tend canner" : "Put in canner";
+
         protected override IEnumerable<Vector3> SnapTargets()
         {
             if (!lidOn && done)
@@ -108,12 +110,14 @@ namespace GrandmasHouse.Stations
         {
             bool pressed = Time.frameCount != enteredFrame && UseAction.WasPressedThisFrame() && !lidMoving;
             reticle.Highlight = false;
+            UseHint = null;
 
             // Lid on to start; lid off once it's done.
             bool lidReady = (!lidOn && HasJars && !done) || (lidOn && done);
             if (lidReady && CursorNear(canLid.position))
             {
                 reticle.Highlight = true;
+                UseHint = lidOn ? "Take lid off" : "Put lid on";
                 if (pressed)
                 {
                     StartCoroutine(MoveLid(!lidOn));
@@ -128,6 +132,7 @@ namespace GrandmasHouse.Stations
                     if (CursorNear(pair.Value.transform.position))
                     {
                         reticle.Highlight = FreeCoolingSpot() != null;
+                        UseHint = reticle.Highlight == true ? "Lift out" : null;
                         if (pressed && FreeCoolingSpot() != null)
                         {
                             LiftOut(pair.Key);

@@ -21,6 +21,12 @@ namespace GrandmasHouse.Stations
         [Tooltip("Paused while working here, if the mode says so.")]
         [SerializeField] protected DayClock clock;
 
+        // The station you're working at, if any, for the button prompts.
+        public static Station Current { get; private set; }
+        // What Interact does at this station right now ("Chop", "Scoop chips"), or none.
+        public string UseHint { get; protected set; }
+        public bool Working => IsWorking;
+
         protected bool IsWorking => isActive && !leaving;
         protected Camera View { get; private set; }
         // The station cursor, in viewport coordinates (0..1).
@@ -45,6 +51,7 @@ namespace GrandmasHouse.Stations
 
         public abstract bool CanInteract(PlayerHands hands);
         public abstract void Interact(PlayerHands hands);
+        public virtual string PromptVerb(PlayerHands hands) => "Work";
 
         // Things the gamepad cursor gently drifts onto when close (tools, handles).
         protected virtual IEnumerable<Vector3> SnapTargets() { yield break; }
@@ -65,6 +72,8 @@ namespace GrandmasHouse.Stations
             clock.PausedForWork = true;
             isActive = true;
             leaving = false;
+            UseHint = null;
+            Current = this;
             OnEnter();
         }
 
@@ -116,6 +125,10 @@ namespace GrandmasHouse.Stations
             {
                 View.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
                 isActive = false;
+                if (Current == this)
+                {
+                    Current = null;
+                }
                 clock.PausedForWork = false;
                 controller.InputEnabled = true;
                 cursorLock.BlockUnlock = false;

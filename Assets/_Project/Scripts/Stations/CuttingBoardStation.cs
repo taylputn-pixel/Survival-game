@@ -69,6 +69,8 @@ namespace GrandmasHouse.Stations
             Enter(hands);
         }
 
+        public override string PromptVerb(PlayerHands hands) => hands.IsEmpty ? "Slice" : "Lay on board";
+
         protected override IEnumerable<Vector3> SnapTargets()
         {
             if (!knifeHeld)
@@ -106,6 +108,7 @@ namespace GrandmasHouse.Stations
             {
                 bool nearKnife = CursorNear(knife.position, knifeGrabRadius);
                 reticle.Highlight = nearKnife;
+                UseHint = nearKnife ? "Pick up knife" : null;
                 if (nearKnife && UseAction.WasPressedThisFrame())
                 {
                     knifeHeld = true;
@@ -116,6 +119,7 @@ namespace GrandmasHouse.Stations
             }
 
             AimKnife();
+            UseHint = HasSomethingToCut ? "Chop" : null;
 
             if (chopTime < 0f && UseAction.WasPressedThisFrame())
             {

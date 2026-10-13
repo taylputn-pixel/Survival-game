@@ -20,6 +20,8 @@ namespace GrandmasHouse.Carrying
         public Pickup Held { get; private set; }
         public bool IsEmpty => Held == null;
         public Focus CurrentFocus { get; private set; }
+        // What pressing Interact would do right now, for the button prompt.
+        public string Verb { get; private set; }
         public Transform ViewPoint => viewPoint;
         public FirstPersonController Controller => controller;
 
@@ -57,6 +59,7 @@ namespace GrandmasHouse.Carrying
             if (!controller.InputEnabled)
             {
                 CurrentFocus = Focus.Nothing;
+                Verb = null;
                 return;
             }
 
@@ -156,14 +159,17 @@ namespace GrandmasHouse.Carrying
             if (lookTarget != null)
             {
                 CurrentFocus = Focus.CanInteract;
+                Verb = lookTarget.PromptVerb(this);
             }
             else if (Held != null && hasSurface)
             {
                 CurrentFocus = Focus.CanPlace;
+                Verb = "Set down";
             }
             else
             {
                 CurrentFocus = Focus.Nothing;
+                Verb = Held != null && Held.OwnContainer == null ? "Drop" : null;
             }
         }
 

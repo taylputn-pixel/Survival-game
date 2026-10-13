@@ -20,6 +20,8 @@ namespace GrandmasHouse.DayCycle
 
         public void Interact(PlayerHands hands) => StartCoroutine(Sleep(hands));
 
+        public string PromptVerb(PlayerHands hands) => "Sleep";
+
         IEnumerator Sleep(PlayerHands hands)
         {
             sleeping = true;

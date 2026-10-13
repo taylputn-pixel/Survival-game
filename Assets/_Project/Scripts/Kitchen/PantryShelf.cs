@@ -38,6 +38,8 @@ namespace GrandmasHouse.Kitchen
             return jar != null && jar.IsSealed && FreeSlot() != null;
         }
 
+        public string PromptVerb(PlayerHands hands) => "Shelve";
+
         public void Interact(PlayerHands hands)
         {
             Transform slot = FreeSlot();

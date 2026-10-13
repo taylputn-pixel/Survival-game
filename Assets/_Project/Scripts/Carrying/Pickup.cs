@@ -59,6 +59,15 @@ namespace GrandmasHouse.Carrying
 
         public void Interact(PlayerHands hands) => hands.Handle(this);
 
+        public string PromptVerb(PlayerHands hands)
+        {
+            if (hands.IsEmpty)
+            {
+                return "Pick up";
+            }
+            return hands.Held.OwnContainer != null ? "Gather" : "Put in";
+        }
+
         public void OnPickedUp()
         {
             StopAllCoroutines();

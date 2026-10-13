@@ -63,6 +63,15 @@ namespace GrandmasHouse.Stations
             Enter(player);
         }
 
+        public override string PromptVerb(PlayerHands player)
+        {
+            if (player.IsEmpty)
+            {
+                return "Weed";
+            }
+            return player.Held.GetComponent<WateringCan>() != null ? "Water" : "Plant";
+        }
+
         protected override IEnumerable<Vector3> SnapTargets()
         {
             if (can != null)
@@ -105,6 +114,7 @@ namespace GrandmasHouse.Stations
         {
             if (can != null)
             {
+                UseHint = can.IsEmpty ? null : "Hold to pour";
                 Water();
                 return;
             }
@@ -116,6 +126,7 @@ namespace GrandmasHouse.Stations
 
             PlantSpot target = SpotUnderCursor();
             reticle.Highlight = target != null;
+            UseHint = target != null ? "Plant" : null;
 
             // The press that opened the station shouldn't also plant.
             if (Time.frameCount == enteredFrame || target == null || !UseAction.WasPressedThisFrame())
@@ -230,6 +241,7 @@ namespace GrandmasHouse.Stations
             {
                 Weed target = Closest(bed.Weeds, w => w.transform.position);
                 reticle.Highlight = target != null;
+                UseHint = target != null ? "Grab weed" : null;
                 if (Time.frameCount != enteredFrame && target != null && UseAction.WasPressedThisFrame())
                 {
                     grabbed = target;
@@ -244,6 +256,7 @@ namespace GrandmasHouse.Stations
                 return;
             }
 
+            UseHint = "Pull back";
             // Pull back toward you (mouse or stick down) to work it loose.
             float pulled = (grabCursorY - CursorPoint.y) / (garden.pullDistance * grabbed.Size);
             grabbed.SetPull(pulled, holding: true);

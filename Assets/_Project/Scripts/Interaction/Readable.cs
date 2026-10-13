@@ -14,6 +14,8 @@ namespace GrandmasHouse.Interaction
 
         public bool CanInteract(PlayerHands hands) => !reader.IsOpen;
 
+        public string PromptVerb(PlayerHands hands) => "Read";
+
         public void Interact(PlayerHands hands)
         {
             discoveries.Record(note);
