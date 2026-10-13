@@ -44,6 +44,8 @@ namespace GrandmasHouse.UI
                 RectTransform dim = UIKit.Rect("Backdrop", transform);
                 UIKit.Stretch(dim);
                 dim.gameObject.AddComponent<Image>().color = new Color(0.1f, 0.07f, 0.04f, 0.45f);
+                // Behind the menu, or it would catch every mouse click.
+                dim.SetSiblingIndex(screen.transform.GetSiblingIndex());
                 backdrop = dim.gameObject;
             }
             if (screens.Count > 0)
