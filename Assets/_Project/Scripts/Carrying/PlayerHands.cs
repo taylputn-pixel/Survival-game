@@ -125,6 +125,8 @@ namespace GrandmasHouse.Carrying
             {
                 item.InContainer.Remove(item);
             }
+            // Lifted off whatever it rested on (a vine, a towel, a shelf).
+            item.transform.SetParent(null, worldPositionStays: true);
             Held = item;
             item.OnPickedUp();
         }
@@ -137,10 +139,15 @@ namespace GrandmasHouse.Carrying
             var ray = new Ray(viewPoint.position, viewPoint.forward);
             if (Physics.Raycast(ray, out RaycastHit hit, settings.reach, ~0, QueryTriggerInteraction.Ignore))
             {
-                var interactable = hit.collider.GetComponentInParent<IInteractable>();
-                if (interactable != null && interactable.CanInteract(this))
+                // The nearest thing up the hierarchy that can be used right now:
+                // a jar on a shelf, or the shelf itself if you're holding a jar.
+                foreach (var interactable in hit.collider.GetComponentsInParent<IInteractable>())
                 {
-                    lookTarget = interactable;
+                    if (interactable.CanInteract(this))
+                    {
+                        lookTarget = interactable;
+                        break;
+                    }
                 }
                 surfaceHit = hit;
                 hasSurface = hit.normal.y >= settings.minSurfaceUpness && IsFreeSurface(hit.collider);

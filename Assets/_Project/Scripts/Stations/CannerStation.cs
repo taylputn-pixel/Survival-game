@@ -185,14 +185,6 @@ namespace GrandmasHouse.Stations
             Transform spot = FreeCoolingSpot();
             jar.AttachTo(spot, Vector3.zero, Quaternion.identity, 0.5f, collidersOn: true);
             jar.GetComponent<JarContents>().CoolAndSeal(Random.Range(pingDelay.x, pingDelay.y));
-            // Picked up from the towel, it no longer sits on its spot.
-            jar.HeldChanged += held =>
-            {
-                if (held && jar.transform.parent == spot)
-                {
-                    jar.transform.SetParent(null, worldPositionStays: true);
-                }
-            };
             if (!HasJars)
             {
                 done = false;
