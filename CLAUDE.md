@@ -39,6 +39,7 @@ Goal: one full loop from seed to sealed jar. Plant cucumbers and dill, tend them
 - Gameplay numbers (speeds, durations, capacities, mode values) live in ScriptableObjects under `Assets/_Project/Data/`, never hard-coded.
 - Keep the scripts small and readable; match the style of the code around them.
 - Prefer composition: stations, containers, and pickups are components on GameObjects.
+- Saving: a new item prefab needs a `SavedItem` key and an entry in `Data/SaveCatalog`; extra item state implements `IItemState`, scene systems implement `ISaveable`, and stations that hold things re-adopt them in `IAfterLoad`.
 
 ## Folder layout
 
