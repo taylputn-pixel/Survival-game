@@ -9,7 +9,8 @@ namespace GrandmasHouse.Stations
     // A dish towel on the counter between the cutting board and the stove.
     // Set an empty jar on it (and a head of dill beside it), step up, then:
     // drop in the dill, scoop slices from the board into the jar a handful
-    // at a time, and hold Interact on the brine pot to pour up to the line.
+    // at a time, hold Interact on the brine pot to pour up to the line, and
+    // put a lid on from the stack. It seals with a ping and is done.
     public class JarPackingStation : Station
     {
         [SerializeField] RecipeData recipe;
@@ -20,6 +21,8 @@ namespace GrandmasHouse.Stations
         [SerializeField] Transform jarSpot;
         [Tooltip("Where a head of dill waits beside the jar.")]
         [SerializeField] Transform herbSpot;
+        [Tooltip("The stack of lids and rings on the towel.")]
+        [SerializeField] Transform lidStack;
 
         [Header("Feel")]
         [Tooltip("How close the cursor must be to something to use it, in screen heights.")]
@@ -39,12 +42,13 @@ namespace GrandmasHouse.Stations
         bool pouring;
         float tilt;
         bool loggedQuality;
+        bool takeable;
 
         public override bool CanInteract(PlayerHands hands)
         {
             if (hands.IsEmpty)
             {
-                return jar != null;
+                return jar != null && !jar.HasLid;
             }
             var heldJar = hands.Held.GetComponent<JarContents>();
             if (heldJar != null)
@@ -88,18 +92,17 @@ namespace GrandmasHouse.Stations
             {
                 yield return dill.transform.position;
             }
-            yield return pot.transform.position;
-        }
-
-        protected override void OnLeave()
-        {
-            StopPouring();
-            // A filled jar can be picked up and carried to the canner.
-            if (jar != null && jar.BrineLevel >= recipe.brineEnough)
+            if (CanPutOnLid())
             {
-                jarItem.SetCollidersEnabled(true);
+                yield return lidStack.position;
+            }
+            if (!jar.HasLid)
+            {
+                yield return pot.transform.position;
             }
         }
+
+        protected override void OnLeave() => StopPouring();
 
         protected override void WhileWorking()
         {
@@ -118,7 +121,7 @@ namespace GrandmasHouse.Stations
                     ScoopSlices();
                 }
             }
-            else if (dill != null && !jar.HasDill && CursorNear(dill.transform.position))
+            else if (dill != null && !jar.HasDill && !jar.HasLid && CursorNear(dill.transform.position))
             {
                 reticle.Highlight = true;
                 if (pressed)
@@ -127,7 +130,15 @@ namespace GrandmasHouse.Stations
                     dill = null;
                 }
             }
-            else if (CursorNear(pot.transform.position))
+            else if (CanPutOnLid() && CursorNear(lidStack.position))
+            {
+                reticle.Highlight = true;
+                if (pressed)
+                {
+                    jar.PutOnLid();
+                }
+            }
+            else if (!jar.HasLid && CursorNear(pot.transform.position))
             {
                 reticle.Highlight = true;
                 if (pressed)
@@ -146,6 +157,13 @@ namespace GrandmasHouse.Stations
         {
             base.Update();
             MovePot();
+
+            // Once sealed and you've stepped back, the jar can be picked up.
+            if (jar != null && jar.IsSealed && !IsWorking && !takeable)
+            {
+                takeable = true;
+                jarItem.SetCollidersEnabled(true);
+            }
         }
 
         void SetJar(Pickup item)
@@ -153,6 +171,7 @@ namespace GrandmasHouse.Stations
             jarItem = item;
             jar = item.GetComponent<JarContents>();
             loggedQuality = false;
+            takeable = false;
             item.AttachTo(jarSpot, Vector3.zero, Quaternion.identity, settings.placeGlideSeconds, collidersOn: false);
             // Picking the finished jar up takes it off the towel.
             item.HeldChanged += OnJarHeld;
@@ -170,7 +189,9 @@ namespace GrandmasHouse.Stations
             jar = null;
         }
 
-        bool CanTakeSlices() => board.SliceCount > 0 && !jar.IsFull;
+        bool CanTakeSlices() => board.SliceCount > 0 && !jar.IsFull && !jar.HasLid;
+
+        bool CanPutOnLid() => !jar.HasLid && !pouring && jar.BrineLevel >= recipe.brineEnough;
 
         void ScoopSlices()
         {

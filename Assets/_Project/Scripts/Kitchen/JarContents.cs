@@ -18,7 +18,16 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] int capacity = 22;
         [SerializeField] float sliceStep = 0.0052f;
 
+        [Tooltip("The lid and ring, hidden until the jar is closed up.")]
+        [SerializeField] Transform lid;
+        [SerializeField] float lidSeconds = 0.5f;
+        [Tooltip("How long after the lid goes on before it seals with a ping.")]
+        [SerializeField] float pingDelay = 1.2f;
+
         public int SliceCount { get; private set; }
+        public bool HasLid { get; private set; }
+        public bool IsSealed { get; private set; }
+        public event System.Action Sealed;
         public bool HasDill { get; private set; }
         // 0 is empty, 1 is right to the rim.
         public float BrineLevel { get; private set; }
@@ -26,7 +35,51 @@ namespace GrandmasHouse.Kitchen
         public int Capacity => capacity;
         public Vector3 Mouth => inside.position + inside.up * innerHeight;
 
-        void Awake() => ShowBrine();
+        void Awake()
+        {
+            ShowBrine();
+            lid.gameObject.SetActive(false);
+        }
+
+        // The lid drops on, the ring twists down, and a moment later it seals.
+        public void PutOnLid()
+        {
+            if (HasLid)
+            {
+                return;
+            }
+            HasLid = true;
+            StartCoroutine(Closing());
+        }
+
+        IEnumerator Closing()
+        {
+            Vector3 seated = lid.localPosition;
+            lid.gameObject.SetActive(true);
+            for (float time = 0f; time < lidSeconds; time += Time.deltaTime)
+            {
+                float t = time / lidSeconds;
+                float drop = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.4f));
+                lid.localPosition = seated + Vector3.up * (1f - drop) * 0.05f;
+                // Two turns of the ring once it's down.
+                float twist = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.4f, 1f, t)) * 720f;
+                lid.localRotation = Quaternion.Euler(0f, twist, 0f);
+                yield return null;
+            }
+            lid.SetLocalPositionAndRotation(seated, Quaternion.identity);
+
+            yield return new WaitForSeconds(pingDelay);
+            // Ping: the center of the lid pulls down as it seals.
+            Vector3 size = lid.localScale;
+            for (float time = 0f; time < 0.15f; time += Time.deltaTime)
+            {
+                lid.localScale = Vector3.Scale(size, new Vector3(1f, 1f - Mathf.Sin(time / 0.15f * Mathf.PI) * 0.4f, 1f));
+                yield return null;
+            }
+            lid.localScale = size;
+            IsSealed = true;
+            Sealed?.Invoke();
+        }
 
         // A slice drops in and settles on the pile inside, a little askew.
         public void AddSlice(Transform slice, float delay)
