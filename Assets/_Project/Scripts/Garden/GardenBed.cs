@@ -39,6 +39,11 @@ namespace GrandmasHouse.Garden
 
         void Overnight(int day)
         {
+            // Plants grow first, judged by how you left the bed at bedtime.
+            foreach (var spot in spots)
+            {
+                spot.GrowOvernight(IsCrowded(spot));
+            }
             foreach (var weed in weeds)
             {
                 weed.GrowOvernight();
@@ -88,6 +93,18 @@ namespace GrandmasHouse.Garden
                 }
             }
             position = default;
+            return false;
+        }
+
+        bool IsCrowded(PlantSpot spot)
+        {
+            foreach (var weed in weeds)
+            {
+                if (Vector3.Distance(weed.transform.position, spot.transform.position) < settings.crowdingRadius)
+                {
+                    return true;
+                }
+            }
             return false;
         }
 

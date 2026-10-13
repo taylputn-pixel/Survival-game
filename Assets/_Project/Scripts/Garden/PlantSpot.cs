@@ -1,10 +1,14 @@
 using System.Collections;
+using System.Collections.Generic;
+using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using UnityEngine;
 
 namespace GrandmasHouse.Garden
 {
-    // One place in a garden bed where a single plant can grow.
+    // One place in a garden bed where a single plant can grow. A watered plant
+    // moves up one stage each night; a dry one just waits (it never dies in
+    // Cozy). Once ready, it holds its harvest for you to pick by hand.
     public class PlantSpot : MonoBehaviour
     {
         [SerializeField] Material soilMaterial;
@@ -18,13 +22,40 @@ namespace GrandmasHouse.Garden
         public bool IsEmpty => Crop == null;
         // 0 is dry, 1 is well watered.
         public float Water { get; private set; }
+        // -1 while it's still a seed; the last stage means ready to harvest.
+        public int Stage { get; private set; } = -1;
+        public bool IsReady => Crop != null && Stage == Crop.stages.Length - 1;
+        public int RipeCount => ripe.Count;
 
         MaterialPropertyBlock block;
+        GameObject mound;
+        GameObject plant;
+        readonly List<Transform> harvestPoints = new List<Transform>();
+        readonly List<Pickup> ripe = new List<Pickup>();
+        bool harvested;
 
         void Awake()
         {
             block = new MaterialPropertyBlock();
             ShowWater();
+        }
+
+        void Update()
+        {
+            // Notice anything picked off the plant, by hand or into a basket.
+            for (int i = ripe.Count - 1; i >= 0; i--)
+            {
+                Pickup item = ripe[i];
+                if (item == null || !harvestPoints.Contains(item.transform.parent))
+                {
+                    ripe.RemoveAt(i);
+                    harvested = true;
+                }
+            }
+            if (Crop != null && Crop.singleHarvest && harvested && ripe.Count == 0)
+            {
+                Clear();
+            }
         }
 
         public void AddWater(float amount)
@@ -40,15 +71,100 @@ namespace GrandmasHouse.Garden
             wetPatch.SetPropertyBlock(block);
         }
 
+        // Called once each night, before the soil dries out again.
+        public void GrowOvernight(bool crowded)
+        {
+            if (Crop != null && Water >= settings.wateredEnough)
+            {
+                if (Stage < Crop.stages.Length - 1)
+                {
+                    ShowStage(Stage + 1);
+                    if (IsReady)
+                    {
+                        Ripen(Crop.singleHarvest ? harvestPoints.Count : Crop.harvestPerNight + (crowded ? 0 : Crop.tendedBonus));
+                    }
+                }
+                else if (!Crop.singleHarvest)
+                {
+                    Ripen(Crop.harvestPerNight + (crowded ? 0 : Crop.tendedBonus));
+                }
+            }
+            Water = 0f;
+            ShowWater();
+        }
+
         // Press a hole into the soil, drop the seed in, and cover it over.
         public void Plant(CropData crop, float seconds)
         {
             Crop = crop;
-            if (marker != null)
-            {
-                marker.SetActive(false);
-            }
+            Stage = -1;
+            harvested = false;
+            marker.SetActive(false);
             StartCoroutine(Planting(crop, seconds));
+        }
+
+        void ShowStage(int stage)
+        {
+            Stage = stage;
+            if (mound != null)
+            {
+                Destroy(mound);
+            }
+            if (plant != null)
+            {
+                Destroy(plant);
+            }
+            plant = Instantiate(Crop.stages[stage], transform);
+            plant.transform.localRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+
+            harvestPoints.Clear();
+            foreach (var child in plant.GetComponentsInChildren<Transform>())
+            {
+                if (child.name.StartsWith("HarvestPoint"))
+                {
+                    harvestPoints.Add(child);
+                }
+            }
+        }
+
+        void Ripen(int count)
+        {
+            foreach (var point in harvestPoints)
+            {
+                if (count <= 0)
+                {
+                    return;
+                }
+                if (point.childCount > 0)
+                {
+                    continue;
+                }
+                Pickup item = Instantiate(Crop.harvest, point.position, point.rotation);
+                item.name = Crop.harvest.name;
+                item.AttachTo(point, Vector3.zero, Quaternion.identity, 0f, collidersOn: true);
+                // Once in your hands it no longer belongs to the plant.
+                item.HeldChanged += held =>
+                {
+                    if (held && item.transform.parent != null && harvestPoints.Contains(item.transform.parent))
+                    {
+                        item.transform.SetParent(null, worldPositionStays: true);
+                    }
+                };
+                ripe.Add(item);
+                count--;
+            }
+        }
+
+        // The plant is finished (dill cut); the spot is ready to plant again.
+        void Clear()
+        {
+            Destroy(plant);
+            plant = null;
+            harvestPoints.Clear();
+            Crop = null;
+            Stage = -1;
+            harvested = false;
+            marker.SetActive(true);
         }
 
         IEnumerator Planting(CropData crop, float seconds)
@@ -61,7 +177,7 @@ namespace GrandmasHouse.Garden
             var seedMaterial = new Material(soilMaterial) { color = crop.seedColor };
             seed.GetComponent<Renderer>().sharedMaterial = seedMaterial;
 
-            var mound = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            mound = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             mound.name = "Mound";
             Destroy(mound.GetComponent<Collider>());
             mound.transform.SetParent(transform, false);

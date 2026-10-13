@@ -21,6 +21,12 @@ namespace GrandmasHouse.Data
         public float pourTilt = 45f;
         public float canFollowSharpness = 14f;
 
+        [Header("Growing")]
+        [Tooltip("How watered a spot must be by nightfall for its plant to grow that night (1 = fully).")]
+        public float wateredEnough = 0.5f;
+        [Tooltip("Weeds closer than this crowd a plant and it loses its tended bonus, in meters.")]
+        public float crowdingRadius = 0.25f;
+
         [Header("Weeds")]
         [Tooltip("Weeds already in the bed on the first day (the garden sat untended).")]
         public int startingWeeds = 4;

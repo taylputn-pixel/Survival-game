@@ -15,3 +15,12 @@ MonoBehaviour:
   displayName: Cucumber
   seedColor: {r: 0.93, g: 0.88, b: 0.7, a: 1}
   seedSize: 0.009
+  stages:
+  - {fileID: 5215273381815471895, guid: 895814dd9dc17944f86471b8cf856cc1, type: 3}
+  - {fileID: 4508706821801301639, guid: 7135a9902f3bc9a49a5ee02b33c93348, type: 3}
+  - {fileID: 9167421145810625415, guid: 0b16d8c1f70bd714b98b3f4d93cf94cc, type: 3}
+  - {fileID: 5277170723309713762, guid: b6de9745e63e0d24284d6415398d8768, type: 3}
+  harvest: {fileID: 6892653883721051213, guid: 859c9666fa7c8fe4491ad17e640bbe42, type: 3}
+  singleHarvest: 0
+  harvestPerNight: 1
+  tendedBonus: 1

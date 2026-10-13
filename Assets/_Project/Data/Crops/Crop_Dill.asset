@@ -15,3 +15,11 @@ MonoBehaviour:
   displayName: Dill
   seedColor: {r: 0.35, g: 0.27, b: 0.17, a: 1}
   seedSize: 0.006
+  stages:
+  - {fileID: 4597340251704212867, guid: 35f44ccf82e616e41bfa228615fbcb9e, type: 3}
+  - {fileID: 6767647304821334476, guid: e74ee0265ffc6394f8d95750d7a71d06, type: 3}
+  - {fileID: 1573136661327410773, guid: 88ded0a40b43d11468e1ada09da705f0, type: 3}
+  harvest: {fileID: 4686656390913155349, guid: 12262f1e140f21240bfb9844e451af18, type: 3}
+  singleHarvest: 1
+  harvestPerNight: 1
+  tendedBonus: 0
