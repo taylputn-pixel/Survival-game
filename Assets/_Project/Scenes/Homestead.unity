@@ -19268,6 +19268,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1166526145}
+  - component: {fileID: 1166526147}
+  - component: {fileID: 1166526146}
   m_Layer: 0
   m_Name: Knob 1
   m_TagString: Untagged
@@ -19292,6 +19294,40 @@ Transform:
   - {fileID: 2038273469}
   m_Father: {fileID: 1771977151}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1166526146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166526144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9314622cc9a34984d9335545e3c0951d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Kitchen.BurnerKnob
+  burner: {fileID: 1351609656}
+--- !u!65 &1166526147
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166526144}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.085, y: 0.085, z: 0.035}
+  m_Center: {x: 0, y: 0, z: -0.012}
 --- !u!1 &1170886726
 GameObject:
   m_ObjectHideFlags: 0
@@ -19332,6 +19368,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1180856861}
+  - component: {fileID: 1180856863}
+  - component: {fileID: 1180856862}
   m_Layer: 0
   m_Name: Knob 2
   m_TagString: Untagged
@@ -19356,6 +19394,40 @@ Transform:
   - {fileID: 2085232065}
   m_Father: {fileID: 1771977151}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1180856862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1180856860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9314622cc9a34984d9335545e3c0951d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Kitchen.BurnerKnob
+  burner: {fileID: 319974391}
+--- !u!65 &1180856863
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1180856860}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.085, y: 0.085, z: 0.035}
+  m_Center: {x: 0, y: 0, z: -0.012}
 --- !u!1 &1184569751
 GameObject:
   m_ObjectHideFlags: 0
@@ -27185,6 +27257,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1810944793}
+  - component: {fileID: 1810944795}
+  - component: {fileID: 1810944794}
   m_Layer: 0
   m_Name: Knob 3
   m_TagString: Untagged
@@ -27209,6 +27283,40 @@ Transform:
   - {fileID: 64481067}
   m_Father: {fileID: 1771977151}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1810944794
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1810944792}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9314622cc9a34984d9335545e3c0951d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Kitchen.BurnerKnob
+  burner: {fileID: 1496581815}
+--- !u!65 &1810944795
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1810944792}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.085, y: 0.085, z: 0.035}
+  m_Center: {x: 0, y: 0, z: -0.012}
 --- !u!1 &1813679643
 GameObject:
   m_ObjectHideFlags: 0
@@ -39532,6 +39640,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2035873375}
+  - component: {fileID: 2035873377}
+  - component: {fileID: 2035873376}
   m_Layer: 0
   m_Name: Knob 4
   m_TagString: Untagged
@@ -39556,6 +39666,40 @@ Transform:
   - {fileID: 1049381378}
   m_Father: {fileID: 1771977151}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2035873376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2035873374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9314622cc9a34984d9335545e3c0951d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Kitchen.BurnerKnob
+  burner: {fileID: 326348137}
+--- !u!65 &2035873377
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2035873374}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.085, y: 0.085, z: 0.035}
+  m_Center: {x: 0, y: 0, z: -0.012}
 --- !u!1 &2038273468
 GameObject:
   m_ObjectHideFlags: 0
