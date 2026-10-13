@@ -24,11 +24,12 @@ namespace GrandmasHouse.Interaction
         InputAction interactAction;
         InputAction backAction;
         FirstPersonController controller;
-        CursorLock cursorLock;
         int openedFrame;
         bool open;
 
         public bool IsOpen => open;
+        // The frame the note was put down, so the same press doesn't also pause.
+        public int ClosedFrame { get; private set; } = -1;
 
         void Awake()
         {
@@ -42,9 +43,6 @@ namespace GrandmasHouse.Interaction
         {
             controller = hands.Controller;
             controller.InputEnabled = false;
-            // Back closes the note here, so it mustn't also free the mouse.
-            cursorLock = hands.GetComponent<CursorLock>();
-            cursorLock.BlockUnlock = true;
             clock.PausedForWork = true;
             reticle.Hidden = true;
 
@@ -75,6 +73,7 @@ namespace GrandmasHouse.Interaction
         void Close()
         {
             open = false;
+            ClosedFrame = Time.frameCount;
             reticle.Hidden = false;
             clock.PausedForWork = false;
             // Wait a frame so the same press doesn't also act in the world.
@@ -86,7 +85,6 @@ namespace GrandmasHouse.Interaction
         {
             yield return null;
             controller.InputEnabled = true;
-            cursorLock.BlockUnlock = false;
         }
 
         IEnumerator Fade(float to)

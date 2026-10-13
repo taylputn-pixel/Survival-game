@@ -23,9 +23,12 @@ namespace GrandmasHouse.Interaction
         static readonly Color KeyBase = new Color(0.95f, 0.92f, 0.85f);
         static readonly Color KeyInk = new Color(0.22f, 0.18f, 0.14f);
 
-        public static Glyph For(InputAction action)
+        public static Glyph For(InputAction action) => ForDevice(action, InputDevices.UsingGamepad);
+
+        // For a specific kind of device, whichever is in use (the controls screen shows both).
+        public static Glyph ForDevice(InputAction action, bool gamepad)
         {
-            return InputDevices.UsingGamepad ? GamepadGlyph(action) : KeyboardGlyph(action);
+            return gamepad ? GamepadGlyph(action) : KeyboardGlyph(action);
         }
 
         static Glyph GamepadGlyph(InputAction action)
@@ -35,8 +38,8 @@ namespace GrandmasHouse.Interaction
             int face = FaceIndex(control);
             if (face < 0)
             {
-                // Shoulders, triggers, sticks: a dark cap with a short name.
-                return new Glyph { sprite = Cap(PadBase, "pad-cap"), label = ShortName(action, "<Gamepad>/"), labelColor = Color.white };
+                // Shoulders, triggers, sticks: a dark cap with the name printed on that controller.
+                return new Glyph { sprite = Cap(PadBase, "pad-cap"), label = PadName(control, family), labelColor = Color.white };
             }
 
             switch (family)
@@ -96,6 +99,26 @@ namespace GrandmasHouse.Interaction
                 case "Escape": return "Esc";
                 case "Left Shift": return "Shift";
                 case "Space": return "Space";
+                default: return name.Length > 5 ? name.Substring(0, 5) : name;
+            }
+        }
+
+        // What each controller family prints on its other buttons.
+        static string PadName(string control, PadFamily family)
+        {
+            if (control == null) return "?";
+            string name = control.Substring(control.LastIndexOf('/') + 1);
+            int f = (int)family; // Xbox, PlayStation, Switch
+            switch (name)
+            {
+                case "leftShoulder": return new[] { "LB", "L1", "L" }[f];
+                case "rightShoulder": return new[] { "RB", "R1", "R" }[f];
+                case "leftTrigger": return new[] { "LT", "L2", "ZL" }[f];
+                case "rightTrigger": return new[] { "RT", "R2", "ZR" }[f];
+                case "leftStickPress": return new[] { "LS", "L3", "LS" }[f];
+                case "rightStickPress": return new[] { "RS", "R3", "RS" }[f];
+                case "start": return new[] { "Menu", "Opt", "+" }[f];
+                case "select": return new[] { "View", "Share", "-" }[f];
                 default: return name.Length > 5 ? name.Substring(0, 5) : name;
             }
         }

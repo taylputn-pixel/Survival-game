@@ -36,7 +36,6 @@ namespace GrandmasHouse.Stations
         InputAction lookAction;
         InputAction backAction;
         FirstPersonController controller;
-        CursorLock cursorLock;
         Transform cameraHome;
         bool isActive;
         bool leaving;
@@ -62,12 +61,10 @@ namespace GrandmasHouse.Stations
         protected void Enter(PlayerHands hands)
         {
             controller = hands.Controller;
-            cursorLock = hands.GetComponent<CursorLock>();
             View = hands.ViewPoint.GetComponent<Camera>();
             cameraHome = View.transform.parent;
 
             controller.InputEnabled = false;
-            cursorLock.BlockUnlock = true;
             CursorPoint = new Vector2(0.5f, 0.5f);
             clock.PausedForWork = true;
             isActive = true;
@@ -131,7 +128,6 @@ namespace GrandmasHouse.Stations
                 }
                 clock.PausedForWork = false;
                 controller.InputEnabled = true;
-                cursorLock.BlockUnlock = false;
             }
         }
 
@@ -140,8 +136,8 @@ namespace GrandmasHouse.Stations
             Vector2 input = lookAction.ReadValue<Vector2>();
             bool gamepad = lookAction.activeControl?.device is Gamepad;
             Vector2 delta = gamepad
-                ? input * settings.stationStickSpeed * Time.deltaTime
-                : input * settings.stationMouseSpeed;
+                ? input * settings.stationStickSpeed * PlayerOptions.StickSensitivity * Time.deltaTime
+                : input * settings.stationMouseSpeed * PlayerOptions.MouseSensitivity;
             // Viewport x spans the screen width, so scale it to match y in on-screen distance.
             float aspect = (float)Screen.width / Screen.height;
             delta.x /= aspect;

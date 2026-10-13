@@ -1,4 +1,5 @@
 using GrandmasHouse.Data;
+using GrandmasHouse.Interaction;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -62,15 +63,15 @@ namespace GrandmasHouse.Player
             {
                 // Stick values are -1..1, so scale by time and ease small movements.
                 float magnitude = Mathf.Pow(input.magnitude, settings.gamepadLookCurve);
-                degrees = input.normalized * magnitude * settings.gamepadLookSpeed * Time.deltaTime;
+                degrees = input.normalized * magnitude * settings.gamepadLookSpeed * PlayerOptions.StickSensitivity * Time.deltaTime;
             }
             else
             {
                 // Mouse delta is already per frame, so it must not be scaled by time.
-                degrees = input * settings.mouseSensitivity;
+                degrees = input * settings.mouseSensitivity * PlayerOptions.MouseSensitivity;
             }
 
-            if (settings.invertY)
+            if (settings.invertY != PlayerOptions.InvertY)
             {
                 degrees.y = -degrees.y;
             }
