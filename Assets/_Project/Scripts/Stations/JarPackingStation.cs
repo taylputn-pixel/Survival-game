@@ -12,8 +12,10 @@ namespace GrandmasHouse.Stations
     // them, step up, then work one jar at a time: drop in the dill, scoop
     // slices from the board a handful at a time, hold Interact on the pot of
     // boiling brine (on the hot pad or the stove) to pour up to the line, and
-    // put a lid on from the stack. Click another jar to work on it. Lidded
-    // jars can be picked straight up off the towel for the canner.
+    // put a lid on from the stack. Each step goes to the jar you're working
+    // on while it still needs it, and otherwise on to the next jar that does,
+    // so you can pour brine down the row, then lid them all. Click a jar to
+    // work on it. Lidded jars can be picked straight up off the towel.
     public class JarPackingStation : Station, IAfterLoad
     {
         [SerializeField] RecipeData recipe;
@@ -107,20 +109,20 @@ namespace GrandmasHouse.Stations
             }
             if (jar != null)
             {
-                if (CanTakeSlices())
+                if (SliceTarget() != null)
                 {
                     yield return board.PilePosition;
                 }
-                if (dills.Count > 0 && !jar.HasDill)
+                if (DillTarget() != null)
                 {
                     yield return dills[0].transform.position;
                 }
-                if (CanPutOnLid())
+                if (LidTarget() != null)
                 {
                     yield return lidStack.position;
                 }
                 CookingPotStation ready = CookingPotStation.ReadyPot();
-                if (ready != null)
+                if (ready != null && BrineTarget() != null)
                 {
                     yield return ready.transform.position;
                 }
@@ -185,43 +187,47 @@ namespace GrandmasHouse.Stations
             }
         }
 
-        // The pile, the dill, the lids and the pot all work on the current jar.
+        // The pile, the dill, the lids and the pot each go to the jar that needs them.
         bool UseTools(bool pressed)
         {
-            if (CanTakeSlices() && CursorNear(board.PilePosition))
+            if (SliceTarget() is JarContents forSlices && CursorNear(board.PilePosition))
             {
                 Hint("Scoop chips");
                 if (pressed)
                 {
+                    jar = forSlices;
                     ScoopSlices();
                 }
                 return true;
             }
-            if (dills.Count > 0 && !jar.HasDill && CursorNear(dills[0].transform.position))
+            if (DillTarget() is JarContents forDill && CursorNear(dills[0].transform.position))
             {
                 Hint("Add dill");
                 if (pressed)
                 {
+                    jar = forDill;
                     jar.AddDill(dills[0]);
                     dills.RemoveAt(0);
                     LineUpDill();
                 }
                 return true;
             }
-            if (CanPutOnLid() && CursorNear(lidStack.position))
+            if (LidTarget() is JarContents forLid && CursorNear(lidStack.position))
             {
                 Hint("Put on lid");
                 if (pressed)
                 {
+                    jar = forLid;
                     jar.PutOnLid();
                 }
                 return true;
             }
-            if (CookingPotStation.ReadyPot() is CookingPotStation ready && CursorNear(ready.transform.position))
+            if (CookingPotStation.ReadyPot() is CookingPotStation ready && BrineTarget() is JarContents forBrine && CursorNear(ready.transform.position))
             {
                 Hint("Pour brine");
                 if (pressed)
                 {
+                    jar = forBrine;
                     pot = ready;
                     potRestPosition = pot.transform.position;
                     potRestRotation = pot.transform.rotation;
@@ -321,9 +327,33 @@ namespace GrandmasHouse.Stations
 
         bool OnTowel(JarContents j) => j != null && j.transform.parent != null && System.Array.IndexOf(jarSpots, j.transform.parent) >= 0;
 
-        bool CanTakeSlices() => board.SliceCount > 0 && !jar.IsFull && !jar.HasLid;
+        // The jar being worked on if this step still applies to it, otherwise
+        // the next jar on the towel it applies to.
+        JarContents NextNeeding(System.Func<JarContents, bool> needs)
+        {
+            if (IsOpen(jar) && needs(jar))
+            {
+                return jar;
+            }
+            foreach (var onTowel in JarsOnTowel())
+            {
+                if (IsOpen(onTowel) && needs(onTowel))
+                {
+                    return onTowel;
+                }
+            }
+            return null;
+        }
 
-        bool CanPutOnLid() => !jar.HasLid && !pouring && jar.BrineLevel >= recipe.brineEnough;
+        JarContents SliceTarget() => board.SliceCount > 0 ? NextNeeding(j => !j.IsFull) : null;
+
+        JarContents DillTarget() => dills.Count > 0 ? NextNeeding(j => !j.HasDill) : null;
+
+        JarContents LidTarget() => pouring ? null : NextNeeding(j => j.BrineLevel >= recipe.brineEnough);
+
+        // Brine goes to the next jar short of the line; once every jar is up
+        // to it, the jar you're on can still be topped up.
+        JarContents BrineTarget() => NextNeeding(j => j.BrineLevel < recipe.brineEnough) ?? (IsOpen(jar) && jar.BrineLevel < 1f ? jar : null);
 
         void ScoopSlices()
         {

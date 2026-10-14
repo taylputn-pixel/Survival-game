@@ -731,8 +731,6 @@ GameObject:
   - component: {fileID: 1251489822895281630}
   - component: {fileID: 1669748840445139161}
   - component: {fileID: 2458608131961902313}
-  - component: {fileID: 1247361847640450121}
-  - component: {fileID: 2927346293546598370}
   m_Layer: 9
   m_Name: Handle R
   m_TagString: Untagged
@@ -812,39 +810,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &1247361847640450121
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2237918543216714335}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.6, y: 3, z: 2}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2927346293546598370
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2237918543216714335}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea8f9a501ebbf5444b55e11d3e825a17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Kitchen.LiftHandle
 --- !u!1 &2353537220258536329
 GameObject:
   m_ObjectHideFlags: 0
@@ -6443,8 +6408,6 @@ GameObject:
   - component: {fileID: 6018631540378954870}
   - component: {fileID: 2438809987245077202}
   - component: {fileID: 8414761093050802707}
-  - component: {fileID: 1275263224233794944}
-  - component: {fileID: 6139800146798481647}
   m_Layer: 9
   m_Name: Handle L
   m_TagString: Untagged
@@ -6524,39 +6487,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &1275263224233794944
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5116676609082846527}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.6, y: 3, z: 2}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &6139800146798481647
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5116676609082846527}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea8f9a501ebbf5444b55e11d3e825a17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Kitchen.LiftHandle
 --- !u!1 &5705265747398581211
 GameObject:
   m_ObjectHideFlags: 0
@@ -6974,7 +6904,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.21, y: 0.15, z: 0.205}
+  m_Size: {x: 0.22, y: 0.15, z: 0.26}
   m_Center: {x: 0, y: 0.075, z: 0}
 --- !u!54 &3687568730228138191
 Rigidbody:

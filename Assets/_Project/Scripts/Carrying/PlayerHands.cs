@@ -22,6 +22,8 @@ namespace GrandmasHouse.Carrying
         public Focus CurrentFocus { get; private set; }
         // What pressing Interact would do right now, for the button prompt.
         public string Verb { get; private set; }
+        // What pressing Pick up would do right now, if anything.
+        public string AltVerb { get; private set; }
         public Transform ViewPoint => viewPoint;
         public FirstPersonController Controller => controller;
 
@@ -45,13 +47,16 @@ namespace GrandmasHouse.Carrying
         }
 
         InputAction interactAction;
+        InputAction pickUpAction;
         IInteractable lookTarget;
+        IAltInteractable altTarget;
         RaycastHit surfaceHit;
         bool hasSurface;
 
         void Awake()
         {
             interactAction = InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
+            pickUpAction = InputSystem.actions.FindAction("Player/PickUp", throwIfNotFound: true);
         }
 
         void Update()
@@ -60,6 +65,7 @@ namespace GrandmasHouse.Carrying
             {
                 CurrentFocus = Focus.Nothing;
                 Verb = null;
+                AltVerb = null;
                 return;
             }
 
@@ -68,6 +74,10 @@ namespace GrandmasHouse.Carrying
             if (interactAction.WasPressedThisFrame())
             {
                 UseHands();
+            }
+            else if (pickUpAction.WasPressedThisFrame() && altTarget != null)
+            {
+                altTarget.AltInteract(this);
             }
         }
 
@@ -137,6 +147,7 @@ namespace GrandmasHouse.Carrying
         void LookAround()
         {
             lookTarget = null;
+            altTarget = null;
             hasSurface = false;
 
             var ray = new Ray(viewPoint.position, viewPoint.forward);
@@ -152,10 +163,19 @@ namespace GrandmasHouse.Carrying
                         break;
                     }
                 }
+                foreach (var alt in hit.collider.GetComponentsInParent<IAltInteractable>())
+                {
+                    if (alt.CanAltInteract(this))
+                    {
+                        altTarget = alt;
+                        break;
+                    }
+                }
                 surfaceHit = hit;
                 hasSurface = hit.normal.y >= settings.minSurfaceUpness && IsFreeSurface(hit.collider);
             }
 
+            AltVerb = altTarget?.AltVerb(this);
             if (lookTarget != null)
             {
                 CurrentFocus = Focus.CanInteract;

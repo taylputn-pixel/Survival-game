@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
+using GrandmasHouse.Interaction;
 using GrandmasHouse.Kitchen;
 using GrandmasHouse.Saving;
 using UnityEngine;
@@ -13,9 +14,9 @@ namespace GrandmasHouse.Stations
     // to the low line and water to the high line from the warming shelf, add
     // scoops of salt, turn the burner on, and wait for the boil. Once it has
     // boiled the brine stays ready, so the pot can move to the hot pad by the
-    // packing towel. Grab a handle to lift it off the stove.
+    // packing towel. Press Pick up while looking at it to lift it off the stove.
     [RequireComponent(typeof(Cookware))]
-    public class CookingPotStation : Station, IPickupGuard, IItemState, IEmptyable
+    public class CookingPotStation : Station, IPickupGuard, IAltInteractable, IItemState, IEmptyable
     {
         [SerializeField] RecipeData recipe;
         [Tooltip("The brine's surface; it rises as you pour and sits on the bottom when empty.")]
@@ -97,8 +98,12 @@ namespace GrandmasHouse.Stations
         void OnEnable() => all.Add(this);
         void OnDisable() => all.Remove(this);
 
-        // On the stove, the pot itself opens the station; its handles lift it.
+        // On the stove, Interact opens the station and Pick up lifts the pot.
         public bool AllowPickup(PlayerHands player) => !cookware.OnStove;
+
+        public bool CanAltInteract(PlayerHands player) => cookware.OnStove && player.IsEmpty;
+
+        public void AltInteract(PlayerHands player) => cookware.LiftOff(player);
 
         // One view of the whole stove front: the shelf, every burner, and the knobs.
         protected override Transform ViewPoint => stoveView != null ? stoveView.transform : base.ViewPoint;
