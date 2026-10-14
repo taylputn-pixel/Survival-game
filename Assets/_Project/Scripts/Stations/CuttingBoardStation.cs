@@ -257,6 +257,15 @@ namespace GrandmasHouse.Stations
                 return; // Just a tap on the very end.
             }
 
+            if (x - leftEnd < minSliceThickness)
+            {
+                // A chop at the far end takes what's left as one last piece,
+                // rather than leaving a heel too thin to be a slice.
+                CutSlice(leftEnd, cutEnd);
+                FinishItem();
+                return;
+            }
+
             CutSlice(x, cutEnd);
             cutEnd = x;
 
