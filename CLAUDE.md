@@ -24,7 +24,7 @@ Goal: one full loop from seed to sealed jar. Plant cucumbers and dill, tend them
 - **Engine:** Unity 6 (6000.4.0f1), URP (Universal 3D template). Stylized, soft art.
 - **Platforms:** PC first, with full controller support from day one. Consoles come after launch, and the Switch sets the performance budget.
 - **Launch:** Cozy mode only. Homesteader (hard mode) is parked. Keep numbers in data (ScriptableObjects) so it stays possible, but build nothing that only Homesteader needs.
-- **Stations:** every activity is a hands-on station (Schedule I style). The camera moves into a working view, and you use tools directly.
+- **Stations:** the hands-on craft steps are stations (Schedule I style): cutting, packing jars, making brine. The camera moves into a working view, and you use tools directly. Moving things around happens in the world without entering a station: carrying jars, pots and the canner on and off the stove, the canner lid, and the canner itself (no station).
 - **Carrying:** hands hold one item, tool, or container at a time. Containers include the basket, egg basket, 12-jar crate, firewood carrier, watering can, and creel. A 4 to 6 slot tool belt is picked from a quick wheel. Stations reach into storage in the same room. No weight limits, no inventory screen.
 - **Time:** a long real-time day (about 40 to 60 minutes, to be tuned) in four parts. The clock exists only in the world, never on screen. The sun stops once night falls, and the next day starts when you sleep. Meals don't move time forward.
 - **Meals:** bonuses only, never penalties (like Valheim's food), plus a variety bonus.

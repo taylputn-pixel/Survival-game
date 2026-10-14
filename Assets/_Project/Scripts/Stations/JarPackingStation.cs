@@ -8,20 +8,23 @@ using UnityEngine;
 namespace GrandmasHouse.Stations
 {
     // A dish towel on the counter between the cutting board and the stove.
-    // Set an empty jar on it (and a head of dill beside it), step up, then:
-    // drop in the dill, scoop slices from the board into the jar a handful
-    // at a time, hold Interact on a pot of boiling brine on the stove to pour
-    // up to the line, and put a lid on from the stack. Then it's ready for
-    // the canner.
+    // Set empty jars on it (up to a canner load) and heads of dill beside
+    // them, step up, then work one jar at a time: drop in the dill, scoop
+    // slices from the board a handful at a time, hold Interact on the pot of
+    // boiling brine (on the hot pad or the stove) to pour up to the line, and
+    // put a lid on from the stack. Click another jar to work on it. Lidded
+    // jars can be picked straight up off the towel for the canner.
     public class JarPackingStation : Station, IAfterLoad
     {
         [SerializeField] RecipeData recipe;
         [Tooltip("Slices are taken from this board's pile.")]
         [SerializeField] CuttingBoardStation board;
-        [Tooltip("Where the jar stands on the towel.")]
-        [SerializeField] Transform jarSpot;
-        [Tooltip("Where a head of dill waits beside the jar.")]
+        [Tooltip("Where jars stand on the towel, in the order they're packed.")]
+        [SerializeField] Transform[] jarSpots;
+        [Tooltip("Where heads of dill wait beside the jars.")]
         [SerializeField] Transform herbSpot;
+        [SerializeField] int maxDill = 4;
+        [SerializeField] float dillSpacing = 0.035f;
         [Tooltip("The stack of lids and rings on the towel.")]
         [SerializeField] Transform lidStack;
 
@@ -36,16 +39,15 @@ namespace GrandmasHouse.Stations
         [SerializeField] float pourHeight = 0.07f;
         [SerializeField] float potFollowSharpness = 10f;
 
-        Pickup jarItem;
         PlayerHands player;
+        // The jar being worked on.
         JarContents jar;
-        Pickup dill;
+        readonly List<Pickup> dills = new List<Pickup>();
+        readonly HashSet<JarContents> logged = new HashSet<JarContents>();
         int enteredFrame;
         bool pouring;
         float tilt;
-        bool loggedQuality;
-        bool takeable;
-        // The pot being poured from, and where it rested on the stove.
+        // The pot being poured from, and where it rested.
         CookingPotStation pot;
         Vector3 potRestPosition;
         Quaternion potRestRotation;
@@ -54,14 +56,14 @@ namespace GrandmasHouse.Stations
         {
             if (hands.IsEmpty)
             {
-                return jar != null && !jar.HasLid;
+                return FirstOpenJar() != null;
             }
             var heldJar = hands.Held.GetComponent<JarContents>();
             if (heldJar != null)
             {
-                return jar == null && heldJar.BrineLevel <= 0f;
+                return !heldJar.HasLid && FreeSpot() != null;
             }
-            return dill == null && IsDill(hands.Held);
+            return dills.Count < maxDill && IsDill(hands.Held);
         }
 
         public override void Interact(PlayerHands hands)
@@ -71,17 +73,20 @@ namespace GrandmasHouse.Stations
                 Pickup item = hands.TakeHeld();
                 if (item.GetComponent<JarContents>() != null)
                 {
-                    SetJar(item);
+                    item.AttachTo(FreeSpot(), Vector3.zero, Quaternion.identity, settings.placeGlideSeconds, collidersOn: true);
                 }
                 else
                 {
-                    dill = item;
-                    item.AttachTo(herbSpot, Vector3.zero, Quaternion.Euler(0f, 0f, 90f), settings.placeGlideSeconds, collidersOn: false);
+                    AddDillHead(item, settings.placeGlideSeconds);
                 }
                 return;
             }
             player = hands;
             enteredFrame = Time.frameCount;
+            if (!IsOpen(jar) || !OnTowel(jar))
+            {
+                jar = FirstOpenJar();
+            }
             Enter(hands);
         }
 
@@ -89,7 +94,7 @@ namespace GrandmasHouse.Stations
         {
             if (hands.IsEmpty)
             {
-                return "Pack jar";
+                return "Pack jars";
             }
             return hands.Held.GetComponent<JarContents>() != null ? "Set jar down" : "Set dill down";
         }
@@ -100,26 +105,32 @@ namespace GrandmasHouse.Stations
             {
                 yield break;
             }
-            if (CanTakeSlices())
+            if (jar != null)
             {
-                yield return board.PilePosition;
+                if (CanTakeSlices())
+                {
+                    yield return board.PilePosition;
+                }
+                if (dills.Count > 0 && !jar.HasDill)
+                {
+                    yield return dills[0].transform.position;
+                }
+                if (CanPutOnLid())
+                {
+                    yield return lidStack.position;
+                }
+                CookingPotStation ready = CookingPotStation.ReadyPot();
+                if (ready != null)
+                {
+                    yield return ready.transform.position;
+                }
             }
-            if (dill != null && !jar.HasDill)
+            foreach (var other in JarsOnTowel())
             {
-                yield return dill.transform.position;
-            }
-            if (CanPutOnLid())
-            {
-                yield return lidStack.position;
-            }
-            if (jar.HasLid)
-            {
-                yield return jar.Mouth;
-            }
-            CookingPotStation ready = CookingPotStation.ReadyPot();
-            if (!jar.HasLid && ready != null)
-            {
-                yield return ready.transform.position;
+                if (other != jar)
+                {
+                    yield return other.Mouth;
+                }
             }
         }
 
@@ -134,49 +145,81 @@ namespace GrandmasHouse.Stations
                 return;
             }
             UseHint = null;
+            reticle.Highlight = false;
+
+            // A jar that was finished or taken away hands over to the next one.
+            if (!IsOpen(jar) || !OnTowel(jar))
+            {
+                jar = FirstOpenJar();
+            }
 
             bool pressed = Time.frameCount != enteredFrame && UseAction.WasPressedThisFrame();
+            if (jar != null && UseTools(pressed))
+            {
+                return;
+            }
+
+            foreach (var other in JarsOnTowel())
+            {
+                if (!CursorNear(other.Mouth))
+                {
+                    continue;
+                }
+                if (other.HasLid)
+                {
+                    Hint("Pick up jar");
+                    if (pressed)
+                    {
+                        TakeJar(other);
+                    }
+                }
+                else if (other != jar)
+                {
+                    Hint("Work on this jar");
+                    if (pressed)
+                    {
+                        jar = other;
+                    }
+                }
+                return;
+            }
+        }
+
+        // The pile, the dill, the lids and the pot all work on the current jar.
+        bool UseTools(bool pressed)
+        {
             if (CanTakeSlices() && CursorNear(board.PilePosition))
             {
-                reticle.Highlight = true;
-                UseHint = "Scoop chips";
+                Hint("Scoop chips");
                 if (pressed)
                 {
                     ScoopSlices();
                 }
+                return true;
             }
-            else if (dill != null && !jar.HasDill && !jar.HasLid && CursorNear(dill.transform.position))
+            if (dills.Count > 0 && !jar.HasDill && CursorNear(dills[0].transform.position))
             {
-                reticle.Highlight = true;
-                UseHint = "Add dill";
+                Hint("Add dill");
                 if (pressed)
                 {
-                    jar.AddDill(dill);
-                    dill = null;
+                    jar.AddDill(dills[0]);
+                    dills.RemoveAt(0);
+                    LineUpDill();
                 }
+                return true;
             }
-            else if (jar.HasLid && CursorNear(jar.Mouth))
+            if (CanPutOnLid() && CursorNear(lidStack.position))
             {
-                reticle.Highlight = true;
-                UseHint = "Pick up jar";
-                if (pressed)
-                {
-                    TakeJar();
-                }
-            }
-            else if (CanPutOnLid() && CursorNear(lidStack.position))
-            {
-                reticle.Highlight = true;
-                UseHint = "Put on lid";
+                Hint("Put on lid");
                 if (pressed)
                 {
                     jar.PutOnLid();
                 }
+                return true;
             }
-            else if (!jar.HasLid && CookingPotStation.ReadyPot() is CookingPotStation ready && CursorNear(ready.transform.position))
+            if (CookingPotStation.ReadyPot() is CookingPotStation ready && CursorNear(ready.transform.position))
             {
-                reticle.Highlight = true;
-                UseHint = "Pour brine";
+                Hint("Pour brine");
                 if (pressed)
                 {
                     pot = ready;
@@ -185,73 +228,98 @@ namespace GrandmasHouse.Stations
                     pouring = true;
                     reticle.Hidden = true;
                 }
+                return true;
             }
-            else
-            {
-                reticle.Highlight = false;
-            }
+            return false;
+        }
+
+        void Hint(string hint)
+        {
+            UseHint = hint;
+            reticle.Highlight = true;
         }
 
         protected override void Update()
         {
             base.Update();
             MovePot();
-
-            // Once the lid is on and you've stepped back, the jar can be
-            // picked up and carried to the canner.
-            if (jar != null && jar.HasLid && !IsWorking && !takeable)
-            {
-                takeable = true;
-                jarItem.SetCollidersEnabled(true);
-            }
         }
 
-        // A jar or dill left on the towel is picked up where it was.
+        // Dill left on the towel is picked up where it was.
         public void AfterLoad()
         {
-            var jarOnTowel = jarSpot.GetComponentInChildren<JarContents>();
-            if (jarOnTowel != null)
+            dills.Clear();
+            foreach (var dill in herbSpot.GetComponentsInChildren<Pickup>())
             {
-                SetJar(jarOnTowel.GetComponent<Pickup>());
-            }
-            var dillWaiting = herbSpot.GetComponentInChildren<Pickup>();
-            if (dillWaiting != null)
-            {
-                dill = dillWaiting;
+                dills.Add(dill);
             }
         }
 
         // Step back from the towel with the lidded jar already in hand.
-        void TakeJar()
+        void TakeJar(JarContents finished)
         {
-            Pickup item = jarItem;
             Leave();
+            var item = finished.GetComponent<Pickup>();
             item.SetCollidersEnabled(true);
             player.Give(item);
         }
 
-        void SetJar(Pickup item)
+        void AddDillHead(Pickup dill, float glideSeconds)
         {
-            jarItem = item;
-            jar = item.GetComponent<JarContents>();
-            loggedQuality = false;
-            takeable = false;
-            item.AttachTo(jarSpot, Vector3.zero, Quaternion.identity, settings.placeGlideSeconds, collidersOn: false);
-            // Picking the finished jar up takes it off the towel.
-            item.HeldChanged += OnJarHeld;
+            dills.Add(dill);
+            dill.AttachTo(herbSpot, DillPosition(dills.Count - 1), Quaternion.Euler(0f, 0f, 90f), glideSeconds, collidersOn: false);
         }
 
-        void OnJarHeld(bool held)
+        // The heads of dill lie side by side, the next one to use in front.
+        void LineUpDill()
         {
-            if (!held || jarItem == null)
+            for (int i = 0; i < dills.Count; i++)
             {
-                return;
+                dills[i].AttachTo(herbSpot, DillPosition(i), Quaternion.Euler(0f, 0f, 90f), 0.2f, collidersOn: false);
             }
-            jarItem.HeldChanged -= OnJarHeld;
-            jarItem.transform.SetParent(null, worldPositionStays: true);
-            jarItem = null;
-            jar = null;
         }
+
+        Vector3 DillPosition(int index) => new Vector3(0f, 0f, -index * dillSpacing);
+
+        IEnumerable<JarContents> JarsOnTowel()
+        {
+            foreach (var spot in jarSpots)
+            {
+                var onSpot = spot.GetComponentInChildren<JarContents>();
+                if (onSpot != null)
+                {
+                    yield return onSpot;
+                }
+            }
+        }
+
+        JarContents FirstOpenJar()
+        {
+            foreach (var onTowel in JarsOnTowel())
+            {
+                if (IsOpen(onTowel))
+                {
+                    return onTowel;
+                }
+            }
+            return null;
+        }
+
+        Transform FreeSpot()
+        {
+            foreach (var spot in jarSpots)
+            {
+                if (spot.GetComponentInChildren<JarContents>() == null)
+                {
+                    return spot;
+                }
+            }
+            return null;
+        }
+
+        static bool IsOpen(JarContents j) => j != null && !j.HasLid;
+
+        bool OnTowel(JarContents j) => j != null && j.transform.parent != null && System.Array.IndexOf(jarSpots, j.transform.parent) >= 0;
 
         bool CanTakeSlices() => board.SliceCount > 0 && !jar.IsFull && !jar.HasLid;
 
@@ -269,7 +337,7 @@ namespace GrandmasHouse.Stations
 
         void Pour()
         {
-            if (!UseAction.IsPressed() || !pot.IsReady)
+            if (!UseAction.IsPressed() || !pot.IsReady || jar == null)
             {
                 StopPouring();
                 return;
@@ -300,8 +368,8 @@ namespace GrandmasHouse.Stations
             LogQuality();
         }
 
-        // The pot lifts off its burner, swings over the jar and tips; let go
-        // and it goes back.
+        // The pot lifts off where it rests, swings over the jar and tips; let
+        // go and it goes back.
         void MovePot()
         {
             if (pot == null)
@@ -310,7 +378,7 @@ namespace GrandmasHouse.Stations
             }
             bool pourPose = pouring && IsWorking && jar != null;
             tilt = Mathf.MoveTowards(tilt, pourPose ? pourTilt : 0f, pourTilt / 0.35f * Time.deltaTime);
-            Vector3 target = jar != null ? jar.Mouth : potRestPosition;
+            Vector3 target = pourPose ? jar.Mouth : potRestPosition;
             Pouring.Follow(pot.transform, pot.Lip, potRestPosition, potRestRotation, target, tilt, pourTilt, pourHeight, potFollowSharpness);
             if (!pouring && tilt <= 0f && (pot.transform.position - potRestPosition).sqrMagnitude < 0.000001f)
             {
@@ -322,11 +390,11 @@ namespace GrandmasHouse.Stations
         void LogQuality()
         {
             // Not shown to the player yet; recorded for tuning jar quality later.
-            if (loggedQuality || jar == null || jar.BrineLevel < recipe.brineEnough)
+            if (jar == null || logged.Contains(jar) || jar.BrineLevel < recipe.brineEnough)
             {
                 return;
             }
-            loggedQuality = true;
+            logged.Add(jar);
             float headspaceError = jar.BrineLevel - recipe.brineLine;
             Debug.Log($"Packed {jar.SliceCount}/{recipe.slicesPerJar} slices, dill {(jar.HasDill ? "yes" : "no")}, brine {jar.BrineLevel:P0} (line {recipe.brineLine:P0}, off by {headspaceError:+0%;-0%})");
         }

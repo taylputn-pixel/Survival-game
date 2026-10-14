@@ -11,8 +11,9 @@ namespace GrandmasHouse.Stations
     // Grandma's enamel cooking pot. Brine is the first thing made in it (more
     // recipes come with meals). Set it on a burner and step up: pour vinegar
     // to the low line and water to the high line from the warming shelf, add
-    // scoops of salt, turn the burner on, and wait for the boil. Boiling
-    // brine is ready to pour into jars at the packing towel.
+    // scoops of salt, turn the burner on, and wait for the boil. Once it has
+    // boiled the brine stays ready, so the pot can move to the hot pad by the
+    // packing towel. Grab a handle to lift it off the stove.
     [RequireComponent(typeof(Cookware))]
     public class CookingPotStation : Station, IPickupGuard, IItemState, IEmptyable
     {
@@ -42,6 +43,7 @@ namespace GrandmasHouse.Stations
 
         Cookware cookware;
         PlayerHands hands;
+        PlayerHands player;
         StoveStaples staples;
         StoveView stoveView;
         StoveStaples.Source pouringFrom;
@@ -58,7 +60,9 @@ namespace GrandmasHouse.Stations
         // 0 is cold, 1 is a rolling boil.
         public float Heat { get; private set; }
         public float Liquid => Vinegar + Water;
-        public bool IsReady => cookware.OnStove && Liquid > 0.02f && Salt > 0 && Heat >= 1f;
+        // Boiled brine in a pot that's set down somewhere (not in your hands).
+        public bool IsReady => !InHands && Liquid > 0.02f && Salt > 0 && Heat >= 1f;
+        bool InHands => player != null && player.Held == cookware.Pickup;
         public Transform Lip => lip;
 
         // A pot of boiling brine on the stove, if there is one.
@@ -81,6 +85,7 @@ namespace GrandmasHouse.Stations
             block = new MaterialPropertyBlock();
             staples = FindFirstObjectByType<StoveStaples>();
             stoveView = FindFirstObjectByType<StoveView>();
+            player = FindAnyObjectByType<PlayerHands>();
             stream.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             pourSound = Sfx.Loop(SoundId.Pour, lip);
             simmerSound = Sfx.Loop(SoundId.Simmer, transform);
@@ -92,6 +97,7 @@ namespace GrandmasHouse.Stations
         void OnEnable() => all.Add(this);
         void OnDisable() => all.Remove(this);
 
+        // On the stove, the pot itself opens the station; its handles lift it.
         public bool AllowPickup(PlayerHands player) => !cookware.OnStove;
 
         // One view of the whole stove front: the shelf, every burner, and the knobs.
@@ -280,7 +286,8 @@ namespace GrandmasHouse.Stations
             }
         }
 
-        // On a lit burner the brine heats toward a boil; off the heat it cools slowly.
+        // On a lit burner the brine heats toward a boil. Off the heat, brine
+        // that has boiled stays ready (Cozy); anything short of a boil cools slowly.
         void Warm()
         {
             float before = Heat;
@@ -288,25 +295,26 @@ namespace GrandmasHouse.Stations
             {
                 Heat = Mathf.Min(Heat + Time.deltaTime / (recipe.heatSeconds * Mathf.Max(Liquid, 0.25f)), 1f);
             }
-            else
+            else if (Heat < 1f || Liquid <= 0f)
             {
                 Heat = Mathf.Max(Heat - Time.deltaTime / (recipe.heatSeconds * 6f), 0f);
             }
 
-            // It starts to simmer as it warms, then rolls into a boil.
-            simmerSound.Set(Liquid > 0f ? Mathf.InverseLerp(0.3f, 0.95f, Heat) : 0f);
-            boilSound.Set(Liquid > 0f && Heat >= 1f);
+            // It starts to simmer as it warms, then rolls into a boil, but only over the flame.
+            bool overHeat = cookware.IsHot && Liquid > 0f;
+            simmerSound.Set(overHeat ? Mathf.InverseLerp(0.3f, 0.95f, Heat) : 0f);
+            boilSound.Set(overHeat && Heat >= 1f);
 
             bool steaming = Heat > 0.5f && Liquid > 0f;
             if (steaming && !steam.isEmitting) steam.Play();
             else if (!steaming && steam.isEmitting) steam.Stop(true, ParticleSystemStopBehavior.StopEmitting);
 
-            if (Heat >= 1f && Liquid > 0f)
+            if (overHeat && Heat >= 1f)
             {
                 // A rolling boil: the surface trembles.
                 surface.localPosition = SurfacePosition() + Vector3.up * Mathf.Sin(Time.time * 37f) * 0.0015f;
             }
-            else if (before >= 1f)
+            else if (before >= 1f && surface.localPosition != SurfacePosition())
             {
                 ShowLiquid();
             }

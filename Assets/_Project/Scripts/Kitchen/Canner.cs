@@ -3,20 +3,22 @@ using System.Collections.Generic;
 using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
-using GrandmasHouse.Kitchen;
+using GrandmasHouse.DayCycle;
+using GrandmasHouse.Interaction;
 using GrandmasHouse.Saving;
 using UnityEngine;
 
-namespace GrandmasHouse.Stations
+namespace GrandmasHouse.Kitchen
 {
-    // The big water-bath canner. It's kept in the pantry; set it on a burner,
-    // put lidded jars in its rack, step up, put the canner lid on and turn
-    // the burner on. It boils for the recipe's time (you can walk away;
-    // sleeping finishes it too). Then take the lid off and lift each jar out
-    // onto the cooling towel, where it pings as it seals.
+    // The big water-bath canner. It's kept in the pantry and used right where
+    // it sits, with no station: set it on a burner, put lidded jars in its
+    // rack, put the lid on and turn the burner on. It boils for the recipe's
+    // time (you can walk away; sleeping finishes it too). Then take the lid
+    // off and lift each jar out; it pings as it cools and seals.
     [RequireComponent(typeof(Cookware))]
-    public class CannerStation : Station, IPickupGuard, IItemState, IAfterLoad
+    public class Canner : MonoBehaviour, IInteractable, IPickupGuard, IItemState, IAfterLoad
     {
+        [SerializeField] PlayerSettings settings;
         [SerializeField] RecipeData recipe;
         [Tooltip("Spots in the rack, one jar each.")]
         [SerializeField] Transform[] rackSlots;
@@ -26,35 +28,35 @@ namespace GrandmasHouse.Stations
         [Tooltip("Where the canner lid is set aside when it's off.")]
         [SerializeField] Transform lidOffPose;
         [SerializeField] ParticleSystem steam;
+        [Tooltip("Finished overnight when you sleep.")]
+        [SerializeField] DayClock clock;
 
         [Header("Feel")]
         [Tooltip("Real seconds for each minute of processing time in the recipe.")]
         [SerializeField] float secondsPerRecipeMinute = 3f;
-        [SerializeField] float grabRadius = 0.08f;
         [SerializeField] float lidMoveSeconds = 0.4f;
         [SerializeField] Vector2 pingDelay = new Vector2(1.5f, 5f);
 
         readonly Dictionary<Transform, Pickup> rack = new Dictionary<Transform, Pickup>();
+        readonly List<Transform> lifted = new List<Transform>();
         bool lidOn;
         bool boiling;
         bool done;
         float boilLeft;
         bool lidMoving;
-        int enteredFrame;
         Cookware cookware;
-        CoolingTowel towel;
-        PlayerHands hands;
         SoundLoop boilSound;
 
         bool HasJars => rack.Count > 0;
         // Boils only with jars in, the lid on, and the burner lit.
         bool Heating => lidOn && !done && HasJars && cookware.IsHot;
+        public bool LidOn => lidOn;
+        public bool CanMoveLid => !lidMoving;
 
-        protected override void Awake()
+        void Awake()
         {
-            base.Awake();
             cookware = GetComponent<Cookware>();
-            towel = FindFirstObjectByType<CoolingTowel>();
+            if (clock == null) clock = FindAnyObjectByType<DayClock>();
             boilSound = Sfx.Loop(SoundId.Boil, transform);
         }
 
@@ -68,8 +70,8 @@ namespace GrandmasHouse.Stations
             if (clock != null) clock.NewDay -= FinishOvernight;
         }
 
-        // Lift it off the stove from its station once it's empty.
-        public bool AllowPickup(PlayerHands player) => !cookware.OnStove;
+        // Lift it whenever the rack is empty, even straight off the stove.
+        public bool AllowPickup(PlayerHands player) => !HasJars;
 
         [System.Serializable]
         class State
@@ -105,6 +107,7 @@ namespace GrandmasHouse.Stations
                     rack[slot] = jar;
                 }
             }
+            SetJarsReachable();
         }
 
         void Start()
@@ -114,57 +117,39 @@ namespace GrandmasHouse.Stations
             steam.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
-        public override bool CanInteract(PlayerHands hands)
+        // Holding a lidded jar: look at the canner on the stove to put it in.
+        public bool CanInteract(PlayerHands hands)
         {
-            if (!cookware.OnStove)
+            if (!cookware.OnStove || hands.IsEmpty)
             {
                 return false;
-            }
-            if (hands.IsEmpty)
-            {
-                return true;
             }
             var jar = hands.Held.GetComponent<JarContents>();
             return jar != null && jar.HasLid && !jar.IsProcessed && !lidOn && !done && FreeSlot() != null;
         }
 
-        public override void Interact(PlayerHands hands)
+        public string PromptVerb(PlayerHands hands) => "Put in canner";
+
+        public void Interact(PlayerHands hands)
         {
-            if (!hands.IsEmpty)
-            {
-                Transform slot = FreeSlot();
-                Pickup jar = hands.TakeHeld();
-                rack[slot] = jar;
-                jar.AttachTo(slot, Vector3.zero, Quaternion.identity, settings.placeGlideSeconds * 1.5f, collidersOn: false);
-                return;
-            }
-            this.hands = hands;
-            enteredFrame = Time.frameCount;
-            Enter(hands);
+            Transform slot = FreeSlot();
+            Pickup jar = hands.TakeHeld();
+            rack[slot] = jar;
+            jar.AttachTo(slot, Vector3.zero, Quaternion.identity, settings.placeGlideSeconds * 1.5f, collidersOn: true);
         }
 
-        public override string PromptVerb(PlayerHands hands) => hands.IsEmpty ? "Tend canner" : "Put in canner";
-
-        protected override IEnumerable<Vector3> SnapTargets()
+        public void ToggleLid()
         {
-            if (!lidOn && done)
-            {
-                foreach (var jar in rack.Values)
-                {
-                    yield return jar.transform.position;
-                }
-            }
             if (!lidMoving)
             {
-                yield return canLid.position;
+                StartCoroutine(MoveLid(!lidOn));
             }
-            yield return cookware.Burner.Knob.position;
-            yield return cookware.Handle.position;
         }
 
-        protected override void Update()
+        void Update()
         {
-            base.Update();
+            NoticeLiftedJars();
+
             boiling = Heating;
             if (boiling)
             {
@@ -179,68 +164,40 @@ namespace GrandmasHouse.Stations
             else if (!boiling && steam.isEmitting) steam.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        protected override void WhileWorking()
+        // A jar picked up out of the rack has left it; a processed one starts cooling.
+        void NoticeLiftedJars()
         {
-            bool pressed = Time.frameCount != enteredFrame && UseAction.WasPressedThisFrame() && !lidMoving;
-            reticle.Highlight = false;
-            UseHint = null;
-
-            // Lid on to start; lid off once it's done.
-            bool lidReady = (!lidOn && HasJars && !done) || (lidOn && done);
-            if (lidReady && CursorNear(canLid.position))
+            lifted.Clear();
+            foreach (var pair in rack)
             {
-                reticle.Highlight = true;
-                UseHint = lidOn ? "Take lid off" : "Put lid on";
-                if (pressed)
+                if (pair.Value == null || pair.Value.transform.parent != pair.Key)
                 {
-                    StartCoroutine(MoveLid(!lidOn));
-                }
-                return;
-            }
-
-            if (!lidOn && done)
-            {
-                foreach (var pair in rack)
-                {
-                    if (CursorNear(pair.Value.transform.position))
-                    {
-                        reticle.Highlight = towel.FreeSpot() != null;
-                        UseHint = reticle.Highlight == true ? "Lift out" : null;
-                        if (pressed && towel.FreeSpot() != null)
-                        {
-                            LiftOut(pair.Key);
-                        }
-                        return;
-                    }
+                    lifted.Add(pair.Key);
                 }
             }
-
-            if (CursorNear(cookware.Burner.Knob.position))
+            foreach (var slot in lifted)
             {
-                reticle.Highlight = true;
-                UseHint = cookware.Burner.On ? "Turn the burner off" : "Turn the burner on";
-                if (pressed)
+                Pickup jar = rack[slot];
+                rack.Remove(slot);
+                if (done && jar != null)
                 {
-                    cookware.Burner.Toggle();
+                    jar.GetComponent<JarContents>().CoolAndSeal(Random.Range(pingDelay.x, pingDelay.y));
                 }
-                return;
             }
-
-            if (!HasJars && !lidOn && CursorNear(cookware.Handle.position))
+            if (lifted.Count > 0 && !HasJars)
             {
-                reticle.Highlight = true;
-                UseHint = "Take off the stove";
-                if (pressed)
-                {
-                    Leave();
-                    cookware.LiftOff(hands);
-                }
+                done = false;
             }
         }
 
         IEnumerator MoveLid(bool putOn)
         {
             lidMoving = true;
+            if (putOn)
+            {
+                lidOn = true;
+                SetJarsReachable();
+            }
             Transform from = putOn ? lidOffPose : lidOnPose;
             Transform to = putOn ? lidOnPose : lidOffPose;
             for (float time = 0f; time < lidMoveSeconds; time += Time.deltaTime)
@@ -252,12 +209,25 @@ namespace GrandmasHouse.Stations
             }
             canLid.SetPositionAndRotation(to.position, to.rotation);
             lidOn = putOn;
+            SetJarsReachable();
             Sfx.Play(SoundId.PotLid, canLid.position);
             lidMoving = false;
 
             if (putOn && !done)
             {
                 boilLeft = recipe.processMinutes * secondsPerRecipeMinute;
+            }
+        }
+
+        // Jars can only be reached into while the lid is off.
+        void SetJarsReachable()
+        {
+            foreach (var jar in rack.Values)
+            {
+                if (jar != null)
+                {
+                    jar.SetCollidersEnabled(!lidOn);
+                }
             }
         }
 
@@ -276,19 +246,6 @@ namespace GrandmasHouse.Stations
             }
         }
 
-        void LiftOut(Transform slot)
-        {
-            Pickup jar = rack[slot];
-            rack.Remove(slot);
-            Transform spot = towel.FreeSpot();
-            jar.AttachTo(spot, Vector3.zero, Quaternion.identity, 0.5f, collidersOn: true);
-            jar.GetComponent<JarContents>().CoolAndSeal(Random.Range(pingDelay.x, pingDelay.y));
-            if (!HasJars)
-            {
-                done = false;
-            }
-        }
-
         Transform FreeSlot()
         {
             foreach (var slot in rackSlots)
@@ -299,14 +256,6 @@ namespace GrandmasHouse.Stations
                 }
             }
             return null;
-        }
-
-        bool CursorNear(Vector3 worldPoint)
-        {
-            Vector3 screen = View.WorldToViewportPoint(worldPoint);
-            float aspect = (float)Screen.width / Screen.height;
-            Vector2 offset = (Vector2)screen - CursorPoint;
-            return screen.z > 0f && new Vector2(offset.x * aspect, offset.y).magnitude < grabRadius;
         }
     }
 }

@@ -353,37 +353,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &1410085089038532336
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6554129566587255502}
-  m_Layer: 9
-  m_Name: WorkView
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6554129566587255502
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1410085089038532336}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.43837115, y: -0, z: -0, w: 0.89879405}
-  m_LocalPosition: {x: 0.045000076, y: 0.645, z: -0.69000006}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7524638554107706297}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1668895578724746162
 GameObject:
   m_ObjectHideFlags: 0
@@ -605,11 +574,15 @@ GameObject:
   m_Component:
   - component: {fileID: 7524638554107706297}
   - component: {fileID: 5034501166884084279}
-  - component: {fileID: 2782923531518499052}
   - component: {fileID: 2447593510069060799}
   - component: {fileID: 831308353354703919}
   - component: {fileID: 7000212106726579573}
   - component: {fileID: 4984928928878257701}
+  - component: {fileID: 1657699223698088898}
+  - component: {fileID: 186975033682630531}
+  - component: {fileID: 7907372232095065696}
+  - component: {fileID: 2931554855620172290}
+  - component: {fileID: 8679246461562157732}
   m_Layer: 9
   m_Name: Canner
   m_TagString: Untagged
@@ -641,7 +614,6 @@ Transform:
   - {fileID: 5981058742365687652}
   - {fileID: 7015981673011379656}
   - {fileID: 6614298591527899914}
-  - {fileID: 6554129566587255502}
   - {fileID: 3411552879058673003}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -658,9 +630,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Stations.CannerStation
   settings: {fileID: 11400000, guid: e68f130955f30ca438ccc0109a110e38, type: 2}
-  viewPoint: {fileID: 6554129566587255502}
-  reticle: {fileID: 0}
-  clock: {fileID: 0}
   recipe: {fileID: 11400000, guid: 705a86bb90da65f46b9907627ca8c014, type: 2}
   rackSlots:
   - {fileID: 6946791376929142964}
@@ -671,31 +640,10 @@ MonoBehaviour:
   lidOnPose: {fileID: 5981058742365687652}
   lidOffPose: {fileID: 7015981673011379656}
   steam: {fileID: 4800620742272453234}
+  clock: {fileID: 0}
   secondsPerRecipeMinute: 3
-  grabRadius: 0.08
   lidMoveSeconds: 0.4
   pingDelay: {x: 1.5, y: 5}
---- !u!65 &2782923531518499052
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2256667083392464529}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.34, y: 0.26, z: 0.34}
-  m_Center: {x: 0, y: 0.13, z: 0}
 --- !u!54 &2447593510069060799
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -767,6 +715,111 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Saving.SavedItem
   key: Canner
+--- !u!65 &1657699223698088898
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2256667083392464529}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.34, y: 0.26, z: 0.02}
+  m_Center: {x: 0, y: 0.13, z: 0.16}
+--- !u!65 &186975033682630531
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2256667083392464529}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.34, y: 0.26, z: 0.02}
+  m_Center: {x: 0, y: 0.13, z: -0.16}
+--- !u!65 &7907372232095065696
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2256667083392464529}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.02, y: 0.26, z: 0.34}
+  m_Center: {x: 0.16, y: 0.13, z: 0}
+--- !u!65 &2931554855620172290
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2256667083392464529}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.02, y: 0.26, z: 0.34}
+  m_Center: {x: -0.16, y: 0.13, z: 0}
+--- !u!65 &8679246461562157732
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2256667083392464529}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.34, y: 0.01, z: 0.34}
+  m_Center: {x: 0, y: 0.005, z: 0}
 --- !u!1 &2969891871116644594
 GameObject:
   m_ObjectHideFlags: 0
@@ -1406,6 +1459,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4281295802326810668}
+  - component: {fileID: 5532456024878282529}
+  - component: {fileID: 3264555884904314896}
   m_Layer: 9
   m_Name: Canner Lid
   m_TagString: Untagged
@@ -1430,6 +1485,40 @@ Transform:
   - {fileID: 9159650883650426276}
   m_Father: {fileID: 7524638554107706297}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5532456024878282529
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4222068247266305192}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.35, y: 0.14, z: 0.35}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3264555884904314896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4222068247266305192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 229228afe4fc07c4686585fa7a0bc032, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Kitchen.CannerLid
+  canner: {fileID: 5034501166884084279}
 --- !u!1 &4558456868054476375
 GameObject:
   m_ObjectHideFlags: 0

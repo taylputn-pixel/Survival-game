@@ -1,11 +1,15 @@
+using GrandmasHouse.Carrying;
+using GrandmasHouse.Interaction;
 using UnityEngine;
 
 namespace GrandmasHouse.Kitchen
 {
-    // The towel beside the stove where canned jars cool.
-    public class CoolingTowel : MonoBehaviour
+    // The towel beside the stove where canned jars cool. Jars set on it line
+    // up in its spots.
+    public class CoolingTowel : MonoBehaviour, IInteractable
     {
         [SerializeField] Transform[] spots;
+        [SerializeField] float glideSeconds = 0.3f;
 
         public Transform FreeSpot()
         {
@@ -17,6 +21,19 @@ namespace GrandmasHouse.Kitchen
                 }
             }
             return null;
+        }
+
+        public bool CanInteract(PlayerHands hands)
+        {
+            return !hands.IsEmpty && hands.Held.GetComponent<JarContents>() != null && FreeSpot() != null;
+        }
+
+        public string PromptVerb(PlayerHands hands) => "Set down to cool";
+
+        public void Interact(PlayerHands hands)
+        {
+            Pickup jar = hands.TakeHeld();
+            jar.AttachTo(FreeSpot(), Vector3.zero, Quaternion.identity, glideSeconds, collidersOn: true);
         }
     }
 }

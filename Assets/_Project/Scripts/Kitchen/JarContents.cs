@@ -2,6 +2,7 @@ using System.Collections;
 using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Saving;
+using GrandmasHouse.Stations;
 using UnityEngine;
 
 namespace GrandmasHouse.Kitchen
@@ -9,7 +10,7 @@ namespace GrandmasHouse.Kitchen
     // What's inside a glass jar: slices packed in, a head of dill, and brine.
     // Everything is visible through the glass.
     [RequireComponent(typeof(Pickup))]
-    public class JarContents : MonoBehaviour, IItemState, IEmptyable
+    public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard
     {
         [Tooltip("The bottom of the inside of the jar.")]
         [SerializeField] Transform inside;
@@ -145,6 +146,10 @@ namespace GrandmasHouse.Kitchen
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             }
         }
+
+        // An open jar on the packing towel is being packed there; once its lid
+        // is on it can be picked straight up.
+        public bool AllowPickup(PlayerHands hands) => HasLid || GetComponentInParent<JarPackingStation>() == null;
 
         // An open jar can be poured out at the sink and packed again.
         public bool HasContents => !HasLid && (SliceCount > 0 || HasDill || BrineLevel > 0f);
