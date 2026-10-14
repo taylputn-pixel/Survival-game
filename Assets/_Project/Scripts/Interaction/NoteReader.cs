@@ -1,4 +1,5 @@
 using System.Collections;
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.DayCycle;
@@ -54,6 +55,7 @@ namespace GrandmasHouse.Interaction
             open = true;
             openedFrame = Time.frameCount;
             panel.gameObject.SetActive(true);
+            Sfx.PlayFlat(SoundId.Paper);
             StopAllCoroutines();
             StartCoroutine(Fade(1f));
         }
@@ -74,6 +76,7 @@ namespace GrandmasHouse.Interaction
         {
             open = false;
             ClosedFrame = Time.frameCount;
+            Sfx.PlayFlat(SoundId.Paper, 0.6f);
             reticle.Hidden = false;
             clock.PausedForWork = false;
             // Wait a frame so the same press doesn't also act in the world.

@@ -1,3 +1,4 @@
+using GrandmasHouse.Audio;
 using UnityEngine;
 
 namespace GrandmasHouse.Kitchen
@@ -18,6 +19,8 @@ namespace GrandmasHouse.Kitchen
             public Vector3 RestPosition { get; private set; }
             public Quaternion RestRotation { get; private set; }
             public float Tilt { get; set; }
+            // The sound of pouring (none for the salt box, which shakes).
+            public SoundLoop Sound { get; set; }
 
             public void Remember()
             {
@@ -27,6 +30,7 @@ namespace GrandmasHouse.Kitchen
 
             public void SetPouring(bool pouring)
             {
+                if (Sound != null) Sound.Set(pouring);
                 if (pouring && !stream.isEmitting) stream.Play();
                 else if (!pouring && stream.isEmitting) stream.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             }
@@ -41,6 +45,10 @@ namespace GrandmasHouse.Kitchen
             foreach (var source in new[] { vinegar, water, salt })
             {
                 source.Remember();
+                if (source != salt)
+                {
+                    source.Sound = Sfx.Loop(SoundId.Pour, source.lip);
+                }
                 source.stream.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             }
         }

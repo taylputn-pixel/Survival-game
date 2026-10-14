@@ -1,4 +1,5 @@
 using System.Collections;
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Saving;
 using UnityEngine;
@@ -74,6 +75,7 @@ namespace GrandmasHouse.Kitchen
                 yield return null;
             }
             lid.localPosition = seated;
+            Sfx.Play(SoundId.LidClink, lid.position);
         }
 
         IEnumerator Cooling(float seconds)
@@ -88,6 +90,7 @@ namespace GrandmasHouse.Kitchen
             }
             lid.localScale = size;
             IsSealed = true;
+            Sfx.Play(SoundId.LidPing, lid.position, 1f, 0.03f);
         }
 
         [System.Serializable]
@@ -182,6 +185,7 @@ namespace GrandmasHouse.Kitchen
         public void AddDill(Pickup dill)
         {
             HasDill = true;
+            Sfx.Play(SoundId.DillRustle, Mouth);
             dill.AttachTo(inside, new Vector3(innerRadius * 0.4f, 0.01f, 0f), Quaternion.Euler(0f, 0f, 8f), 0.35f, collidersOn: false);
             dill.transform.localScale = Vector3.Scale(dill.transform.localScale, new Vector3(0.6f, 0.9f, 0.6f));
             NoShadows(dill.transform);
@@ -218,6 +222,7 @@ namespace GrandmasHouse.Kitchen
                 yield return null;
             }
             slice.SetLocalPositionAndRotation(end, endRotation);
+            Sfx.Play(SoundId.SliceDrop, slice.position, 1f, 0.15f);
         }
     }
 }

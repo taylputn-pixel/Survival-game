@@ -1,4 +1,5 @@
 using System.Collections;
+using GrandmasHouse.Audio;
 using UnityEngine;
 
 namespace GrandmasHouse.Garden
@@ -47,6 +48,7 @@ namespace GrandmasHouse.Garden
         public void PullOut(Vector3 tossTo)
         {
             pulledOut = true;
+            Sfx.Play(SoundId.WeedPull, transform.position);
             StartCoroutine(Toss(tossTo));
         }
 

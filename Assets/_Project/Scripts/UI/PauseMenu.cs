@@ -53,6 +53,8 @@ namespace GrandmasHouse.UI
         {
             paused = true;
             Time.timeScale = 0f;
+            // Simmering pots and pouring hush while paused.
+            AudioListener.pause = true;
             hands.Controller.InputEnabled = false;
             cursorLock.Free = true;
             reticle.Hidden = true;
@@ -70,6 +72,7 @@ namespace GrandmasHouse.UI
             paused = false;
             closedFrame = Time.frameCount;
             Time.timeScale = 1f;
+            AudioListener.pause = false;
             hands.Controller.InputEnabled = true;
             cursorLock.Free = false;
             reticle.Hidden = false;
@@ -77,6 +80,7 @@ namespace GrandmasHouse.UI
 
         void QuitToTitle()
         {
+            AudioListener.pause = false;
             if (SaveManager.Instance != null)
             {
                 SaveManager.Instance.Save();

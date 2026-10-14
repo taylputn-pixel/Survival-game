@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using GrandmasHouse.Audio;
 using GrandmasHouse.Data;
 using GrandmasHouse.Interaction;
 using UnityEngine;
@@ -102,6 +103,7 @@ namespace GrandmasHouse.Carrying
             // Interpolation would fight the code that moves the item by hand.
             body.interpolation = RigidbodyInterpolation.None;
             SetCollidersEnabled(false);
+            Sfx.Play(SoundId.PickUp, transform.position);
             HeldChanged?.Invoke(true);
         }
 
@@ -181,6 +183,11 @@ namespace GrandmasHouse.Carrying
             SetPose(endPosition, endRotation, local);
             SetCollidersEnabled(collidersOn);
             body.isKinematic = true;
+            if (seconds > 0f)
+            {
+                // Softer when it's tucked into a basket.
+                Sfx.Play(SoundId.SetDown, transform.position, InContainer != null ? 0.45f : 1f);
+            }
             if (!local)
             {
                 HeldChanged?.Invoke(false);

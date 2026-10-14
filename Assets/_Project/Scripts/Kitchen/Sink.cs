@@ -1,4 +1,5 @@
 using System.Collections;
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Interaction;
 using UnityEngine;
@@ -61,6 +62,11 @@ namespace GrandmasHouse.Kitchen
             yield return Move(t, startPosition, startRotation, over, upright, tipSeconds);
             yield return Move(t, over, upright, over, tipped, tipSeconds);
             emptyable.SetPouring(true);
+            if (emptyable is JarContents)
+            {
+                // A jar has no pouring sound of its own.
+                Sfx.Play(SoundId.Pour, drain.position, 0.8f);
+            }
             yield return new WaitForSeconds(pourSeconds);
             emptyable.Empty();
             emptyable.SetPouring(false);

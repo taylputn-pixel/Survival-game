@@ -1,3 +1,4 @@
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.Saving;
@@ -45,10 +46,12 @@ namespace GrandmasHouse.Garden
         }
 
         MaterialPropertyBlock block;
+        SoundLoop pourSound;
 
         void Awake()
         {
             block = new MaterialPropertyBlock();
+            pourSound = Sfx.Loop(SoundId.Pour, spout);
             ShowLevel();
             SetPouring(false);
         }
@@ -83,6 +86,7 @@ namespace GrandmasHouse.Garden
 
         public void SetPouring(bool pouring)
         {
+            pourSound.Set(pouring);
             if (pouring && !stream.isEmitting)
             {
                 stream.Play();

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.Kitchen;
@@ -43,6 +44,7 @@ namespace GrandmasHouse.Stations
         Cookware cookware;
         CoolingTowel towel;
         PlayerHands hands;
+        SoundLoop boilSound;
 
         bool HasJars => rack.Count > 0;
         // Boils only with jars in, the lid on, and the burner lit.
@@ -53,6 +55,7 @@ namespace GrandmasHouse.Stations
             base.Awake();
             cookware = GetComponent<Cookware>();
             towel = FindFirstObjectByType<CoolingTowel>();
+            boilSound = Sfx.Loop(SoundId.Boil, transform);
         }
 
         void OnEnable()
@@ -171,6 +174,7 @@ namespace GrandmasHouse.Stations
                     FinishBoiling();
                 }
             }
+            boilSound.Set(boiling);
             if (boiling && !steam.isEmitting) steam.Play();
             else if (!boiling && steam.isEmitting) steam.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
@@ -248,6 +252,7 @@ namespace GrandmasHouse.Stations
             }
             canLid.SetPositionAndRotation(to.position, to.rotation);
             lidOn = putOn;
+            Sfx.Play(SoundId.PotLid, canLid.position);
             lidMoving = false;
 
             if (putOn && !done)

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.Saving;
@@ -164,6 +165,7 @@ namespace GrandmasHouse.Garden
             Stage = -1;
             harvested = false;
             marker.SetActive(false);
+            Sfx.Play(SoundId.SoilPat, transform.position);
             StartCoroutine(Planting(crop, seconds));
         }
 

@@ -1,4 +1,5 @@
 using System;
+using GrandmasHouse.Audio;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -77,6 +78,7 @@ namespace GrandmasHouse.UI
             var image = rect.gameObject.AddComponent<Image>();
             var button = rect.gameObject.AddComponent<Button>();
             Style(button, image);
+            button.onClick.AddListener(() => Sfx.PlayFlat(SoundId.MenuClick));
             button.onClick.AddListener(onClick);
             rect.gameObject.AddComponent<LayoutElement>().preferredHeight = height;
 

@@ -1,4 +1,5 @@
 using System;
+using GrandmasHouse.Audio;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -48,6 +49,7 @@ namespace GrandmasHouse.UI
         {
             Index = (Index + direction + options.Length) % options.Length;
             Show();
+            Sfx.PlayFlat(SoundId.MenuClick);
             onChange(Index);
         }
 

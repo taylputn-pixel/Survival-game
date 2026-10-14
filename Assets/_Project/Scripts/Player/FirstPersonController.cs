@@ -1,3 +1,4 @@
+using GrandmasHouse.Audio;
 using GrandmasHouse.Data;
 using GrandmasHouse.Interaction;
 using UnityEngine;
@@ -97,6 +98,14 @@ namespace GrandmasHouse.Player
             body.Move((horizontalVelocity + Vector3.up * verticalVelocity) * Time.deltaTime);
         }
 
+        // Wood floors indoors (and the back step), grass outside.
+        void Footstep()
+        {
+            bool wood = Physics.Raycast(transform.position + Vector3.up * 0.1f, Vector3.down, out RaycastHit hit, 0.4f, ~0, QueryTriggerInteraction.Ignore)
+                && (hit.collider.name.Contains("Floor") || hit.collider.name.Contains("Step"));
+            Sfx.Play(wood ? SoundId.StepWood : SoundId.StepGrass, transform.position, 1f, 0.1f);
+        }
+
         void HeadBob()
         {
             float speed = horizontalVelocity.magnitude;
@@ -106,7 +115,13 @@ namespace GrandmasHouse.Player
                 return;
             }
 
+            float before = bobTime;
             bobTime += Time.deltaTime * settings.headBobFrequency * (speed / settings.walkSpeed);
+            // A step lands at the bottom of each bob.
+            if (Mathf.Floor(before + 0.25f) != Mathf.Floor(bobTime + 0.25f))
+            {
+                Footstep();
+            }
             float offset = Mathf.Sin(bobTime * Mathf.PI * 2f) * settings.headBobAmount;
             cameraPivot.localPosition = pivotRestPosition + Vector3.up * offset;
         }

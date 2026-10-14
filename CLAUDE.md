@@ -33,7 +33,7 @@ Goal: one full loop from seed to sealed jar. Plant cucumbers and dill, tend them
 
 ## Code conventions
 
-- C# scripts live in `Assets/_Project/Scripts/`, grouped by system (`Player/`, `Interaction/`, `Stations/`, `Carrying/`, `Garden/`, `Kitchen/`, `UI/`, `Saving/`, `Time/`, `Data/`).
+- C# scripts live in `Assets/_Project/Scripts/`, grouped by system (`Player/`, `Interaction/`, `Stations/`, `Carrying/`, `Garden/`, `Kitchen/`, `Audio/`, `UI/`, `Saving/`, `Time/`, `Data/`).
 - Use the **new Input System** only, with one action map that works for both keyboard/mouse and gamepad.
 - Never hard-code a key or button name in on-screen text; prompts go through the prompt-icon system (coming in Phase 1).
 - Gameplay numbers (speeds, durations, capacities, mode values) live in ScriptableObjects under `Assets/_Project/Data/`, never hard-coded.

@@ -1,3 +1,4 @@
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Interaction;
 using GrandmasHouse.Saving;
@@ -62,9 +63,15 @@ namespace GrandmasHouse.Kitchen
 
         public void SetOn(bool on)
         {
+            if (on != On)
+            {
+                Sfx.Play(SoundId.KnobClick, knob.position);
+            }
             On = on;
-            knob.localRotation = Quaternion.Euler(0f, 0f, on ? -90f : 0f);
+            ShowKnob();
         }
+
+        void ShowKnob() => knob.localRotation = Quaternion.Euler(0f, 0f, On ? -90f : 0f);
 
         void Update()
         {
@@ -89,7 +96,8 @@ namespace GrandmasHouse.Kitchen
 
         public void Restore(string json)
         {
-            SetOn(json == "1");
+            On = json == "1";
+            ShowKnob();
             glow = On ? 1f : 0f;
             ShowHeat();
         }

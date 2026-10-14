@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.Kitchen;
@@ -47,6 +48,9 @@ namespace GrandmasHouse.Stations
         MaterialPropertyBlock block;
         int enteredFrame;
         float saltShake;
+        SoundLoop pourSound;
+        SoundLoop simmerSound;
+        SoundLoop boilSound;
 
         public float Vinegar { get; private set; }
         public float Water { get; private set; }
@@ -78,6 +82,9 @@ namespace GrandmasHouse.Stations
             staples = FindFirstObjectByType<StoveStaples>();
             stoveView = FindFirstObjectByType<StoveView>();
             stream.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            pourSound = Sfx.Loop(SoundId.Pour, lip);
+            simmerSound = Sfx.Loop(SoundId.Simmer, transform);
+            boilSound = Sfx.Loop(SoundId.Boil, transform);
             steam.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             ShowLiquid();
         }
@@ -133,6 +140,7 @@ namespace GrandmasHouse.Stations
 
         public void SetPouring(bool pouring)
         {
+            pourSound.Set(pouring);
             if (pouring && !stream.isEmitting) stream.Play();
             else if (!pouring && stream.isEmitting) stream.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
@@ -180,6 +188,7 @@ namespace GrandmasHouse.Stations
                 if (pressed && Liquid > 0f && saltShake <= 0f)
                 {
                     Salt++;
+                    Sfx.Play(SoundId.SaltShake, staples.salt.vessel.position);
                     saltShake = 0.7f;
                 }
             }
@@ -283,6 +292,10 @@ namespace GrandmasHouse.Stations
             {
                 Heat = Mathf.Max(Heat - Time.deltaTime / (recipe.heatSeconds * 6f), 0f);
             }
+
+            // It starts to simmer as it warms, then rolls into a boil.
+            simmerSound.Set(Liquid > 0f ? Mathf.InverseLerp(0.3f, 0.95f, Heat) : 0f);
+            boilSound.Set(Liquid > 0f && Heat >= 1f);
 
             bool steaming = Heat > 0.5f && Liquid > 0f;
             if (steaming && !steam.isEmitting) steam.Play();

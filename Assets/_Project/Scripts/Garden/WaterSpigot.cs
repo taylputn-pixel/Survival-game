@@ -1,4 +1,5 @@
 using System.Collections;
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.Interaction;
@@ -19,6 +20,7 @@ namespace GrandmasHouse.Garden
         [SerializeField] float handleTurnSeconds = 0.25f;
 
         bool busy;
+        SoundLoop fillSound;
 
         public bool CanInteract(PlayerHands hands)
         {
@@ -47,12 +49,15 @@ namespace GrandmasHouse.Garden
 
             yield return TurnHandle(0f, 90f);
             stream.Play();
+            fillSound ??= Sfx.Loop(SoundId.Pour, stream.transform);
+            fillSound.Set(true);
             while (!can.IsFull)
             {
                 can.Fill(Time.deltaTime / settings.canFillSeconds);
                 yield return null;
             }
             stream.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+            fillSound.Set(false);
             yield return TurnHandle(90f, 0f);
 
             hands.Give(item);

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Saving;
 using UnityEngine;
@@ -162,6 +163,7 @@ namespace GrandmasHouse.Stations
                 if (nearKnife && UseAction.WasPressedThisFrame())
                 {
                     knifeHeld = true;
+                    Sfx.Play(SoundId.PickUp, knife.position);
                     reticle.Hidden = true;
                     knifeX = cutEnd;
                 }
@@ -216,6 +218,7 @@ namespace GrandmasHouse.Stations
                     if (!chopLanded && phase >= 0.35f)
                     {
                         chopLanded = true;
+                        Sfx.Play(SoundId.KnifeChop, knife.position);
                         Chop(knifeX);
                     }
                     if (phase >= 1f)
