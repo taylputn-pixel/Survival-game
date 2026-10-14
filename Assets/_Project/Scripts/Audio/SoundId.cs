@@ -21,6 +21,7 @@ namespace GrandmasHouse.Audio
         StepGrass,
         Paper,
         MenuClick,
+        RadioStatic,
 
         // Loops
         Pour,

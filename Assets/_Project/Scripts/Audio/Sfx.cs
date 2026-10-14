@@ -25,7 +25,7 @@ namespace GrandmasHouse.Audio
             { SoundId.SaltShake, 0.4f }, { SoundId.KnobClick, 0.5f }, { SoundId.SetDown, 0.45f },
             { SoundId.PickUp, 0.25f }, { SoundId.WeedPull, 0.5f }, { SoundId.SoilPat, 0.4f },
             { SoundId.StepWood, 0.3f }, { SoundId.StepGrass, 0.25f }, { SoundId.Paper, 0.45f },
-            { SoundId.MenuClick, 0.35f }, { SoundId.Pour, 0.45f }, { SoundId.Boil, 0.4f }, { SoundId.Simmer, 0.25f },
+            { SoundId.MenuClick, 0.35f }, { SoundId.RadioStatic, 0.3f }, { SoundId.Pour, 0.45f }, { SoundId.Boil, 0.4f }, { SoundId.Simmer, 0.25f },
         };
 
         // Domain reload may be off in the editor, so start fresh each time Play begins.

@@ -29,6 +29,7 @@ namespace GrandmasHouse.Audio
                 case SoundId.StepWood: return Clip(id, 0.12f, t => Sweep(t, 160f, 90f, 0.08f) * Decay(t, 38f) * 0.5f + Noise() * Decay(t, 120f) * 0.12f);
                 case SoundId.StepGrass: return Filtered(id, 0.18f, 0.22f, t => Envelope(t, 0.02f, 0.18f) * Jitter(t, 60f) * 0.5f);
                 case SoundId.Paper: return Filtered(id, 0.35f, 0.6f, t => Envelope(t, 0.02f, 0.35f) * Jitter(t, 120f) * 0.45f);
+                case SoundId.RadioStatic: return Filtered(id, 0.35f, 0.8f, t => Envelope(t, 0.02f, 0.35f) * (0.6 + 0.4 * Math.Sin(2 * Math.PI * 23 * t)) * 0.5f);
                 case SoundId.MenuClick: return Clip(id, 0.04f, t => Math.Sin(2 * Math.PI * 1800 * t) * Decay(t, 140f) * 0.35f);
                 case SoundId.Pour: return Filtered(id, 2f, 0.45f, t => 0.35f + 0.08f * Math.Sin(2 * Math.PI * 3 * t), loop: true);
                 case SoundId.Boil: return BubblesLoop(id, 3f, 14f);
