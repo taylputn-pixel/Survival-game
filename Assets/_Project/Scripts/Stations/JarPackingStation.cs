@@ -58,7 +58,7 @@ namespace GrandmasHouse.Stations
         bool pouring;
         float tilt;
         // The pot being poured from, and where it rested.
-        CookingPotStation pot;
+        CookingPot pot;
         Vector3 potRestPosition;
         Quaternion potRestRotation;
         // What's in your hand under the cursor.
@@ -137,7 +137,7 @@ namespace GrandmasHouse.Stations
                 {
                     yield return lidStack.position;
                 }
-                CookingPotStation ready = CookingPotStation.ReadyPot();
+                CookingPot ready = CookingPot.ReadyPot();
                 if (ready != null && BrineTarget() != null)
                 {
                     yield return ready.transform.position;
@@ -400,7 +400,7 @@ namespace GrandmasHouse.Stations
                 }
                 return true;
             }
-            if (CookingPotStation.ReadyPot() is CookingPotStation ready && BrineTarget() is JarContents forBrine && CursorNear(ready.transform.position))
+            if (CookingPot.ReadyPot() is CookingPot ready && BrineTarget() is JarContents forBrine && CursorNear(ready.transform.position))
             {
                 Hint("Pour brine");
                 if (pressed)

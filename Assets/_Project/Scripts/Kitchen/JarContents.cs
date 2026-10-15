@@ -24,7 +24,7 @@ namespace GrandmasHouse.Kitchen
 
         [Tooltip("The lid and ring, hidden until the jar is closed up.")]
         [SerializeField] Transform lid;
-        [Tooltip("Grandma's label, shown once the jar has sealed.")]
+        [Tooltip("The paper label, put on by hand at the label box once the jar has sealed.")]
         [SerializeField] GameObject label;
         [SerializeField] float lidSeconds = 0.25f;
         [Header("Rebuilding a saved jar")]
@@ -42,6 +42,8 @@ namespace GrandmasHouse.Kitchen
         public bool IsProcessed { get; private set; }
         public bool IsSealed { get; private set; }
         public bool HasDill { get; private set; }
+        public bool IsLabeled { get; private set; }
+        public bool CanLabel => IsSealed && !IsLabeled;
         // 0 is empty, 1 is right to the rim.
         public float BrineLevel { get; private set; }
         public bool IsFull => SliceCount >= capacity;
@@ -87,6 +89,32 @@ namespace GrandmasHouse.Kitchen
             Sfx.Play(SoundId.LidClink, lid.position);
         }
 
+        // Smoothed on from the label box: it unrolls around the front.
+        public void PutOnLabel()
+        {
+            if (!CanLabel)
+            {
+                return;
+            }
+            IsLabeled = true;
+            StartCoroutine(Unroll());
+        }
+
+        IEnumerator Unroll()
+        {
+            label.SetActive(true);
+            Sfx.Play(SoundId.Paper, label.transform.position, 0.8f, 0.1f);
+            Transform t = label.transform;
+            const float seconds = 0.3f;
+            for (float time = 0f; time < seconds; time += Time.deltaTime)
+            {
+                float k = Mathf.SmoothStep(0.2f, 1f, time / seconds);
+                t.localScale = new Vector3(k, 1f, k);
+                yield return null;
+            }
+            t.localScale = Vector3.one;
+        }
+
         IEnumerator Cooling(float seconds)
         {
             yield return new WaitForSeconds(seconds);
@@ -99,7 +127,6 @@ namespace GrandmasHouse.Kitchen
             }
             lid.localScale = size;
             IsSealed = true;
-            label.SetActive(true);
             Sfx.Play(SoundId.LidPing, lid.position, 1f, 0.03f);
         }
 
@@ -113,11 +140,12 @@ namespace GrandmasHouse.Kitchen
             public bool lid;
             public bool processed;
             public bool sealedUp;
+            public bool labeled;
         }
 
         public string Capture() => JsonUtility.ToJson(new State
         {
-            slices = SliceCount, cloves = CloveCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed,
+            slices = SliceCount, cloves = CloveCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
         });
 
         public void Restore(string json)
@@ -155,8 +183,9 @@ namespace GrandmasHouse.Kitchen
             HasLid = state.lid;
             IsProcessed = state.processed;
             IsSealed = state.sealedUp;
+            IsLabeled = state.labeled;
             lid.gameObject.SetActive(HasLid);
-            label.SetActive(IsSealed);
+            label.SetActive(IsLabeled);
             ShowBrine();
         }
 

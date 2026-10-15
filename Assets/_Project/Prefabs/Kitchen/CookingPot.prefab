@@ -6807,37 +6807,6 @@ Transform:
   - {fileID: 8116397726489249792}
   m_Father: {fileID: 8906276771316239783}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &7182151526497764444
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6214129638797825843}
-  m_Layer: 9
-  m_Name: WorkView
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6214129638797825843
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7182151526497764444}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.4461978, y: 0, z: 0, w: 0.89493436}
-  m_LocalPosition: {x: 0.05, y: 0.8, z: -0.4}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8906276771316239783}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7319769395798254818
 GameObject:
   m_ObjectHideFlags: 0
@@ -6882,7 +6851,6 @@ Transform:
   - {fileID: 4914930942484110208}
   - {fileID: 3884275852600019882}
   - {fileID: 8349004102981033895}
-  - {fileID: 6214129638797825843}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &8366869229241753321
@@ -6989,10 +6957,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2426cf4c21f28b4584c9f287659233d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Stations.BrinePotStation
-  settings: {fileID: 11400000, guid: e68f130955f30ca438ccc0109a110e38, type: 2}
-  viewPoint: {fileID: 6214129638797825843}
-  reticle: {fileID: 0}
-  clock: {fileID: 0}
   recipe: {fileID: 11400000, guid: 705a86bb90da65f46b9907627ca8c014, type: 2}
   surface: {fileID: 8860931131707681763}
   surfaceRenderer: {fileID: 140592182412010998}
@@ -7001,7 +6965,6 @@ MonoBehaviour:
   lip: {fileID: 3884275852600019882}
   stream: {fileID: 828075422209920768}
   steam: {fileID: 6113753881879355802}
-  grabRadius: 0.08
   pourRate: 0.22
   pourTilt: 75
   pourHeight: 0.12

@@ -170,6 +170,7 @@ namespace GrandmasHouse.DevTools
                 case ItemCategory.Container: return "Containers";
                 case ItemCategory.Seed: return "Seeds";
                 case ItemCategory.Cookware: return "Cookware";
+                case ItemCategory.Staple: return "Pantry";
                 default: return "Other";
             }
         }

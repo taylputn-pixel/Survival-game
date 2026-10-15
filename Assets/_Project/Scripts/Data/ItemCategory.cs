@@ -13,5 +13,7 @@ namespace GrandmasHouse.Data
         Seed,
         // Pots and the canner. Added last so saved numbers don't shift.
         Cookware,
+        // Pantry staples: vinegar, salt.
+        Staple,
     }
 }

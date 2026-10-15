@@ -2,10 +2,11 @@ using UnityEngine;
 
 namespace GrandmasHouse.Kitchen
 {
-    // A paper label wrapped around the front of a jar: a curved strip just
-    // outside the glass, open at the back, with its picture stretched across.
+    // A paper label wrapped around the front of something round (a jar, the
+    // vinegar bottle, the salt box): a curved strip just outside it, open at
+    // the back, with its picture stretched across.
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-    public class JarLabel : MonoBehaviour
+    public class WrapLabel : MonoBehaviour
     {
         [SerializeField] float radius = 0.0432f;
         [SerializeField] float height = 0.05f;
@@ -49,7 +50,7 @@ namespace GrandmasHouse.Kitchen
                 triangles[i * 6 + 4] = a + 1;
                 triangles[i * 6 + 5] = a + 3;
             }
-            var mesh = new Mesh { name = "Jar Label" };
+            var mesh = new Mesh { name = "Label" };
             mesh.vertices = vertices;
             mesh.normals = normals;
             mesh.uv = uvs;
