@@ -18,6 +18,9 @@ namespace GrandmasHouse.Carrying
         [SerializeField] FirstPersonController controller;
 
         public Pickup Held { get; private set; }
+        // A second jar in the other hand. Whatever takes the first jar gets
+        // it, and this one moves over to take its place.
+        public Pickup Extra { get; private set; }
         public bool IsEmpty => Held == null;
         public Focus CurrentFocus { get; private set; }
         // What pressing Interact would do right now, for the button prompt.
@@ -31,8 +34,16 @@ namespace GrandmasHouse.Carrying
         public Pickup TakeHeld()
         {
             Pickup item = Held;
-            Held = null;
+            Held = Extra;
+            Extra = null;
             return item;
+        }
+
+        // Jars can be carried two at a time, one in each hand.
+        public bool CanCarrySecond(Pickup target)
+        {
+            return Held != null && Extra == null && target != Held
+                && Held.Category == ItemCategory.Jar && target.Category == ItemCategory.Jar;
         }
 
         // Puts something back in your empty hands (a filled watering can).
@@ -98,6 +109,16 @@ namespace GrandmasHouse.Carrying
             Held.transform.SetPositionAndRotation(
                 Vector3.Lerp(Held.transform.position, target, t),
                 Quaternion.Slerp(Held.transform.rotation, targetRotation, t));
+
+            if (Extra != null)
+            {
+                // The other hand, mirrored to the left.
+                Vector3 offset = Extra.HoldOffset(settings.holdOffset);
+                offset.x = -offset.x;
+                Extra.transform.SetPositionAndRotation(
+                    Vector3.Lerp(Extra.transform.position, viewPoint.position + view * offset, t),
+                    Quaternion.Slerp(Extra.transform.rotation, view * Extra.HeldRotation, t));
+            }
         }
 
         public bool CanHandle(Pickup target)
@@ -110,7 +131,7 @@ namespace GrandmasHouse.Carrying
             {
                 return Held.OwnContainer.Accepts(target);
             }
-            return target.OwnContainer != null && target.OwnContainer.Accepts(Held);
+            return (target.OwnContainer != null && target.OwnContainer.Accepts(Held)) || CanCarrySecond(target);
         }
 
         public void Handle(Pickup target)
@@ -126,22 +147,31 @@ namespace GrandmasHouse.Carrying
             }
             else if (target.OwnContainer != null && target.OwnContainer.Accepts(Held))
             {
-                Pickup item = Held;
-                Held = null;
-                target.OwnContainer.Add(item, settings.placeGlideSeconds);
+                target.OwnContainer.Add(TakeHeld(), settings.placeGlideSeconds);
+            }
+            else if (CanCarrySecond(target))
+            {
+                Lift(target);
+                Extra = target;
+                target.OnPickedUp();
             }
         }
 
         void Hold(Pickup item)
         {
+            Lift(item);
+            Held = item;
+            item.OnPickedUp();
+        }
+
+        // Lifted off whatever it rested on (a vine, a towel, a shelf, a basket).
+        static void Lift(Pickup item)
+        {
             if (item.InContainer != null)
             {
                 item.InContainer.Remove(item);
             }
-            // Lifted off whatever it rested on (a vine, a towel, a shelf).
             item.transform.SetParent(null, worldPositionStays: true);
-            Held = item;
-            item.OnPickedUp();
         }
 
         void LookAround()
@@ -215,14 +245,12 @@ namespace GrandmasHouse.Carrying
 
             if (hasSurface)
             {
-                Held.PlaceOn(surfaceHit.point, transform.eulerAngles.y, settings.placeGlideSeconds);
-                Held = null;
+                TakeHeld().PlaceOn(surfaceHit.point, transform.eulerAngles.y, settings.placeGlideSeconds);
             }
             else if (Held.OwnContainer == null)
             {
                 // Loose items can be dropped; a full basket is only ever set down gently.
-                Held.Drop();
-                Held = null;
+                TakeHeld().Drop();
             }
         }
     }

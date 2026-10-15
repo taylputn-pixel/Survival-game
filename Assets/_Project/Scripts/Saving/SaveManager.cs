@@ -71,11 +71,12 @@ namespace GrandmasHouse.Saving
                 record.states.Add(state.Capture());
             }
 
-            if (pickup != null && hands.Held == pickup)
+            if (pickup != null && (hands.Held == pickup || hands.Extra == pickup))
             {
                 // Whatever's in your hands is set down at your feet.
                 Transform player = hands.transform;
-                record.position = player.position + player.forward * 0.4f + Vector3.up * 0.1f;
+                Vector3 side = hands.Extra == pickup ? -player.right * 0.2f : Vector3.zero;
+                record.position = player.position + player.forward * 0.4f + side + Vector3.up * 0.1f;
                 record.rotation = Quaternion.Euler(0f, player.eulerAngles.y, 0f);
                 record.kinematic = false;
                 record.colliders = true;

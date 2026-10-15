@@ -24,6 +24,8 @@ namespace GrandmasHouse.Kitchen
 
         [Tooltip("The lid and ring, hidden until the jar is closed up.")]
         [SerializeField] Transform lid;
+        [Tooltip("Grandma's label, shown once the jar has sealed.")]
+        [SerializeField] GameObject label;
         [SerializeField] float lidSeconds = 0.25f;
         [Header("Rebuilding a saved jar")]
         [SerializeField] Material chipMaterial;
@@ -50,6 +52,7 @@ namespace GrandmasHouse.Kitchen
         {
             ShowBrine();
             lid.gameObject.SetActive(false);
+            label.SetActive(false);
         }
 
         // The lid drops on in one motion.
@@ -96,6 +99,7 @@ namespace GrandmasHouse.Kitchen
             }
             lid.localScale = size;
             IsSealed = true;
+            label.SetActive(true);
             Sfx.Play(SoundId.LidPing, lid.position, 1f, 0.03f);
         }
 
@@ -152,6 +156,7 @@ namespace GrandmasHouse.Kitchen
             IsProcessed = state.processed;
             IsSealed = state.sealedUp;
             lid.gameObject.SetActive(HasLid);
+            label.SetActive(IsSealed);
             ShowBrine();
         }
 
@@ -167,7 +172,17 @@ namespace GrandmasHouse.Kitchen
 
         // An open jar on the packing towel is being packed there; once its lid
         // is on it can be picked straight up.
-        public bool AllowPickup(PlayerHands hands) => HasLid || GetComponentInParent<JarPackingStation>() == null;
+        //
+        // In the canner, a jar lifts out only into empty hands, so looking into
+        // the canner with a jar in hand still puts it in.
+        public bool AllowPickup(PlayerHands hands)
+        {
+            if (GetComponentInParent<Canner>() != null)
+            {
+                return hands.IsEmpty;
+            }
+            return HasLid || GetComponentInParent<JarPackingStation>() == null;
+        }
 
         // An open jar can be poured out at the sink and packed again.
         public bool HasContents => !HasLid && (SliceCount > 0 || CloveCount > 0 || HasDill || BrineLevel > 0f);

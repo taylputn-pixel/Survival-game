@@ -93,6 +93,10 @@ namespace GrandmasHouse.Carrying
             {
                 return "Pick up";
             }
+            if (hands.CanCarrySecond(this))
+            {
+                return "Pick up another";
+            }
             return hands.Held.OwnContainer != null ? "Gather" : "Put in";
         }
 
