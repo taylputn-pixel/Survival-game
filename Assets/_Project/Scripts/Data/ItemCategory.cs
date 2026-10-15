@@ -11,5 +11,7 @@ namespace GrandmasHouse.Data
         Tool,
         Container,
         Seed,
+        // Pots and the canner. Added last so saved numbers don't shift.
+        Cookware,
     }
 }

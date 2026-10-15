@@ -6946,7 +6946,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Carrying.Pickup
   displayName: Cooking Pot
-  category: 0
+  category: 7
   heldRotation: {x: 0, y: 0, z: 0}
   keepUpright: 1
   useCustomHoldOffset: 1

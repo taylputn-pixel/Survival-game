@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GrandmasHouse.Carrying;
+using GrandmasHouse.Data;
 using GrandmasHouse.Interaction;
 using GrandmasHouse.Player;
 using GrandmasHouse.Saving;
@@ -12,8 +13,8 @@ using UnityEngine.UI;
 namespace GrandmasHouse.DevTools
 {
     // Testing menu, Editor and development builds only. F1 while walking
-    // around opens a list of every item in the save catalog; pick how many
-    // and click one to drop them in front of you. New items show up here as
+    // around opens a list of every item in the save catalog, filtered by
+    // category; pick how many and click one to drop them in front of you. New items show up here as
     // soon as they're added to the catalog.
     [RequireComponent(typeof(MenuStack))]
     public class DevMenu : MonoBehaviour
@@ -30,6 +31,12 @@ namespace GrandmasHouse.DevTools
         MenuStack menus;
         CursorLock cursorLock;
         Text status;
+        RectTransform grid;
+        LayoutElement gridSize;
+        List<SavedItem> items;
+        List<ItemCategory> categories;
+        // -1 shows every category.
+        int shown = -1;
         int amount = 1;
         bool open;
         int closedFrame = -1;
@@ -86,21 +93,32 @@ namespace GrandmasHouse.DevTools
             for (int i = 0; i < Amounts.Length; i++) labels[i] = Amounts[i].ToString();
             var chooser = UIKit.ChooserRow(panel, "How many", labels, System.Array.IndexOf(Amounts, amount), i => amount = Amounts[i]);
 
+            items = SpawnableItems();
+            categories = new List<ItemCategory>();
+            foreach (var item in items)
+            {
+                if (!categories.Contains(CategoryOf(item))) categories.Add(CategoryOf(item));
+            }
+            categories.Sort((a, b) => string.Compare(CategoryName(a), CategoryName(b), System.StringComparison.Ordinal));
+            var names = new string[categories.Count + 1];
+            names[0] = "All";
+            for (int i = 0; i < categories.Count; i++) names[i + 1] = CategoryName(categories[i]);
+            int current = shown >= 0 && categories.Contains((ItemCategory)shown) ? categories.IndexOf((ItemCategory)shown) + 1 : 0;
+            UIKit.ChooserRow(panel, "Category", names, current, i =>
+            {
+                shown = i == 0 ? -1 : (int)categories[i - 1];
+                ShowItems();
+            });
+
             UIKit.Label(panel, "Spawn in front of you", 24);
-            RectTransform grid = UIKit.Rect("Items", panel);
+            grid = UIKit.Rect("Items", panel);
             var layout = grid.gameObject.AddComponent<GridLayoutGroup>();
             layout.cellSize = new Vector2(352f, 52f);
             layout.spacing = new Vector2(16f, 12f);
             layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             layout.constraintCount = 2;
-            List<SavedItem> items = SpawnableItems();
-            int rows = (items.Count + 1) / 2;
-            grid.gameObject.AddComponent<LayoutElement>().preferredHeight = rows * 64f;
-            foreach (var item in items)
-            {
-                SavedItem prefab = item;
-                UIKit.Button(grid, Nice(prefab), () => Spawn(prefab), 52f);
-            }
+            gridSize = grid.gameObject.AddComponent<LayoutElement>();
+            ShowItems();
 
             status = UIKit.Label(panel, " ", 22, FontStyle.Italic, TextAnchor.MiddleCenter);
             UIKit.Button(panel, "Close", menus.Pop);
@@ -113,6 +131,48 @@ namespace GrandmasHouse.DevTools
             closedFrame = Time.frameCount;
             cursorLock.Free = false;
             reticle.Hidden = false;
+        }
+
+        // The buttons for the chosen category (or all of them).
+        void ShowItems()
+        {
+            for (int i = grid.childCount - 1; i >= 0; i--)
+            {
+                Destroy(grid.GetChild(i).gameObject);
+            }
+            int count = 0;
+            foreach (var item in items)
+            {
+                if (shown >= 0 && (int)CategoryOf(item) != shown)
+                {
+                    continue;
+                }
+                SavedItem prefab = item;
+                UIKit.Button(grid, Nice(prefab), () => Spawn(prefab), 52f);
+                count++;
+            }
+            gridSize.preferredHeight = (count + 1) / 2 * 64f;
+        }
+
+        static ItemCategory CategoryOf(SavedItem item)
+        {
+            var pickup = item.GetComponent<Pickup>();
+            return pickup != null ? pickup.Category : ItemCategory.Other;
+        }
+
+        static string CategoryName(ItemCategory category)
+        {
+            switch (category)
+            {
+                case ItemCategory.Produce: return "Food";
+                case ItemCategory.Jar: return "Jars";
+                case ItemCategory.Egg: return "Eggs";
+                case ItemCategory.Tool: return "Tools";
+                case ItemCategory.Container: return "Containers";
+                case ItemCategory.Seed: return "Seeds";
+                case ItemCategory.Cookware: return "Cookware";
+                default: return "Other";
+            }
         }
 
         // Every item in the catalog once (an old key can point at the same prefab).
