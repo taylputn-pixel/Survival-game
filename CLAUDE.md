@@ -39,7 +39,7 @@ Goal: one full loop from seed to sealed jar. Plant cucumbers and dill, tend them
 - Gameplay numbers (speeds, durations, capacities, mode values) live in ScriptableObjects under `Assets/_Project/Data/`, never hard-coded.
 - Keep the scripts small and readable; match the style of the code around them.
 - Prefer composition: stations, containers, and pickups are components on GameObjects.
-- Dev menu (Editor and development builds only, `Scripts/DevTools/DevMenu` on the Homestead "Dev Tools" object): F1 while walking opens it; filter by category (from each Pickup's `ItemCategory`), pick how many, then click any item from `Data/SaveCatalog` to spawn it in front of the player. Items added to the catalog appear automatically; add future testing tools (time skip, etc.) to this menu rather than new hotkeys.
+- Dev menu (Editor and development builds only, `Scripts/DevTools/DevMenu` on the Homestead "Dev Tools" object): F1 while walking opens it; click a category (from each Pickup's `ItemCategory`) to see its items, pick how many, then click any item from `Data/SaveCatalog` to spawn it in front of the player. Items added to the catalog appear automatically; add future testing tools (time skip, etc.) to this menu rather than new hotkeys.
 - Saving: a new item prefab needs a `SavedItem` key and an entry in `Data/SaveCatalog`; extra item state implements `IItemState`, scene systems implement `ISaveable`, and stations that hold things re-adopt them in `IAfterLoad`.
 
 ## Folder layout

@@ -13,8 +13,8 @@ using UnityEngine.UI;
 namespace GrandmasHouse.DevTools
 {
     // Testing menu, Editor and development builds only. F1 while walking
-    // around opens a list of every item in the save catalog, filtered by
-    // category; pick how many and click one to drop them in front of you. New items show up here as
+    // around opens the kinds of items in the save catalog; click a kind to
+    // see its items, pick how many and click one to drop them in front of you. New items show up here as
     // soon as they're added to the catalog.
     [RequireComponent(typeof(MenuStack))]
     public class DevMenu : MonoBehaviour
@@ -31,12 +31,8 @@ namespace GrandmasHouse.DevTools
         MenuStack menus;
         CursorLock cursorLock;
         Text status;
-        RectTransform grid;
-        LayoutElement gridSize;
         List<SavedItem> items;
         List<ItemCategory> categories;
-        // -1 shows every category.
-        int shown = -1;
         int amount = 1;
         bool open;
         int closedFrame = -1;
@@ -80,18 +76,13 @@ namespace GrandmasHouse.DevTools
             }
         }
 
+        // First screen: a button for each kind of item.
         void Open()
         {
             open = true;
             hands.Controller.InputEnabled = false;
             cursorLock.Free = true;
             reticle.Hidden = true;
-
-            RectTransform panel = UIKit.Panel("Dev Menu", transform, 820f);
-            UIKit.Label(panel, "Dev menu", 40, FontStyle.Bold, TextAnchor.MiddleCenter);
-            var labels = new string[Amounts.Length];
-            for (int i = 0; i < Amounts.Length; i++) labels[i] = Amounts[i].ToString();
-            var chooser = UIKit.ChooserRow(panel, "How many", labels, System.Array.IndexOf(Amounts, amount), i => amount = Amounts[i]);
 
             items = SpawnableItems();
             categories = new List<ItemCategory>();
@@ -100,29 +91,45 @@ namespace GrandmasHouse.DevTools
                 if (!categories.Contains(CategoryOf(item))) categories.Add(CategoryOf(item));
             }
             categories.Sort((a, b) => string.Compare(CategoryName(a), CategoryName(b), System.StringComparison.Ordinal));
-            var names = new string[categories.Count + 1];
-            names[0] = "All";
-            for (int i = 0; i < categories.Count; i++) names[i + 1] = CategoryName(categories[i]);
-            int current = shown >= 0 && categories.Contains((ItemCategory)shown) ? categories.IndexOf((ItemCategory)shown) + 1 : 0;
-            UIKit.ChooserRow(panel, "Category", names, current, i =>
-            {
-                shown = i == 0 ? -1 : (int)categories[i - 1];
-                ShowItems();
-            });
 
+            RectTransform panel = UIKit.Panel("Dev Menu", transform, 820f);
+            UIKit.Label(panel, "Dev menu", 40, FontStyle.Bold, TextAnchor.MiddleCenter);
+            UIKit.Label(panel, "Spawn items", 24);
+            RectTransform grid = Grid(panel, categories.Count);
+            Button first = null;
+            foreach (var category in categories)
+            {
+                ItemCategory kind = category;
+                Button button = UIKit.Button(grid, CategoryName(kind), () => OpenCategory(kind), 52f);
+                if (first == null) first = button;
+            }
+            Button close = UIKit.Button(panel, "Close", menus.Pop);
+            menus.Push(panel.gameObject, first != null ? first : close);
+        }
+
+        // Second screen: how many, and the items of one kind. Back returns to the kinds.
+        void OpenCategory(ItemCategory category)
+        {
+            RectTransform panel = UIKit.Panel(CategoryName(category), transform, 820f);
+            UIKit.Label(panel, CategoryName(category), 40, FontStyle.Bold, TextAnchor.MiddleCenter);
+            var labels = new string[Amounts.Length];
+            for (int i = 0; i < Amounts.Length; i++) labels[i] = Amounts[i].ToString();
+            UIKit.ChooserRow(panel, "How many", labels, System.Array.IndexOf(Amounts, amount), i => amount = Amounts[i]);
+
+            var ofKind = items.FindAll(item => CategoryOf(item) == category);
             UIKit.Label(panel, "Spawn in front of you", 24);
-            grid = UIKit.Rect("Items", panel);
-            var layout = grid.gameObject.AddComponent<GridLayoutGroup>();
-            layout.cellSize = new Vector2(352f, 52f);
-            layout.spacing = new Vector2(16f, 12f);
-            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            layout.constraintCount = 2;
-            gridSize = grid.gameObject.AddComponent<LayoutElement>();
-            ShowItems();
+            RectTransform grid = Grid(panel, ofKind.Count);
+            Button first = null;
+            foreach (var item in ofKind)
+            {
+                SavedItem prefab = item;
+                Button button = UIKit.Button(grid, Nice(prefab), () => Spawn(prefab), 52f);
+                if (first == null) first = button;
+            }
 
             status = UIKit.Label(panel, " ", 22, FontStyle.Italic, TextAnchor.MiddleCenter);
-            UIKit.Button(panel, "Close", menus.Pop);
-            menus.Push(panel.gameObject, chooser);
+            UIKit.Button(panel, "Back", menus.Pop);
+            menus.Push(panel.gameObject, first);
         }
 
         void Close()
@@ -133,25 +140,17 @@ namespace GrandmasHouse.DevTools
             reticle.Hidden = false;
         }
 
-        // The buttons for the chosen category (or all of them).
-        void ShowItems()
+        // Buttons two to a row.
+        static RectTransform Grid(Transform panel, int count)
         {
-            for (int i = grid.childCount - 1; i >= 0; i--)
-            {
-                Destroy(grid.GetChild(i).gameObject);
-            }
-            int count = 0;
-            foreach (var item in items)
-            {
-                if (shown >= 0 && (int)CategoryOf(item) != shown)
-                {
-                    continue;
-                }
-                SavedItem prefab = item;
-                UIKit.Button(grid, Nice(prefab), () => Spawn(prefab), 52f);
-                count++;
-            }
-            gridSize.preferredHeight = (count + 1) / 2 * 64f;
+            RectTransform grid = UIKit.Rect("Buttons", panel);
+            var layout = grid.gameObject.AddComponent<GridLayoutGroup>();
+            layout.cellSize = new Vector2(352f, 52f);
+            layout.spacing = new Vector2(16f, 12f);
+            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            layout.constraintCount = 2;
+            grid.gameObject.AddComponent<LayoutElement>().preferredHeight = (count + 1) / 2 * 64f;
+            return grid;
         }
 
         static ItemCategory CategoryOf(SavedItem item)
