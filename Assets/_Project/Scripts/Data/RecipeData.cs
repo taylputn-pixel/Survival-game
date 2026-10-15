@@ -15,6 +15,8 @@ namespace GrandmasHouse.Data
         public int slicesPerJar = 20;
         [Tooltip("A head of dill goes in each jar.")]
         public bool needsDill = true;
+        [Tooltip("Garlic cloves the recipe calls for in each jar (more is fine, just extra garlic).")]
+        public int garlicPerJar = 2;
         [Tooltip("How high the brine should come, as a share of the jar (the rest is headspace under the lid).")]
         [Range(0f, 1f)] public float brineLine = 0.88f;
         [Tooltip("Brine at least this high counts as filled and ready to can.")]

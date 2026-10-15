@@ -9,17 +9,19 @@ namespace GrandmasHouse.Stations
 {
     // A dish towel on the counter between the cutting board and the stove.
     // Set empty jars on it (up to a canner load) and heads of dill beside
-    // them, step up, then work one jar at a time: drop in the dill, scoop
-    // slices from the board a handful at a time, hold Interact on the pot of
-    // boiling brine (on the hot pad or the stove) to pour up to the line, and
-    // put a lid on from the stack. Each step goes to the jar you're working
-    // on while it still needs it, and otherwise on to the next jar that does,
-    // so you can pour brine down the row, then lid them all. Click a jar to
-    // work on it. Lidded jars can be picked straight up off the towel.
+    // them, then step up and pack by hand: pick up a handful of slices or a
+    // garlic clove from the board, or a head of dill, carry it over a jar and
+    // drop it in. Hold Interact on the pot of boiling brine (on the hot pad
+    // or the stove) to pour up to the line, and put a lid on from the stack.
+    // Brine and lids go to the jar you're working on while it still needs
+    // them, otherwise on to the next jar that does, so you can pour down the
+    // row and then lid them all. Lidded jars pick straight up off the towel.
     public class JarPackingStation : Station, IAfterLoad
     {
+        enum Carrying { Nothing, Slices, Cloves, Dill }
+
         [SerializeField] RecipeData recipe;
-        [Tooltip("Slices are taken from this board's pile.")]
+        [Tooltip("Slices and peeled garlic are taken from this board's piles.")]
         [SerializeField] CuttingBoardStation board;
         [Tooltip("Where jars stand on the towel, in the order they're packed.")]
         [SerializeField] Transform[] jarSpots;
@@ -33,7 +35,13 @@ namespace GrandmasHouse.Stations
         [Header("Feel")]
         [Tooltip("How close the cursor must be to something to use it, in screen heights.")]
         [SerializeField] float grabRadius = 0.08f;
+        [Tooltip("Slices picked up with each grab, and the most you can carry at once.")]
         [SerializeField] int handful = 4;
+        [SerializeField] int maxSlicesCarried = 12;
+        [SerializeField] int maxClovesCarried = 6;
+        [Tooltip("How high above the towel things are carried, in meters.")]
+        [SerializeField] float carryHeight = 0.2f;
+        [SerializeField] float carrySharpness = 18f;
         [Tooltip("How fast the brine rises while pouring (share of the jar per second).")]
         [SerializeField] float pourRate = 0.32f;
         [SerializeField] float pourTilt = 70f;
@@ -53,6 +61,10 @@ namespace GrandmasHouse.Stations
         CookingPotStation pot;
         Vector3 potRestPosition;
         Quaternion potRestRotation;
+        // What's in your hand under the cursor.
+        Carrying carrying;
+        readonly List<Transform> carried = new List<Transform>();
+        Pickup carriedDill;
 
         public override bool CanInteract(PlayerHands hands)
         {
@@ -107,13 +119,17 @@ namespace GrandmasHouse.Stations
             {
                 yield break;
             }
-            if (jar != null)
+            if (carrying == Carrying.Nothing)
             {
-                if (SliceTarget() != null)
+                if (board.SliceCount > 0)
                 {
                     yield return board.PilePosition;
                 }
-                if (DillTarget() != null)
+                if (board.CloveCount > 0)
+                {
+                    yield return board.ClovePilePosition;
+                }
+                if (dills.Count > 0)
                 {
                     yield return dills[0].transform.position;
                 }
@@ -127,16 +143,17 @@ namespace GrandmasHouse.Stations
                     yield return ready.transform.position;
                 }
             }
-            foreach (var other in JarsOnTowel())
+            foreach (var onTowel in JarsOnTowel())
             {
-                if (other != jar)
-                {
-                    yield return other.Mouth;
-                }
+                yield return onTowel.Mouth;
             }
         }
 
-        protected override void OnLeave() => StopPouring();
+        protected override void OnLeave()
+        {
+            StopPouring();
+            PutBackCarried();
+        }
 
         protected override void WhileWorking()
         {
@@ -156,7 +173,12 @@ namespace GrandmasHouse.Stations
             }
 
             bool pressed = Time.frameCount != enteredFrame && UseAction.WasPressedThisFrame();
-            if (jar != null && UseTools(pressed))
+            if (carrying != Carrying.Nothing)
+            {
+                WhileCarrying(pressed);
+                return;
+            }
+            if (PickUpIngredient(pressed) || UseTools(pressed))
             {
                 return;
             }
@@ -187,31 +209,187 @@ namespace GrandmasHouse.Stations
             }
         }
 
-        // The pile, the dill, the lids and the pot each go to the jar that needs them.
-        bool UseTools(bool pressed)
+        // Slices, a garlic clove, or a head of dill come up into your hand.
+        bool PickUpIngredient(bool pressed)
         {
-            if (SliceTarget() is JarContents forSlices && CursorNear(board.PilePosition))
+            if (board.SliceCount > 0 && CursorNear(board.PilePosition))
             {
-                Hint("Scoop chips");
+                Hint("Pick up slices");
                 if (pressed)
                 {
-                    jar = forSlices;
-                    ScoopSlices();
+                    Grab(Carrying.Slices, board.TakeSlices(handful));
                 }
                 return true;
             }
-            if (DillTarget() is JarContents forDill && CursorNear(dills[0].transform.position))
+            if (board.CloveCount > 0 && CursorNear(board.ClovePilePosition))
             {
-                Hint("Add dill");
+                Hint("Pick up a clove");
                 if (pressed)
                 {
-                    jar = forDill;
-                    jar.AddDill(dills[0]);
+                    Grab(Carrying.Cloves, board.TakeCloves(1));
+                }
+                return true;
+            }
+            if (dills.Count > 0 && CursorNear(dills[0].transform.position))
+            {
+                Hint("Pick up dill");
+                if (pressed)
+                {
+                    carriedDill = dills[0];
                     dills.RemoveAt(0);
+                    carriedDill.OnPickedUp();
+                    carriedDill.transform.SetParent(null, worldPositionStays: true);
+                    carrying = Carrying.Dill;
                     LineUpDill();
                 }
                 return true;
             }
+            return false;
+        }
+
+        void Grab(Carrying kind, List<Transform> pieces)
+        {
+            foreach (var piece in pieces)
+            {
+                piece.SetParent(null, worldPositionStays: true);
+                carried.Add(piece);
+            }
+            if (carried.Count > 0)
+            {
+                carrying = kind;
+            }
+        }
+
+        // Over a jar, drop what you're holding in; over its pile, pick up more.
+        void WhileCarrying(bool pressed)
+        {
+            foreach (var onTowel in JarsOnTowel())
+            {
+                if (!IsOpen(onTowel) || !CursorNear(onTowel.Mouth))
+                {
+                    continue;
+                }
+                if (carrying == Carrying.Slices && onTowel.IsFull)
+                {
+                    UseHint = "This jar is full";
+                    return;
+                }
+                if (carrying == Carrying.Dill && onTowel.HasDill)
+                {
+                    UseHint = "This jar has dill";
+                    return;
+                }
+                Hint("Drop in");
+                if (pressed)
+                {
+                    DropInto(onTowel);
+                }
+                return;
+            }
+
+            if (carrying == Carrying.Slices && carried.Count < maxSlicesCarried && board.SliceCount > 0 && CursorNear(board.PilePosition))
+            {
+                Hint("Pick up more");
+                if (pressed)
+                {
+                    Grab(Carrying.Slices, board.TakeSlices(Mathf.Min(handful, maxSlicesCarried - carried.Count)));
+                }
+            }
+            else if (carrying == Carrying.Cloves && carried.Count < maxClovesCarried && board.CloveCount > 0 && CursorNear(board.ClovePilePosition))
+            {
+                Hint("Pick up another");
+                if (pressed)
+                {
+                    Grab(Carrying.Cloves, board.TakeCloves(1));
+                }
+            }
+        }
+
+        void DropInto(JarContents target)
+        {
+            jar = target;
+            if (carrying == Carrying.Dill)
+            {
+                target.AddDill(carriedDill);
+                carriedDill = null;
+                carrying = Carrying.Nothing;
+                return;
+            }
+            int count = carrying == Carrying.Slices ? Mathf.Min(carried.Count, target.Capacity - target.SliceCount) : carried.Count;
+            for (int i = 0; i < count; i++)
+            {
+                Transform piece = carried[0];
+                carried.RemoveAt(0);
+                if (carrying == Carrying.Slices)
+                {
+                    target.AddSlice(piece, i * 0.06f);
+                }
+                else
+                {
+                    target.AddClove(piece, i * 0.08f);
+                }
+            }
+            if (carried.Count == 0)
+            {
+                carrying = Carrying.Nothing;
+            }
+        }
+
+        // Stepping back with something in hand puts it back where it came from.
+        void PutBackCarried()
+        {
+            if (carrying == Carrying.Slices)
+            {
+                board.ReturnSlices(new List<Transform>(carried));
+            }
+            else if (carrying == Carrying.Cloves)
+            {
+                board.ReturnCloves(new List<Transform>(carried));
+            }
+            else if (carrying == Carrying.Dill && carriedDill != null)
+            {
+                AddDillHead(carriedDill, 0.3f);
+            }
+            carried.Clear();
+            carriedDill = null;
+            carrying = Carrying.Nothing;
+        }
+
+        // What's in hand floats under the cursor, a little above the jars.
+        void MoveCarried()
+        {
+            if (carrying == Carrying.Nothing || View == null)
+            {
+                return;
+            }
+            var plane = new Plane(Vector3.up, jarSpots[0].position + Vector3.up * carryHeight);
+            Ray ray = CursorRay();
+            if (!plane.Raycast(ray, out float distance))
+            {
+                return;
+            }
+            Vector3 hand = ray.GetPoint(distance);
+            float t = 1f - Mathf.Exp(-carrySharpness * Time.deltaTime);
+            if (carrying == Carrying.Dill)
+            {
+                Transform dill = carriedDill.transform;
+                dill.SetPositionAndRotation(Vector3.Lerp(dill.position, hand + Vector3.down * 0.06f, t),
+                    Quaternion.Slerp(dill.rotation, Quaternion.Euler(0f, 0f, 8f), t));
+                return;
+            }
+            for (int i = 0; i < carried.Count; i++)
+            {
+                // A loose little stack, each piece a bit higher and askew.
+                Vector3 offset = new Vector3((i % 2) * 0.012f - 0.006f, i * 0.007f, ((i / 2) % 2) * 0.01f - 0.005f);
+                Quaternion lean = Quaternion.Euler(10f + i * 7f, i * 53f, -8f);
+                carried[i].SetPositionAndRotation(Vector3.Lerp(carried[i].position, hand + offset, t),
+                    Quaternion.Slerp(carried[i].rotation, lean, t));
+            }
+        }
+
+        // The lids and the pot go to the jar that needs them.
+        bool UseTools(bool pressed)
+        {
             if (LidTarget() is JarContents forLid && CursorNear(lidStack.position))
             {
                 Hint("Put on lid");
@@ -248,6 +426,7 @@ namespace GrandmasHouse.Stations
         protected override void Update()
         {
             base.Update();
+            MoveCarried();
             MovePot();
         }
 
@@ -345,25 +524,11 @@ namespace GrandmasHouse.Stations
             return null;
         }
 
-        JarContents SliceTarget() => board.SliceCount > 0 ? NextNeeding(j => !j.IsFull) : null;
-
-        JarContents DillTarget() => dills.Count > 0 ? NextNeeding(j => !j.HasDill) : null;
-
         JarContents LidTarget() => pouring ? null : NextNeeding(j => j.BrineLevel >= recipe.brineEnough);
 
         // Brine goes to the next jar short of the line; once every jar is up
         // to it, the jar you're on can still be topped up.
         JarContents BrineTarget() => NextNeeding(j => j.BrineLevel < recipe.brineEnough) ?? (IsOpen(jar) && jar.BrineLevel < 1f ? jar : null);
-
-        void ScoopSlices()
-        {
-            int room = jar.Capacity - jar.SliceCount;
-            List<Transform> slices = board.TakeSlices(Mathf.Min(handful, room));
-            for (int i = 0; i < slices.Count; i++)
-            {
-                jar.AddSlice(slices[i], i * 0.06f);
-            }
-        }
 
         void Pour()
         {
@@ -426,7 +591,7 @@ namespace GrandmasHouse.Stations
             }
             logged.Add(jar);
             float headspaceError = jar.BrineLevel - recipe.brineLine;
-            Debug.Log($"Packed {jar.SliceCount}/{recipe.slicesPerJar} slices, dill {(jar.HasDill ? "yes" : "no")}, brine {jar.BrineLevel:P0} (line {recipe.brineLine:P0}, off by {headspaceError:+0%;-0%})");
+            Debug.Log($"Packed {jar.SliceCount}/{recipe.slicesPerJar} slices, {jar.CloveCount}/{recipe.garlicPerJar} garlic cloves, dill {(jar.HasDill ? "yes" : "no")}, brine {jar.BrineLevel:P0} (line {recipe.brineLine:P0}, off by {headspaceError:+0%;-0%})");
         }
 
         bool CursorNear(Vector3 worldPoint)

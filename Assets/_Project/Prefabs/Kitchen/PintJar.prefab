@@ -410,6 +410,8 @@ MonoBehaviour:
   lidSeconds: 0.5
   chipMaterial: {fileID: 2100000, guid: f7aaf5503e24397458290823facb6ff9, type: 2}
   chipSize: {x: 0.05, y: 0.006}
+  cloveMaterial: {fileID: 2100000, guid: 0d71eb380eaf18041b99b1ebf9bc115f, type: 2}
+  cloveSize: {x: 0.0126, y: 0.0108, z: 0.0216}
 --- !u!114 &37119894869995612
 MonoBehaviour:
   m_ObjectHideFlags: 0

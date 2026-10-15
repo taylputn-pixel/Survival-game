@@ -7,7 +7,8 @@ using UnityEngine;
 
 namespace GrandmasHouse.Kitchen
 {
-    // What's inside a glass jar: slices packed in, a head of dill, and brine.
+    // What's inside a glass jar: slices packed in, a head of dill, garlic
+    // cloves, and brine.
     // Everything is visible through the glass.
     [RequireComponent(typeof(Pickup))]
     public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard
@@ -28,8 +29,12 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Material chipMaterial;
         [Tooltip("Diameter and thickness of a pickle chip, in meters.")]
         [SerializeField] Vector2 chipSize = new Vector2(0.05f, 0.006f);
+        [SerializeField] Material cloveMaterial;
+        [Tooltip("Width, height and length of a clove, in meters.")]
+        [SerializeField] Vector3 cloveSize = new Vector3(0.0126f, 0.0108f, 0.0216f);
 
         public int SliceCount { get; private set; }
+        public int CloveCount { get; private set; }
         public bool HasLid { get; private set; }
         // Through the water bath and out to cool.
         public bool IsProcessed { get; private set; }
@@ -98,6 +103,7 @@ namespace GrandmasHouse.Kitchen
         class State
         {
             public int slices;
+            public int cloves;
             public bool dill;
             public float brine;
             public bool lid;
@@ -107,7 +113,7 @@ namespace GrandmasHouse.Kitchen
 
         public string Capture() => JsonUtility.ToJson(new State
         {
-            slices = SliceCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed,
+            slices = SliceCount, cloves = CloveCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed,
         });
 
         public void Restore(string json)
@@ -127,7 +133,19 @@ namespace GrandmasHouse.Kitchen
                     new Vector3(jitter.x, 0.004f + i * sliceStep, jitter.y),
                     Quaternion.Euler(Random.Range(-25f, 25f), Random.Range(0f, 360f), Random.Range(-25f, 25f)));
             }
+            for (int i = 0; i < state.cloves; i++)
+            {
+                var clove = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                clove.name = "Clove";
+                Destroy(clove.GetComponent<Collider>());
+                clove.GetComponent<Renderer>().sharedMaterial = cloveMaterial;
+                clove.transform.localScale = cloveSize;
+                clove.transform.SetParent(inside, false);
+                NoShadows(clove.transform);
+                clove.transform.SetLocalPositionAndRotation(ClovePlace(), Random.rotation);
+            }
             SliceCount = state.slices;
+            CloveCount = state.cloves;
             HasDill = state.dill;
             BrineLevel = state.brine;
             HasLid = state.lid;
@@ -152,7 +170,7 @@ namespace GrandmasHouse.Kitchen
         public bool AllowPickup(PlayerHands hands) => HasLid || GetComponentInParent<JarPackingStation>() == null;
 
         // An open jar can be poured out at the sink and packed again.
-        public bool HasContents => !HasLid && (SliceCount > 0 || HasDill || BrineLevel > 0f);
+        public bool HasContents => !HasLid && (SliceCount > 0 || CloveCount > 0 || HasDill || BrineLevel > 0f);
 
         public void Empty()
         {
@@ -165,6 +183,7 @@ namespace GrandmasHouse.Kitchen
                 }
             }
             SliceCount = 0;
+            CloveCount = 0;
             HasDill = false;
             BrineLevel = 0f;
             ShowBrine();
@@ -184,6 +203,24 @@ namespace GrandmasHouse.Kitchen
             slice.SetParent(inside, worldPositionStays: true);
             NoShadows(slice);
             StartCoroutine(Drop(slice, end, tilt, delay));
+        }
+
+        // A garlic clove drops in and tucks in among the slices. There's no
+        // limit; past the recipe's count it's just extra garlic.
+        public void AddClove(Transform clove, float delay)
+        {
+            CloveCount++;
+            clove.SetParent(inside, worldPositionStays: true);
+            NoShadows(clove);
+            StartCoroutine(Drop(clove, ClovePlace(), Random.rotation, delay));
+        }
+
+        // Somewhere low in the jar, among whatever is already packed.
+        Vector3 ClovePlace()
+        {
+            float top = Mathf.Max(0.01f, SliceCount * sliceStep);
+            Vector2 jitter = Random.insideUnitCircle * (innerRadius - 0.012f);
+            return new Vector3(jitter.x, Random.Range(0.006f, Mathf.Min(top, innerHeight - 0.01f)), jitter.y);
         }
 
         // The dill goes in standing up along the side of the jar.
