@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb4b8b46663cf1c45ad7e49c6467dca8, type: 3}
+  m_Name: Recipe_PickledGarlic
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.RecipeData
+  displayName: Pickled Garlic
+  fill: 1
+  label: {fileID: 2100000, guid: cec5c8624231f9a41be25bfdf96d8605, type: 2}
+  slicesPerJar: 0
+  needsDill: 1
+  garlicPerJar: 30
+  peppercornPinches: 1
+  brineLine: 0.88
+  brineEnough: 0.75
+  vinegarShare: 0.5
+  saltScoops: 2
+  heatSeconds: 8
+  potPerJar: 0.2
+  processMinutes: 10
+  cardText: '(stand-in until Grandma''s own card is added)
+
+
+    Pickled Garlic
+
+
+    About
+    30 peeled cloves for each pint (three heads).
+
+    A head of dill and a pinch
+    of peppercorns in each jar.
+
+    Hot brine to the line: equal parts water and
+    vinegar, two scoops of salt.
+
+    Water bath, 10 minutes.'

@@ -8,7 +8,13 @@ namespace GrandmasHouse.Data
     [CreateAssetMenu(fileName = "Recipe", menuName = "Grandma's House/Recipe")]
     public class RecipeData : ScriptableObject
     {
+        // What fills the jar, which is how a packed jar knows what it is.
+        public enum Fill { Slices, Cloves }
+
         public string displayName = "Dill Pickle Chips";
+        public Fill fill = Fill.Slices;
+        [Tooltip("The label put on a sealed jar of this.")]
+        public Material label;
 
         [Header("Packing a jar")]
         [Tooltip("Slices that fill one jar snugly.")]
@@ -17,6 +23,8 @@ namespace GrandmasHouse.Data
         public bool needsDill = true;
         [Tooltip("Garlic cloves the recipe calls for in each jar (more is fine, just extra garlic).")]
         public int garlicPerJar = 2;
+        [Tooltip("Pinches of peppercorns in each jar.")]
+        public int peppercornPinches = 0;
         [Tooltip("How high the brine should come, as a share of the jar (the rest is headspace under the lid).")]
         [Range(0f, 1f)] public float brineLine = 0.88f;
         [Tooltip("Brine at least this high counts as filled and ready to can.")]

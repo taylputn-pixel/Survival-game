@@ -9,16 +9,17 @@ namespace GrandmasHouse.Stations
 {
     // A dish towel on the counter between the cutting board and the stove.
     // Set empty jars on it (up to a canner load) and heads of dill beside
-    // them, then step up and pack by hand: pick up a handful of slices or a
-    // garlic clove from the board, or a head of dill, carry it over a jar and
-    // drop it in. Hold Interact on the pot of boiling brine (on the hot pad
+    // them, then step up and pack by hand: pick up a handful of slices or
+    // garlic cloves from the board, a head of dill, or a pinch of peppercorns
+    // from the tin, carry it over a jar and drop it in. A jar of slices is
+    // dill pickles; a jar of cloves is pickled garlic. Hold Interact on the pot of boiling brine (on the hot pad
     // or the stove) to pour up to the line, and put a lid on from the stack.
     // Brine and lids go to the jar you're working on while it still needs
     // them, otherwise on to the next jar that does, so you can pour down the
     // row and then lid them all. Lidded jars pick straight up off the towel.
     public class JarPackingStation : Station, IAfterLoad
     {
-        enum Carrying { Nothing, Slices, Cloves, Dill }
+        enum Carrying { Nothing, Slices, Cloves, Dill, Peppercorns }
 
         [SerializeField] RecipeData recipe;
         [Tooltip("Slices and peeled garlic are taken from this board's piles.")]
@@ -31,6 +32,8 @@ namespace GrandmasHouse.Stations
         [SerializeField] float dillSpacing = 0.035f;
         [Tooltip("The stack of lids and rings on the towel.")]
         [SerializeField] Transform lidStack;
+        [Tooltip("Where the peppercorn tin stands on the towel.")]
+        [SerializeField] Transform spiceSpot;
 
         [Header("Feel")]
         [Tooltip("How close the cursor must be to something to use it, in screen heights.")]
@@ -38,7 +41,8 @@ namespace GrandmasHouse.Stations
         [Tooltip("Slices picked up with each grab, and the most you can carry at once.")]
         [SerializeField] int handful = 4;
         [SerializeField] int maxSlicesCarried = 12;
-        [SerializeField] int maxClovesCarried = 6;
+        [SerializeField] int clovesPerGrab = 3;
+        [SerializeField] int maxClovesCarried = 12;
         [Tooltip("How high above the towel things are carried, in meters.")]
         [SerializeField] float carryHeight = 0.2f;
         [SerializeField] float carrySharpness = 18f;
@@ -77,8 +81,14 @@ namespace GrandmasHouse.Stations
             {
                 return !heldJar.HasLid && FreeSpot() != null;
             }
+            if (hands.Held.GetComponent<PeppercornTin>() != null)
+            {
+                return Tin == null;
+            }
             return dills.Count < maxDill && IsDill(hands.Held);
         }
+
+        PeppercornTin Tin => spiceSpot.GetComponentInChildren<PeppercornTin>();
 
         public override void Interact(PlayerHands hands)
         {
@@ -88,6 +98,10 @@ namespace GrandmasHouse.Stations
                 if (item.GetComponent<JarContents>() != null)
                 {
                     item.AttachTo(FreeSpot(), Vector3.zero, Quaternion.identity, settings.placeGlideSeconds, collidersOn: true);
+                }
+                else if (item.GetComponent<PeppercornTin>() != null)
+                {
+                    item.AttachTo(spiceSpot, Vector3.zero, Quaternion.identity, settings.placeGlideSeconds, collidersOn: true);
                 }
                 else
                 {
@@ -110,7 +124,8 @@ namespace GrandmasHouse.Stations
             {
                 return "Pack jars";
             }
-            return hands.Held.GetComponent<JarContents>() != null ? "Set jar down" : "Set dill down";
+            if (hands.Held.GetComponent<JarContents>() != null) return "Set jar down";
+            return hands.Held.GetComponent<PeppercornTin>() != null ? "Set peppercorns down" : "Set dill down";
         }
 
         protected override IEnumerable<Vector3> SnapTargets()
@@ -132,6 +147,10 @@ namespace GrandmasHouse.Stations
                 if (dills.Count > 0)
                 {
                     yield return dills[0].transform.position;
+                }
+                if (Tin != null)
+                {
+                    yield return Tin.transform.position;
                 }
                 if (LidTarget() != null)
                 {
@@ -223,10 +242,19 @@ namespace GrandmasHouse.Stations
             }
             if (board.CloveCount > 0 && CursorNear(board.ClovePilePosition))
             {
-                Hint("Pick up a clove");
+                Hint("Pick up cloves");
                 if (pressed)
                 {
-                    Grab(Carrying.Cloves, board.TakeCloves(1));
+                    Grab(Carrying.Cloves, board.TakeCloves(clovesPerGrab));
+                }
+                return true;
+            }
+            if (Tin is PeppercornTin tin && CursorNear(tin.transform.position))
+            {
+                Hint("Pick up a pinch of peppercorns");
+                if (pressed)
+                {
+                    Grab(Carrying.Peppercorns, tin.TakePinch());
                 }
                 return true;
             }
@@ -269,7 +297,9 @@ namespace GrandmasHouse.Stations
                 {
                     continue;
                 }
-                if (carrying == Carrying.Slices && onTowel.IsFull)
+                bool noRoom = (carrying == Carrying.Slices && onTowel.RoomForSlices == 0)
+                    || (carrying == Carrying.Cloves && onTowel.RoomForCloves == 0);
+                if (noRoom)
                 {
                     UseHint = "This jar is full";
                     return;
@@ -297,10 +327,10 @@ namespace GrandmasHouse.Stations
             }
             else if (carrying == Carrying.Cloves && carried.Count < maxClovesCarried && board.CloveCount > 0 && CursorNear(board.ClovePilePosition))
             {
-                Hint("Pick up another");
+                Hint("Pick up more");
                 if (pressed)
                 {
-                    Grab(Carrying.Cloves, board.TakeCloves(1));
+                    Grab(Carrying.Cloves, board.TakeCloves(Mathf.Min(clovesPerGrab, maxClovesCarried - carried.Count)));
                 }
             }
         }
@@ -315,7 +345,15 @@ namespace GrandmasHouse.Stations
                 carrying = Carrying.Nothing;
                 return;
             }
-            int count = carrying == Carrying.Slices ? Mathf.Min(carried.Count, target.Capacity - target.SliceCount) : carried.Count;
+            if (carrying == Carrying.Peppercorns)
+            {
+                target.AddPeppercorns(new List<Transform>(carried));
+                carried.Clear();
+                carrying = Carrying.Nothing;
+                return;
+            }
+            int room = carrying == Carrying.Slices ? target.RoomForSlices : target.RoomForCloves;
+            int count = Mathf.Min(carried.Count, room);
             for (int i = 0; i < count; i++)
             {
                 Transform piece = carried[0];
@@ -349,6 +387,11 @@ namespace GrandmasHouse.Stations
             else if (carrying == Carrying.Dill && carriedDill != null)
             {
                 AddDillHead(carriedDill, 0.3f);
+            }
+            else if (carrying == Carrying.Peppercorns)
+            {
+                // Back into the tin.
+                foreach (var corn in carried) Destroy(corn.gameObject);
             }
             carried.Clear();
             carriedDill = null;
@@ -590,8 +633,9 @@ namespace GrandmasHouse.Stations
                 return;
             }
             logged.Add(jar);
-            float headspaceError = jar.BrineLevel - recipe.brineLine;
-            Debug.Log($"Packed {jar.SliceCount}/{recipe.slicesPerJar} slices, {jar.CloveCount}/{recipe.garlicPerJar} garlic cloves, dill {(jar.HasDill ? "yes" : "no")}, brine {jar.BrineLevel:P0} (line {recipe.brineLine:P0}, off by {headspaceError:+0%;-0%})");
+            RecipeData packed = jar.Recipe != null ? jar.Recipe : recipe;
+            float headspaceError = jar.BrineLevel - packed.brineLine;
+            Debug.Log($"{packed.displayName}: {jar.SliceCount} slices, {jar.CloveCount} cloves (recipe {packed.garlicPerJar}), {jar.PeppercornCount} peppercorns, dill {(jar.HasDill ? "yes" : "no")}, brine {jar.BrineLevel:P0} (line {packed.brineLine:P0}, off by {headspaceError:+0%;-0%})");
         }
 
         bool CursorNear(Vector3 worldPoint)

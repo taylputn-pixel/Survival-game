@@ -13,22 +13,22 @@ MonoBehaviour:
   m_Name: Book_HowToCan
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.NoteData
   kind: 3
-  title: 'How to Can: Dill Pickles'
+  title: How to Can
   recipe: {fileID: 0}
   body: 
   marginNote: 
   pages:
-  - 'Putting up a batch of dill pickles takes an afternoon and fills the pantry for
-    winter.
+  - 'Two recipes are in this book: dill pickles, and pickled garlic. Both take an
+    afternoon and fill the pantry for winter.
 
 
-    You will need: cucumbers, a head of dill and two cloves of garlic
-    for each pint jar, vinegar and salt from the pantry, pint jars with lids, the
-    cooking pot, and the big water-bath canner.
+    For dill pickles you will need:
+    cucumbers, a head of dill and two cloves of garlic for each pint jar, vinegar
+    and salt from the pantry, pint jars with lids, the cooking pot, and the big water-bath
+    canner.
 
 
-    A canner holds four pints,
-    so plan your batch in fours.'
+    A canner holds four pints, so plan your batch in fours.'
   - 'Getting ready
 
 
@@ -87,3 +87,24 @@ MonoBehaviour:
     When
     they''ve sealed, take them to the table and put a label on each. Then carry them
     to the pantry shelf, two at a time, and stand back and admire them.'
+  - 'Pickled garlic
+
+
+    You will need about three heads of garlic for each pint,
+    a head of dill, and the peppercorn tin from the pantry.
+
+
+    Break and peel
+    the garlic on the cutting board. Set the jars and the peppercorn tin on the dish
+    towel.'
+  - 'Packing pickled garlic
+
+
+    In each jar put a head of dill and a pinch of peppercorns,
+    then fill it with peeled cloves, a handful at a time, until it''s full.
+
+
+    Make
+    the same brine as for pickles, pour it over the garlic to the line, and put on
+    a lid. It goes through the same ten-minute water bath, and gets its own label
+    at the table.'

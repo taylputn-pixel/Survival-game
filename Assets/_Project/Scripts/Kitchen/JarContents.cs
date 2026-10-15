@@ -1,15 +1,17 @@
 using System.Collections;
 using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
+using GrandmasHouse.Data;
 using GrandmasHouse.Saving;
 using GrandmasHouse.Stations;
 using UnityEngine;
 
 namespace GrandmasHouse.Kitchen
 {
-    // What's inside a glass jar: slices packed in, a head of dill, garlic
-    // cloves, and brine.
-    // Everything is visible through the glass.
+    // What's inside a glass jar: slices or garlic cloves packed in, a head of
+    // dill, peppercorns, and brine. Everything is visible through the glass.
+    // What it's mostly packed with decides what it is (dill pickles or
+    // pickled garlic), and so which label it gets.
     [RequireComponent(typeof(Pickup))]
     public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard
     {
@@ -21,6 +23,12 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Transform brine;
         [SerializeField] int capacity = 22;
         [SerializeField] float sliceStep = 0.0052f;
+        [Tooltip("Cloves that fill a jar packed with garlic alone.")]
+        [SerializeField] int cloveCapacity = 30;
+        [SerializeField] int clovesPerLayer = 6;
+        [SerializeField] float cloveLayer = 0.02f;
+        [Tooltip("Everything this jar can be put up as.")]
+        [SerializeField] RecipeData[] recipes;
 
         [Tooltip("The lid and ring, hidden until the jar is closed up.")]
         [SerializeField] Transform lid;
@@ -34,9 +42,12 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Material cloveMaterial;
         [Tooltip("Width, height and length of a clove, in meters.")]
         [SerializeField] Vector3 cloveSize = new Vector3(0.0126f, 0.0108f, 0.0216f);
+        [SerializeField] Material peppercornMaterial;
+        [SerializeField] float peppercornSize = 0.005f;
 
         public int SliceCount { get; private set; }
         public int CloveCount { get; private set; }
+        public int PeppercornCount { get; private set; }
         public bool HasLid { get; private set; }
         // Through the water bath and out to cool.
         public bool IsProcessed { get; private set; }
@@ -46,8 +57,31 @@ namespace GrandmasHouse.Kitchen
         public bool CanLabel => IsSealed && !IsLabeled;
         // 0 is empty, 1 is right to the rim.
         public float BrineLevel { get; private set; }
-        public bool IsFull => SliceCount >= capacity;
-        public int Capacity => capacity;
+        // How packed it is: slices and cloves both take up room.
+        public float Fullness => SliceCount / (float)capacity + CloveCount / (float)cloveCapacity;
+        public bool IsFull => Fullness >= 0.999f;
+        public int RoomForSlices => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * capacity + 0.001f));
+        public int RoomForCloves => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * cloveCapacity + 0.001f));
+        // What it's being put up as: slices make pickles, cloves alone make pickled garlic.
+        public RecipeData Recipe
+        {
+            get
+            {
+                if (SliceCount == 0 && CloveCount == 0)
+                {
+                    return null;
+                }
+                var fill = SliceCount > 0 ? RecipeData.Fill.Slices : RecipeData.Fill.Cloves;
+                foreach (var recipe in recipes)
+                {
+                    if (recipe != null && recipe.fill == fill)
+                    {
+                        return recipe;
+                    }
+                }
+                return null;
+            }
+        }
         public Vector3 Mouth => inside.position + inside.up * innerHeight;
 
         void Awake()
@@ -97,6 +131,7 @@ namespace GrandmasHouse.Kitchen
                 return;
             }
             IsLabeled = true;
+            ShowLabel();
             StartCoroutine(Unroll());
         }
 
@@ -135,6 +170,7 @@ namespace GrandmasHouse.Kitchen
         {
             public int slices;
             public int cloves;
+            public int peppercorns;
             public bool dill;
             public float brine;
             public bool lid;
@@ -145,7 +181,7 @@ namespace GrandmasHouse.Kitchen
 
         public string Capture() => JsonUtility.ToJson(new State
         {
-            slices = SliceCount, cloves = CloveCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
+            slices = SliceCount, cloves = CloveCount, peppercorns = PeppercornCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
         });
 
         public void Restore(string json)
@@ -165,6 +201,8 @@ namespace GrandmasHouse.Kitchen
                     new Vector3(jitter.x, 0.004f + i * sliceStep, jitter.y),
                     Quaternion.Euler(Random.Range(-25f, 25f), Random.Range(0f, 360f), Random.Range(-25f, 25f)));
             }
+            SliceCount = state.slices;
+            CloveCount = 0;
             for (int i = 0; i < state.cloves; i++)
             {
                 var clove = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -174,10 +212,16 @@ namespace GrandmasHouse.Kitchen
                 clove.transform.localScale = cloveSize;
                 clove.transform.SetParent(inside, false);
                 NoShadows(clove.transform);
+                CloveCount++;
                 clove.transform.SetLocalPositionAndRotation(ClovePlace(), Random.rotation);
             }
-            SliceCount = state.slices;
-            CloveCount = state.cloves;
+            PeppercornCount = state.peppercorns;
+            for (int i = 0; i < state.peppercorns; i++)
+            {
+                var corn = MakePeppercorn(peppercornMaterial, peppercornSize);
+                corn.SetParent(inside, false);
+                corn.localPosition = PeppercornPlace();
+            }
             HasDill = state.dill;
             BrineLevel = state.brine;
             HasLid = state.lid;
@@ -186,6 +230,7 @@ namespace GrandmasHouse.Kitchen
             IsLabeled = state.labeled;
             lid.gameObject.SetActive(HasLid);
             label.SetActive(IsLabeled);
+            ShowLabel();
             ShowBrine();
         }
 
@@ -214,7 +259,7 @@ namespace GrandmasHouse.Kitchen
         }
 
         // An open jar can be poured out at the sink and packed again.
-        public bool HasContents => !HasLid && (SliceCount > 0 || CloveCount > 0 || HasDill || BrineLevel > 0f);
+        public bool HasContents => !HasLid && (SliceCount > 0 || CloveCount > 0 || PeppercornCount > 0 || HasDill || BrineLevel > 0f);
 
         public void Empty()
         {
@@ -228,6 +273,7 @@ namespace GrandmasHouse.Kitchen
             }
             SliceCount = 0;
             CloveCount = 0;
+            PeppercornCount = 0;
             HasDill = false;
             BrineLevel = 0f;
             ShowBrine();
@@ -249,8 +295,9 @@ namespace GrandmasHouse.Kitchen
             StartCoroutine(Drop(slice, end, tilt, delay));
         }
 
-        // A garlic clove drops in and tucks in among the slices. There's no
-        // limit; past the recipe's count it's just extra garlic.
+        // A garlic clove drops in. Among slices it tucks in anywhere (past the
+        // recipe's count it's just extra garlic); in a jar of garlic alone the
+        // cloves stack up in layers.
         public void AddClove(Transform clove, float delay)
         {
             CloveCount++;
@@ -259,12 +306,61 @@ namespace GrandmasHouse.Kitchen
             StartCoroutine(Drop(clove, ClovePlace(), Random.rotation, delay));
         }
 
-        // Somewhere low in the jar, among whatever is already packed.
         Vector3 ClovePlace()
         {
-            float top = Mathf.Max(0.01f, SliceCount * sliceStep);
-            Vector2 jitter = Random.insideUnitCircle * (innerRadius - 0.012f);
-            return new Vector3(jitter.x, Random.Range(0.006f, Mathf.Min(top, innerHeight - 0.01f)), jitter.y);
+            if (SliceCount > 0)
+            {
+                // Somewhere low in the jar, among the slices.
+                float top = Mathf.Max(0.01f, SliceCount * sliceStep);
+                Vector2 jitter = Random.insideUnitCircle * (innerRadius - 0.012f);
+                return new Vector3(jitter.x, Random.Range(0.006f, Mathf.Min(top, innerHeight - 0.01f)), jitter.y);
+            }
+            // Around the jar in rings, one layer on top of the last.
+            int index = CloveCount - 1;
+            int layer = index / clovesPerLayer;
+            float angle = (index % clovesPerLayer) * Mathf.PI * 2f / clovesPerLayer + layer * 0.5f;
+            float ring = index % clovesPerLayer == clovesPerLayer - 1 ? 0f : innerRadius - 0.014f;
+            return new Vector3(Mathf.Cos(angle) * ring, 0.008f + layer * cloveLayer, Mathf.Sin(angle) * ring);
+        }
+
+        // A pinch of peppercorns falls in and settles among what's packed.
+        public void AddPeppercorns(System.Collections.Generic.List<Transform> corns)
+        {
+            for (int i = 0; i < corns.Count; i++)
+            {
+                PeppercornCount++;
+                corns[i].SetParent(inside, worldPositionStays: true);
+                StartCoroutine(Drop(corns[i], PeppercornPlace(), Random.rotation, i * 0.03f));
+            }
+        }
+
+        Vector3 PeppercornPlace()
+        {
+            float top = Mathf.Clamp(Fullness * innerHeight, 0.01f, innerHeight - 0.01f);
+            Vector2 jitter = Random.insideUnitCircle * (innerRadius - 0.006f);
+            return new Vector3(jitter.x, Random.Range(0.004f, top), jitter.y);
+        }
+
+        public static Transform MakePeppercorn(Material material, float size)
+        {
+            var corn = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            corn.name = "Peppercorn";
+            Destroy(corn.GetComponent<Collider>());
+            var look = corn.GetComponent<Renderer>();
+            look.sharedMaterial = material;
+            look.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            corn.transform.localScale = Vector3.one * size;
+            return corn.transform;
+        }
+
+        // The label shows what's inside.
+        void ShowLabel()
+        {
+            RecipeData recipe = Recipe;
+            if (recipe != null && recipe.label != null)
+            {
+                label.GetComponent<Renderer>().sharedMaterial = recipe.label;
+            }
         }
 
         // The dill goes in standing up along the side of the jar.

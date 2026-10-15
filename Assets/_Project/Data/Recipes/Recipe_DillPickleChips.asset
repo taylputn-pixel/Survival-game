@@ -13,10 +13,18 @@ MonoBehaviour:
   m_Name: Recipe_DillPickleChips
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.RecipeData
   displayName: Dill Pickle Chips
+  fill: 0
+  label: {fileID: 2100000, guid: 6f707c382f6b06c4d8b640717e65cf19, type: 2}
   slicesPerJar: 20
   needsDill: 1
+  garlicPerJar: 2
+  peppercornPinches: 0
   brineLine: 0.88
   brineEnough: 0.75
+  vinegarShare: 0.5
+  saltScoops: 2
+  heatSeconds: 8
+  potPerJar: 0.2
   processMinutes: 10
   cardText: '(stand-in until Grandma''s own card is added)
 

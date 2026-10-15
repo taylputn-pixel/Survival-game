@@ -514,6 +514,12 @@ MonoBehaviour:
   brine: {fileID: 8655880477618518376}
   capacity: 22
   sliceStep: 0.0052
+  cloveCapacity: 30
+  clovesPerLayer: 6
+  cloveLayer: 0.02
+  recipes:
+  - {fileID: 11400000, guid: 705a86bb90da65f46b9907627ca8c014, type: 2}
+  - {fileID: 11400000, guid: 896573569d607674fbf46701d86820eb, type: 2}
   lid: {fileID: 8101993745699184547}
   label: {fileID: 151480534958748030}
   lidSeconds: 0.5
@@ -521,6 +527,8 @@ MonoBehaviour:
   chipSize: {x: 0.05, y: 0.006}
   cloveMaterial: {fileID: 2100000, guid: 0d71eb380eaf18041b99b1ebf9bc115f, type: 2}
   cloveSize: {x: 0.0126, y: 0.0108, z: 0.0216}
+  peppercornMaterial: {fileID: 2100000, guid: 234adcde5119a6948b3673c49e099c02, type: 2}
+  peppercornSize: 0.005
 --- !u!114 &37119894869995612
 MonoBehaviour:
   m_ObjectHideFlags: 0
