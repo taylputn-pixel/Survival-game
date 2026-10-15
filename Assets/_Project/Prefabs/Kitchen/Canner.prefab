@@ -640,6 +640,9 @@ MonoBehaviour:
   lidOnPose: {fileID: 5981058742365687652}
   lidOffPose: {fileID: 7015981673011379656}
   steam: {fileID: 4800620742272453234}
+  waterSurface: {fileID: 8378135504937297721}
+  waterHeights: {x: 0.012, y: 0.205}
+  waterNeeded: 0.85
   clock: {fileID: 0}
   secondsPerRecipeMinute: 3
   lidMoveSeconds: 0.4

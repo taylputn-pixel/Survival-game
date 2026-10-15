@@ -11,12 +11,13 @@ using UnityEngine;
 namespace GrandmasHouse.Kitchen
 {
     // The big water-bath canner. It's kept in the pantry and used right where
-    // it sits, with no station: set it on a burner, put lidded jars in its
-    // rack, put the lid on and turn the burner on. It boils for the recipe's
+    // it sits, with no station: fill it with water at the sink, set it on a
+    // burner, put lidded jars in its rack, put the lid on and turn the burner
+    // on. It only boils with enough water to cover the jars. It boils for the recipe's
     // time (you can walk away; sleeping finishes it too). Then take the lid
     // off and lift each jar out; it pings as it cools and seals.
     [RequireComponent(typeof(Cookware))]
-    public class Canner : MonoBehaviour, IInteractable, IPickupGuard, IItemState, IAfterLoad
+    public class Canner : MonoBehaviour, IInteractable, IPickupGuard, IItemState, IAfterLoad, IFillable, IEmptyable
     {
         [SerializeField] PlayerSettings settings;
         [SerializeField] RecipeData recipe;
@@ -28,6 +29,12 @@ namespace GrandmasHouse.Kitchen
         [Tooltip("Where the canner lid is set aside when it's off.")]
         [SerializeField] Transform lidOffPose;
         [SerializeField] ParticleSystem steam;
+        [Tooltip("The water's surface; it rises as the canner fills.")]
+        [SerializeField] Transform waterSurface;
+        [Tooltip("Height of the water's surface when empty and when full, in the canner's space.")]
+        [SerializeField] Vector2 waterHeights = new Vector2(0.012f, 0.205f);
+        [Tooltip("How full it must be to cover the jars and boil (share of full).")]
+        [Range(0f, 1f)] [SerializeField] float waterNeeded = 0.85f;
         [Tooltip("Finished overnight when you sleep.")]
         [SerializeField] DayClock clock;
 
@@ -47,9 +54,15 @@ namespace GrandmasHouse.Kitchen
         Cookware cookware;
         SoundLoop boilSound;
 
+        // 0 is empty, 1 is full.
+        float water;
+
         bool HasJars => rack.Count > 0;
-        // Boils only with jars in, the lid on, and the burner lit.
-        bool Heating => lidOn && !done && HasJars && cookware.IsHot;
+        // Boils only with jars in, enough water over them, the lid on, and the burner lit.
+        bool Heating => lidOn && !done && HasJars && water >= waterNeeded && cookware.IsHot;
+        public bool IsFull => water >= 1f;
+        public Vector3 SurfaceWorld => waterSurface.position;
+        public bool HasContents => water > 0f;
         public bool LidOn => lidOn;
         public bool CanMoveLid => !lidMoving;
 
@@ -58,6 +71,31 @@ namespace GrandmasHouse.Kitchen
             cookware = GetComponent<Cookware>();
             if (clock == null) clock = FindAnyObjectByType<DayClock>();
             boilSound = Sfx.Loop(SoundId.Boil, transform);
+            ShowWater();
+        }
+
+        public void AddWater(float amount)
+        {
+            water = Mathf.Min(water + amount, 1f);
+            ShowWater();
+        }
+
+        public void DoneFilling() { }
+
+        // Poured out at the sink.
+        public void Empty()
+        {
+            water = 0f;
+            ShowWater();
+        }
+
+        public void SetPouring(bool pouring) { }
+
+        void ShowWater()
+        {
+            waterSurface.gameObject.SetActive(water > 0f);
+            Vector3 at = waterSurface.localPosition;
+            waterSurface.localPosition = new Vector3(at.x, Mathf.Lerp(waterHeights.x, waterHeights.y, water), at.z);
         }
 
         void OnEnable()
@@ -80,9 +118,10 @@ namespace GrandmasHouse.Kitchen
             public bool boiling;
             public bool done;
             public float boilLeft;
+            public float water;
         }
 
-        public string Capture() => JsonUtility.ToJson(new State { lidOn = lidOn, boiling = boiling, done = done, boilLeft = boilLeft });
+        public string Capture() => JsonUtility.ToJson(new State { lidOn = lidOn, boiling = boiling, done = done, boilLeft = boilLeft, water = water });
 
         public void Restore(string json)
         {
@@ -91,6 +130,8 @@ namespace GrandmasHouse.Kitchen
             boiling = state.boiling;
             done = state.done;
             boilLeft = state.boilLeft;
+            water = state.water;
+            ShowWater();
             Transform pose = lidOn ? lidOnPose : lidOffPose;
             canLid.SetPositionAndRotation(pose.position, pose.rotation);
         }

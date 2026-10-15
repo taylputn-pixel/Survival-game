@@ -17,7 +17,17 @@ namespace GrandmasHouse.Kitchen
         void SetPouring(bool pouring);
     }
 
-    // The kitchen sink. Hold the cooking pot under the faucet to fill it
+    // Something that's filled with water at the sink: the cooking pot, the canner.
+    public interface IFillable
+    {
+        bool IsFull { get; }
+        void AddWater(float amount);
+        // Where the faucet's stream lands.
+        Vector3 SurfaceWorld { get; }
+        void DoneFilling();
+    }
+
+    // The kitchen sink. Hold the cooking pot or the canner under the faucet to fill it
     // with water (Interact, held), or pour a pot or jar out down the drain
     // (Interact for a jar; the second button for a pot, since Interact fills it).
     public class Sink : MonoBehaviour, IInteractable, IAltInteractable
@@ -54,24 +64,24 @@ namespace GrandmasHouse.Kitchen
             {
                 return false;
             }
-            var pot = hands.Held.GetComponent<CookingPot>();
-            if (pot != null)
+            var fillable = hands.Held.GetComponent<IFillable>();
+            if (fillable != null)
             {
-                return !pot.IsFull;
+                return !fillable.IsFull;
             }
             return CanPourOut(hands);
         }
 
-        public string PromptVerb(PlayerHands hands) => hands.Held.GetComponent<CookingPot>() != null ? "Hold to fill with water" : "Pour out";
+        public string PromptVerb(PlayerHands hands) => hands.Held.GetComponent<IFillable>() != null ? "Hold to fill with water" : "Pour out";
 
         public void Interact(PlayerHands hands)
         {
-            var pot = hands.Held.GetComponent<CookingPot>();
-            StartCoroutine(pot != null ? Fill(hands, pot) : PourOut(hands));
+            var fillable = hands.Held.GetComponent<IFillable>();
+            StartCoroutine(fillable != null ? Fill(hands, fillable) : PourOut(hands));
         }
 
-        // A pot can always be poured out on the second button.
-        public bool CanAltInteract(PlayerHands hands) => !busy && !hands.IsEmpty && hands.Held.GetComponent<CookingPot>() != null && CanPourOut(hands);
+        // Anything that fills here pours out on the second button.
+        public bool CanAltInteract(PlayerHands hands) => !busy && !hands.IsEmpty && hands.Held.GetComponent<IFillable>() != null && CanPourOut(hands);
 
         public string AltVerb(PlayerHands hands) => "Pour out";
 
@@ -83,8 +93,8 @@ namespace GrandmasHouse.Kitchen
             return emptyable != null && emptyable.HasContents;
         }
 
-        // The pot goes under the faucet and fills while you hold the button.
-        IEnumerator Fill(PlayerHands hands, CookingPot pot)
+        // It goes under the faucet and fills while you hold the button.
+        IEnumerator Fill(PlayerHands hands, IFillable pot)
         {
             busy = true;
             hands.Controller.InputEnabled = false;
@@ -104,7 +114,7 @@ namespace GrandmasHouse.Kitchen
             }
             faucetStream.gameObject.SetActive(false);
             tapSound.Set(false);
-            pot.LogBrine();
+            pot.DoneFilling();
 
             hands.Give(item);
             hands.Controller.InputEnabled = true;
@@ -141,9 +151,9 @@ namespace GrandmasHouse.Kitchen
             yield return Move(t, startPosition, startRotation, over, upright, tipSeconds);
             yield return Move(t, over, upright, over, tipped, tipSeconds);
             emptyable.SetPouring(true);
-            if (emptyable is JarContents)
+            if (!(emptyable is CookingPot))
             {
-                // A jar has no pouring sound of its own.
+                // Only the pot has a pouring sound of its own.
                 Sfx.Play(SoundId.Pour, drain.position, 0.8f);
             }
             yield return new WaitForSeconds(pourSeconds);

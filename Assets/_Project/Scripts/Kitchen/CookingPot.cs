@@ -17,7 +17,7 @@ namespace GrandmasHouse.Kitchen
     // knob. Once it has boiled the brine stays ready, so the pot can move to
     // the hot pad by the packing towel.
     [RequireComponent(typeof(Cookware))]
-    public class CookingPot : MonoBehaviour, IInteractable, IItemState, IEmptyable
+    public class CookingPot : MonoBehaviour, IInteractable, IItemState, IEmptyable, IFillable
     {
         [SerializeField] RecipeData recipe;
         [Tooltip("The brine's surface; it rises as you pour and sits on the bottom when empty.")]
@@ -186,6 +186,8 @@ namespace GrandmasHouse.Kitchen
             busy = false;
             LogBrine();
         }
+
+        public void DoneFilling() => LogBrine();
 
         // Cold water from the tap, held under the faucet at the sink.
         public void AddWater(float amount)
