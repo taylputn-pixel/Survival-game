@@ -11687,7 +11687,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 564950657}
-  - component: {fileID: 564950656}
+  - component: {fileID: 564950659}
+  - component: {fileID: 564950658}
   m_Layer: 0
   m_Name: Dev Tools
   m_TagString: Untagged
@@ -11695,23 +11696,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &564950656
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 564950655}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d68b5412256ce4444a72f1f975bea579, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.DevTools.DevSpawner
-  hands: {fileID: 1573927867}
-  cucumber: {fileID: 6892653883721051213, guid: 859c9666fa7c8fe4491ad17e640bbe42, type: 3}
-  dill: {fileID: 4686656390913155349, guid: 12262f1e140f21240bfb9844e451af18, type: 3}
-  garlic: {fileID: 8412553011175359793, guid: 40df516444efe6e4ca4f8a56bdbd78cc, type: 3}
-  distance: 0.6
 --- !u!4 &564950657
 Transform:
   m_ObjectHideFlags: 0
@@ -11727,6 +11711,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &564950658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 564950655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23ae28413e7860845ac416e79665aa91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.DevTools.DevMenu
+  hands: {fileID: 1573927867}
+  reader: {fileID: 371697911}
+  reticle: {fileID: 371697905}
+  catalog: {fileID: 11400000, guid: a720ee306e791c144a04377e9b6f57f5, type: 2}
+  distance: 0.6
+--- !u!114 &564950659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 564950655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef83d70bf1eaedb4b82e36f9117c4172, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.UI.MenuStack
 --- !u!1 &565441495
 GameObject:
   m_ObjectHideFlags: 0
