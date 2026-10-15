@@ -11,7 +11,9 @@ using UnityEngine.UI;
 namespace GrandmasHouse.Interaction
 {
     // Holds one of Grandma's notes up to read, filling the screen like paper
-    // in your hands. Back or Interact puts it down. The clock waits.
+    // in your hands. Back or Interact puts it down. A book opens to its first
+    // page: Interact turns the page (and closes it after the last), Previous
+    // turns back, Back puts it down. The clock waits.
     public class NoteReader : MonoBehaviour
     {
         [SerializeField] CanvasGroup panel;
@@ -24,11 +26,15 @@ namespace GrandmasHouse.Interaction
 
         InputAction interactAction;
         InputAction backAction;
+        InputAction previousAction;
+        NoteData showing;
+        int page;
         FirstPersonController controller;
         int openedFrame;
         bool open;
 
         public bool IsOpen => open;
+        public bool HasNextPage => open && showing != null && page < showing.PageCount - 1;
         // The frame the note was put down, so the same press doesn't also pause.
         public int ClosedFrame { get; private set; } = -1;
 
@@ -36,6 +42,7 @@ namespace GrandmasHouse.Interaction
         {
             interactAction = InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
             backAction = InputSystem.actions.FindAction("Player/Back", throwIfNotFound: true);
+            previousAction = InputSystem.actions.FindAction("Player/Previous", throwIfNotFound: true);
             panel.alpha = 0f;
             panel.gameObject.SetActive(false);
         }
@@ -47,10 +54,8 @@ namespace GrandmasHouse.Interaction
             clock.PausedForWork = true;
             reticle.Hidden = true;
 
-            title.text = note.title;
-            body.text = note.Body;
-            margin.text = note.marginNote;
-            margin.gameObject.SetActive(!string.IsNullOrEmpty(note.marginNote));
+            showing = note;
+            ShowPage(0);
 
             open = true;
             openedFrame = Time.frameCount;
@@ -66,10 +71,42 @@ namespace GrandmasHouse.Interaction
             {
                 return;
             }
-            if (backAction.WasPressedThisFrame() || interactAction.WasPressedThisFrame())
+            if (backAction.WasPressedThisFrame())
             {
                 Close();
             }
+            else if (interactAction.WasPressedThisFrame())
+            {
+                if (HasNextPage)
+                {
+                    TurnTo(page + 1);
+                }
+                else
+                {
+                    Close();
+                }
+            }
+            else if (previousAction.WasPressedThisFrame() && page > 0)
+            {
+                TurnTo(page - 1);
+            }
+        }
+
+        void TurnTo(int index)
+        {
+            Sfx.PlayFlat(SoundId.Paper, 0.7f);
+            ShowPage(index);
+        }
+
+        // A book's page number sits where a note's margin writing would.
+        void ShowPage(int index)
+        {
+            page = index;
+            title.text = showing.title;
+            body.text = showing.Page(page);
+            string side = showing.PageCount > 1 ? "Page " + (page + 1) + " of " + showing.PageCount : showing.marginNote;
+            margin.text = side;
+            margin.gameObject.SetActive(!string.IsNullOrEmpty(side));
         }
 
         void Close()

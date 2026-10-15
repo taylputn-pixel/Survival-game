@@ -61,7 +61,14 @@ namespace GrandmasHouse.Interaction
             if (reader.IsOpen)
             {
                 lookPrompt.Hide();
-                usePrompt.Hide();
+                if (reader.HasNextPage)
+                {
+                    usePrompt.Show(interactAction, "Turn the page");
+                }
+                else
+                {
+                    usePrompt.Hide();
+                }
                 backPrompt.Show(backAction, "Put down");
             }
             else if (station != null && station.Working)

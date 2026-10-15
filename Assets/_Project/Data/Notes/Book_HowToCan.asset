@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b8860589b05b4642ab42b24201a782d, type: 3}
+  m_Name: Book_HowToCan
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.NoteData
+  kind: 3
+  title: 'How to Can: Dill Pickles'
+  recipe: {fileID: 0}
+  body: 
+  marginNote: 
+  pages:
+  - 'Putting up a batch of dill pickles takes an afternoon and fills the pantry for
+    winter.
+
+
+    You will need: cucumbers, a head of dill and two cloves of garlic
+    for each pint jar, vinegar and salt from the pantry, pint jars with lids, the
+    cooking pot, and the big water-bath canner.
+
+
+    A canner holds four pints,
+    so plan your batch in fours.'
+  - 'Getting ready
+
+
+    Lay a cucumber on the cutting board and slice it into chips.
+    Even slices pack best, but a crooked one is still a pickle.
+
+
+    Set a head
+    of garlic on the board and press it to break it into cloves. Peel each clove;
+    the papery skin comes right off.
+
+
+    Set your jars on the dish towel, and the
+    dill heads beside them.'
+  - 'The brine
+
+
+    Fill the cooking pot at the sink up to the first line. Pour
+    vinegar in to the top line, about equal parts water and vinegar. Add two scoops
+    of salt.
+
+
+    Set the pot on a burner and turn the knob. Wait for a rolling
+    boil. Once it has boiled, the brine stays ready, so you can move the pot to the
+    hot pad beside the towel.'
+  - 'Packing the jars
+
+
+    In each jar put a head of dill and two cloves of garlic.
+    More garlic never hurt anyone.
+
+
+    Pack the slices in snug, a handful at a
+    time.
+
+
+    Pour the hot brine over them up to the line, leaving a little room
+    under the lid, then press a lid on.'
+  - 'The water bath
+
+
+    Carry the canner to the sink and fill it with water, enough
+    to cover the jars.
+
+
+    Set it on a burner, lower the lidded jars into the rack,
+    put the canner lid on, and turn the burner on. Let it boil for ten minutes. You
+    can step away and do something else while it works.'
+  - 'Cooling and keeping
+
+
+    Take the canner lid off and lift each jar out onto
+    the cooling towel. As they cool, listen for the ping: that''s the lid sealing.
+
+
+    When
+    they''ve sealed, take them to the table and put a label on each. Then carry them
+    to the pantry shelf, two at a time, and stand back and admire them.'
