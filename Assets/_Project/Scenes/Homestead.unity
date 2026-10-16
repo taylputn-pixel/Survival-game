@@ -3048,37 +3048,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1574638076}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &154445740
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 154445741}
-  m_Layer: 0
-  m_Name: WorkView
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &154445741
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 154445740}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.30997524, y: 0.6355434, z: -0.30997524, w: 0.6355434}
-  m_LocalPosition: {x: -0.85, y: 1.4, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 589195393}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &158066778
 GameObject:
   m_ObjectHideFlags: 0
@@ -11659,8 +11628,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 589195393}
-  - component: {fileID: 589195392}
   - component: {fileID: 589195394}
+  - component: {fileID: 589195395}
   m_Layer: 0
   m_Name: GardenBed
   m_TagString: Untagged
@@ -11668,28 +11637,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &589195392
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 589195391}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 131eec83ea4e938448e5b122fc48c95f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Stations.GardenBedStation
-  settings: {fileID: 11400000, guid: e68f130955f30ca438ccc0109a110e38, type: 2}
-  viewPoint: {fileID: 154445741}
-  reticle: {fileID: 371697905}
-  clock: {fileID: 2003454500}
-  garden: {fileID: 11400000, guid: 3cf29fe1dd41dea4a86839dad920ea1a, type: 2}
-  bed: {fileID: 589195394}
-  spotRadius: 0.06
-  plantSeconds: 0.35
-  wateringMargin: 0.15
-  canYaw: -75
 --- !u!4 &589195393
 Transform:
   m_ObjectHideFlags: 0
@@ -11709,7 +11656,6 @@ Transform:
   - {fileID: 162666205}
   - {fileID: 1303067612}
   - {fileID: 2102866268}
-  - {fileID: 154445741}
   - {fileID: 1698664844}
   m_Father: {fileID: 1190031794}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -11739,6 +11685,24 @@ MonoBehaviour:
   weedPrefab: {fileID: 450337071063329581, guid: c31f5753534e8204d8396478a051ac19, type: 3}
   weedPile: {fileID: 1698664844}
   pileSize: 12
+--- !u!114 &589195395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 589195391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75abdc46d389a304591304b4dba6782d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Garden.BedSoil
+  garden: {fileID: 11400000, guid: 3cf29fe1dd41dea4a86839dad920ea1a, type: 2}
+  spotReach: 0.2
+  plantSeconds: 0.35
+  wateringMargin: 0.15
+  canYaw: -75
+  canReach: 1.1
 --- !u!1 &590060512
 GameObject:
   m_ObjectHideFlags: 0

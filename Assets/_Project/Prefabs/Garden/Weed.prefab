@@ -601,6 +601,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2054418197148203503}
   - component: {fileID: 450337071063329581}
+  - component: {fileID: 6744294208300108608}
   m_Layer: 0
   m_Name: Weed
   m_TagString: Untagged
@@ -641,6 +642,28 @@ MonoBehaviour:
   root: {fileID: 2594245536146214227}
   pullRise: 0.05
   tossSeconds: 0.45
+  letGoDistance: 3
+--- !u!65 &6744294208300108608
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6376673743795062555}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.1, y: 0.05, z: 0.1}
+  m_Center: {x: 0, y: 0.025, z: 0}
 --- !u!1 &6627945883594558156
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,12 +1,16 @@
 using System.Collections;
 using GrandmasHouse.Audio;
+using GrandmasHouse.Carrying;
+using GrandmasHouse.Interaction;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace GrandmasHouse.Garden
 {
-    // A weed in the garden bed. It grows a little each night. Grab it and
-    // pull back to work it loose; it comes out roots and all.
-    public class Weed : MonoBehaviour
+    // A weed in the garden bed. It grows a little each night. Look at it
+    // with empty hands and hold Interact to work it loose; it comes out
+    // roots and all. Let go early and it settles back in.
+    public class Weed : MonoBehaviour, IInteractable
     {
         [Tooltip("The leafy part above the soil.")]
         [SerializeField] Transform top;
@@ -15,8 +19,11 @@ namespace GrandmasHouse.Garden
         [Tooltip("How far the weed rises out of the soil as it comes loose, in meters.")]
         [SerializeField] float pullRise = 0.05f;
         [SerializeField] float tossSeconds = 0.45f;
+        [Tooltip("Walk this far from the weed while pulling and you let go, in meters.")]
+        [SerializeField] float letGoDistance = 3f;
 
         public int Age { get; private set; }
+        public GardenBed Bed { get; set; }
         public float Size => Mathf.Lerp(0.9f, 1.8f, Age / (float)Mathf.Max(maxAge, 1));
 
         int maxAge = 3;
@@ -24,6 +31,37 @@ namespace GrandmasHouse.Garden
         float shownPull;
         bool held;
         bool pulledOut;
+        InputAction interactAction;
+
+        public bool CanInteract(PlayerHands hands) => hands.IsEmpty && !pulledOut && !held;
+
+        public string PromptVerb(PlayerHands hands) => "Hold to pull weed";
+
+        public void Interact(PlayerHands hands)
+        {
+            interactAction ??= InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
+            StartCoroutine(Pulling(hands));
+        }
+
+        // Older weeds take a little longer. Walking off lets go.
+        IEnumerator Pulling(PlayerHands hands)
+        {
+            float seconds = Bed.Settings.pullSeconds * Size;
+            float amount = 0f;
+            held = true;
+            while (interactAction.IsPressed() && Vector3.Distance(hands.ViewPoint.position, transform.position) < letGoDistance)
+            {
+                amount += Time.deltaTime / seconds;
+                SetPull(amount, holding: true);
+                if (amount >= 1f)
+                {
+                    Bed.PullOut(this);
+                    yield break;
+                }
+                yield return null;
+            }
+            SetPull(0f, holding: false);
+        }
 
         public void Sprout(int startAge, int oldest)
         {
@@ -48,6 +86,11 @@ namespace GrandmasHouse.Garden
         public void PullOut(Vector3 tossTo)
         {
             pulledOut = true;
+            held = false;
+            foreach (var hit in GetComponentsInChildren<Collider>())
+            {
+                hit.enabled = false;
+            }
             Sfx.Play(SoundId.WeedPull, transform.position);
             StartCoroutine(Toss(tossTo));
         }

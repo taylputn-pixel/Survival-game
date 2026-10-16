@@ -23,6 +23,6 @@ MonoBehaviour:
   weedsPerNight: 2
   maxWeeds: 10
   weedSpacing: 0.12
-  pullDistance: 0.1
+  pullSeconds: 0.6
   weedMaxAge: 3
   wetSoilColor: {r: 0.17, g: 0.11, b: 0.07, a: 1}

@@ -28,6 +28,12 @@ namespace GrandmasHouse.Carrying
         // What pressing Pick up would do right now, if anything.
         public string AltVerb { get; private set; }
         public Transform ViewPoint => viewPoint;
+        // Where the line of sight meets something within reach.
+        public bool HasLookPoint { get; private set; }
+        public Vector3 LookPoint => surfaceHit.point;
+        // Something else is moving the held item for now (the garden bed
+        // tipping the watering can); the hands leave it be until it's done.
+        public bool HeldPosed { get; set; }
         public FirstPersonController Controller => controller;
 
         // Hands the held item over to something else (a station, a board).
@@ -94,7 +100,7 @@ namespace GrandmasHouse.Carrying
 
         void LateUpdate()
         {
-            if (Held == null)
+            if (Held == null || HeldPosed)
             {
                 return;
             }
@@ -179,10 +185,14 @@ namespace GrandmasHouse.Carrying
             lookTarget = null;
             altTarget = null;
             hasSurface = false;
+            HasLookPoint = false;
 
             var ray = new Ray(viewPoint.position, viewPoint.forward);
             if (Physics.Raycast(ray, out RaycastHit hit, settings.reach, ~0, QueryTriggerInteraction.Ignore))
             {
+                // Set first, so things deciding what you can do can see where you look.
+                surfaceHit = hit;
+                HasLookPoint = true;
                 // The nearest thing up the hierarchy that can be used right now:
                 // a jar on a shelf, or the shelf itself if you're holding a jar.
                 foreach (var interactable in hit.collider.GetComponentsInParent<IInteractable>())
@@ -201,7 +211,6 @@ namespace GrandmasHouse.Carrying
                         break;
                     }
                 }
-                surfaceHit = hit;
                 hasSurface = hit.normal.y >= settings.minSurfaceUpness && IsFreeSurface(hit.collider);
             }
 

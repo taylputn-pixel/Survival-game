@@ -730,6 +730,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6923533030117001367}
   - component: {fileID: 589568212980281679}
+  - component: {fileID: 9148859734133376689}
   m_Layer: 0
   m_Name: Hornworm
   m_TagString: Untagged
@@ -777,3 +778,26 @@ MonoBehaviour:
   wiggle: 10
   sound: 10
   removeSeconds: 0.4
+--- !u!136 &9148859734133376689
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8842276423956026347}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.02
+  m_Height: 0.09
+  m_Direction: 2
+  m_Center: {x: 0, y: 0.007, z: 0}

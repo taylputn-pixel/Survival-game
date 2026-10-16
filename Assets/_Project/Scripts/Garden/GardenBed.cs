@@ -23,6 +23,7 @@ namespace GrandmasHouse.Garden
         readonly Queue<Weed> pile = new Queue<Weed>();
 
         public IReadOnlyList<PlantSpot> Spots => spots;
+        public GardenSettings Settings => settings;
         public IReadOnlyList<Weed> Weeds => weeds;
         public IEnumerable<Pinchable> Pinchables
         {
@@ -92,6 +93,7 @@ namespace GrandmasHouse.Garden
             {
                 Weed weed = Instantiate(weedPrefab, transform);
                 weed.transform.SetLocalPositionAndRotation(saved.position, Quaternion.Euler(0f, saved.yaw, 0f));
+                weed.Bed = this;
                 weed.Sprout(saved.age, settings.weedMaxAge);
                 weeds.Add(weed);
             }
@@ -142,6 +144,7 @@ namespace GrandmasHouse.Garden
                 return;
             }
             Weed weed = Instantiate(weedPrefab, position, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f), transform);
+            weed.Bed = this;
             weed.Sprout(age, settings.weedMaxAge);
             weeds.Add(weed);
         }
