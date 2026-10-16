@@ -329,6 +329,25 @@ namespace GrandmasHouse.Kitchen
             }
         }
 
+        // What's in it, kind by kind, as shares of the chopped pieces.
+        public Dictionary<string, float> Composition()
+        {
+            var shares = new Dictionary<string, float>();
+            foreach (var piece in pieces)
+            {
+                if (piece == null) continue;
+                string kind = RecipeData.KindOf(piece.name);
+                shares.TryGetValue(kind, out float had);
+                shares[kind] = had + 1f / pieces.Count;
+            }
+            return shares;
+        }
+
+        // Set down somewhere, not in your hands.
+        public bool IsSetDown => !InHands;
+
+        public static IEnumerable<CookingPot> All => all;
+
         static int CountOf(List<Transform> list, string prefix)
         {
             int count = 0;

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb4b8b46663cf1c45ad7e49c6467dca8, type: 3}
+  m_Name: Recipe_OnionRelish
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.RecipeData
+  displayName: Onion Relish
+  fill: 3
+  label: {fileID: 2100000, guid: 7159d968ac16adf409d8a3bcf7a165a4, type: 2}
+  needs: []
+  mostly: Onion
+  mostlyShare: 0.5
+  slicesPerJar: 20
+  wedgesPerJar: 12
+  needsDill: 0
+  clovesPerJar: 20
+  garlicPerJar: 0
+  peppercornPinches: 0
+  brineLine: 0.88
+  brineEnough: 0.8
+  usesBrine: 0
+  needsLemon: 0
+  liquid: {fileID: 2100000, guid: 90590eacc9f4fb04f80edb08f21b2d69, type: 2}
+  vinegarShare: 0.5
+  saltScoops: 1
+  heatSeconds: 20
+  potPerJar: 0.27
+  piecesPerPot: 44
+  tomatoesPerPot: 5
+  onionsPerPot: 1
+  peppersPerPot: 2
+  processMinutes: 15
+  cardText: 

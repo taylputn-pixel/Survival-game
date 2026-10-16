@@ -494,6 +494,8 @@ MonoBehaviour:
   category: 2
   heldRotation: {x: 0, y: 0, z: 0}
   keepUpright: 1
+  perHand: 1
+  bothHands: 0
   useCustomHoldOffset: 0
   customHoldOffset: {x: 0, y: -0.45, z: 0.55}
 --- !u!114 &4596061283356993487
@@ -520,9 +522,18 @@ MonoBehaviour:
   wedgeLayer: 0.028
   recipes:
   - {fileID: 11400000, guid: 705a86bb90da65f46b9907627ca8c014, type: 2}
+  - {fileID: 11400000, guid: 6ffa3b86090fa8a40b942834fa97e9d6, type: 2}
+  - {fileID: 11400000, guid: 82bfd8cba204a9041917e2b33801dee1, type: 2}
+  - {fileID: 11400000, guid: 61b472a4efb193647997a6a5f344a7df, type: 2}
+  - {fileID: 11400000, guid: c6effafed31a62e409d8bb3af1266843, type: 2}
   - {fileID: 11400000, guid: 896573569d607674fbf46701d86820eb, type: 2}
   - {fileID: 11400000, guid: 1aede0e4f23a0b645a20bc3ee1a8284d, type: 2}
   - {fileID: 11400000, guid: 65cf7262a0545e24fbf9980797fffdbe, type: 2}
+  - {fileID: 11400000, guid: 7b876ba658e6b10479cc5eaa56dc0ce3, type: 2}
+  - {fileID: 11400000, guid: 8e3a94607b37a4d498a339e253fbe8be, type: 2}
+  - {fileID: 11400000, guid: baedd86fe2c918a449d6211a30b49dbd, type: 2}
+  - {fileID: 11400000, guid: 87c0a7c0fc522e442aa20d8e0347d758, type: 2}
+  - {fileID: 11400000, guid: 3fee20fc2b1379f4e91b058bb1bafd0b, type: 2}
   lid: {fileID: 8101993745699184547}
   label: {fileID: 151480534958748030}
   lidSeconds: 0.5
@@ -534,6 +545,13 @@ MonoBehaviour:
   peppercornSize: 0.005
   wedgeMaterial: {fileID: 2100000, guid: 3c7bd32fe50be3149986c95ac3164442, type: 2}
   wedgeSize: {x: 0.034, y: 0.026, z: 0.036}
+  sliceLooks:
+  - kind: Onion
+    material: {fileID: 2100000, guid: 15d3bbdd7826710498b7a3f5f015bfcd, type: 2}
+    size: {x: 0.068, y: 0.005}
+  - kind: "Jalape\xF1o"
+    material: {fileID: 2100000, guid: 7e0dbb2b8bfffd64e9e8d466e104af62, type: 2}
+    size: {x: 0.024, y: 0.005}
 --- !u!114 &37119894869995612
 MonoBehaviour:
   m_ObjectHideFlags: 0

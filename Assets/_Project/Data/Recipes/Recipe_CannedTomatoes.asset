@@ -15,6 +15,9 @@ MonoBehaviour:
   displayName: Canned Tomatoes
   fill: 2
   label: {fileID: 2100000, guid: 448d801ac0690b849b1a04a945bb9e4b, type: 2}
+  needs: []
+  mostly: 
+  mostlyShare: 0.75
   slicesPerJar: 20
   wedgesPerJar: 12
   needsDill: 0
@@ -30,6 +33,10 @@ MonoBehaviour:
   saltScoops: 2
   heatSeconds: 8
   potPerJar: 0.2
+  piecesPerPot: 44
+  tomatoesPerPot: 5
+  onionsPerPot: 1
+  peppersPerPot: 2
   processMinutes: 85
   cardText: '(stand-in until Grandma''s own card is added)
 

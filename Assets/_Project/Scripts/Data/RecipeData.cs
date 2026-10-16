@@ -9,12 +9,20 @@ namespace GrandmasHouse.Data
     public class RecipeData : ScriptableObject
     {
         // What fills the jar, which is how a packed jar knows what it is.
+        // Salsa means anything cooked in the pot and ladled in.
         public enum Fill { Slices, Cloves, Wedges, Salsa }
 
         public string displayName = "Dill Pickle Chips";
         public Fill fill = Fill.Slices;
         [Tooltip("The label put on a sealed jar of this.")]
         public Material label;
+
+        [Header("What makes it this")]
+        [Tooltip("Kinds that must be in it (Dill, Onion, Jalapeño); missing one, it's something plainer. A kind is the first word of a piece's name.")]
+        public string[] needs = new string[0];
+        [Tooltip("A kind that must make up most of it (Cucumber), or empty.")]
+        public string mostly;
+        [Range(0f, 1f)] public float mostlyShare = 0.75f;
 
         [Header("Packing a jar")]
         [Tooltip("Slices that fill one jar snugly.")]
@@ -68,5 +76,30 @@ namespace GrandmasHouse.Data
         // Card or book text with this recipe's numbers filled in, so the
         // words always match how the game plays.
         public string FillIn(string text) => text?.Replace("{cloves}", clovesPerJar.ToString());
+
+        // What kind a piece is, from its name: "Onion Slice" is Onion.
+        public static string KindOf(string pieceName)
+        {
+            int space = pieceName.IndexOf(' ');
+            return space < 0 ? pieceName : pieceName.Substring(0, space);
+        }
+
+        // Whether a jar holding these amounts of each kind is this. "Mostly"
+        // counts only the main pieces (main), not extras like a head of dill.
+        public bool Matches(System.Collections.Generic.IDictionary<string, float> amounts, float main)
+        {
+            foreach (var kind in needs)
+            {
+                if (!amounts.TryGetValue(kind, out float amount) || amount <= 0f)
+                {
+                    return false;
+                }
+            }
+            if (string.IsNullOrEmpty(mostly))
+            {
+                return true;
+            }
+            return main > 0f && amounts.TryGetValue(mostly, out float most) && most / main >= mostlyShare;
+        }
     }
 }

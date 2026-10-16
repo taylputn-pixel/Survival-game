@@ -194,7 +194,16 @@ namespace GrandmasHouse.Stations
             {
                 yield return onTowel.Mouth;
             }
+            if (CarryingPieces)
+            {
+                foreach (var cooking in CookingPot.All)
+                {
+                    if (cooking.IsSetDown) yield return cooking.transform.position;
+                }
+            }
         }
+
+        bool CarryingPieces => carrying == Carrying.Slices || carrying == Carrying.Wedges || carrying == Carrying.Cloves;
 
         protected override void OnLeave()
         {
@@ -330,9 +339,38 @@ namespace GrandmasHouse.Stations
             }
         }
 
-        // Over a jar, drop what you're holding in; over its pile, pick up more.
+        // Over a jar, drop what you're holding in; over the cooking pot, drop
+        // it in to cook; over its pile, pick up more.
         void WhileCarrying(bool pressed)
         {
+            if (CarryingPieces)
+            {
+                foreach (var cooking in CookingPot.All)
+                {
+                    if (!cooking.IsSetDown || !CursorNear(cooking.transform.position))
+                    {
+                        continue;
+                    }
+                    if (cooking.RoomForPieces == 0)
+                    {
+                        UseHint = "The pot is full";
+                        return;
+                    }
+                    Hint("Drop in pot");
+                    if (pressed)
+                    {
+                        int count = Mathf.Min(carried.Count, cooking.RoomForPieces);
+                        cooking.AddPieces(carried.GetRange(0, count));
+                        carried.RemoveRange(0, count);
+                        if (carried.Count == 0)
+                        {
+                            carrying = Carrying.Nothing;
+                        }
+                    }
+                    return;
+                }
+            }
+
             foreach (var onTowel in JarsOnTowel())
             {
                 if (!IsOpen(onTowel) || !CursorNear(onTowel.Mouth))
@@ -535,7 +573,7 @@ namespace GrandmasHouse.Stations
             }
             if (CookingPot.ReadyPot() is CookingPot ready && PourTarget(ready) is JarContents forBrine && CursorNear(ready.transform.position))
             {
-                Hint(ready.HasSalsa ? "Ladle salsa" : "Pour brine");
+                Hint(ready.HasSalsa ? "Ladle into jar" : "Pour brine");
                 if (pressed)
                 {
                     jar = forBrine;
@@ -693,7 +731,7 @@ namespace GrandmasHouse.Stations
                         StopPouring();
                         return;
                     }
-                    jar.AddSalsa(pourRate * Time.deltaTime);
+                    jar.AddSalsa(pourRate * Time.deltaTime, pot.Composition());
                     pot.Use((jar.BrineLevel - before) * pot.SalsaRecipe.potPerJar);
                 }
                 else

@@ -15,6 +15,12 @@ MonoBehaviour:
   displayName: Salsa
   fill: 3
   label: {fileID: 2100000, guid: 3efe62364da56b840a9b7c3e89dd9fc3, type: 2}
+  needs:
+  - Tomato
+  - Onion
+  - "Jalape\xF1o"
+  mostly: Tomato
+  mostlyShare: 0.3
   slicesPerJar: 20
   wedgesPerJar: 12
   needsDill: 0

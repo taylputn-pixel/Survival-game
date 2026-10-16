@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
@@ -11,9 +12,10 @@ namespace GrandmasHouse.Kitchen
     // What's inside a glass jar: slices, garlic cloves or tomato wedges
     // packed in, a head of dill, peppercorns, lemon juice, and brine (or the
     // tomatoes' own juice), or salsa ladled in from the pot. Everything is
-    // visible through the glass. What it's filled with decides what it is
-    // (dill pickles, pickled garlic, canned tomatoes, salsa), and so which
-    // label it gets.
+    // visible through the glass. What it's filled with decides what it is,
+    // and so which label it gets: dill pickles need mostly cucumber and a
+    // head of dill, salsa needs tomato, onion and jalapeño. Short of a
+    // recipe, it's something plainer (pickles, pickled onions, relish).
     [RequireComponent(typeof(Pickup))]
     public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard
     {
@@ -49,6 +51,12 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Material wedgeMaterial;
         [Tooltip("Width, height and length of a tomato wedge, in meters.")]
         [SerializeField] Vector3 wedgeSize = new Vector3(0.034f, 0.026f, 0.036f);
+        [Tooltip("Slices of other produce (onion, jalapeño). Anything else comes back as a pickle chip.")]
+        [SerializeField] PieceLook[] sliceLooks;
+
+        // How much of each kind is in it: slices and wedges by count, salsa
+        // by share of the jar ("Tomato", "Onion", "Jalapeño").
+        readonly Dictionary<string, float> amounts = new Dictionary<string, float>();
 
         public int SliceCount { get; private set; }
         public int CloveCount { get; private set; }
@@ -119,22 +127,47 @@ namespace GrandmasHouse.Kitchen
                 return 20;
             }
         }
-        // What it's being put up as: slices make pickles, cloves alone make pickled garlic.
+        // What it's being put up as. What fills it picks the family (slices,
+        // cloves, wedges, or something ladled from the pot); then the first
+        // recipe of that family whose ingredients it has, in the order the
+        // recipes are listed, so the real recipes come before plainer ones.
         public RecipeData Recipe
         {
             get
             {
-                if (HasSalsa)
+                RecipeData.Fill fill;
+                if (HasSalsa) fill = RecipeData.Fill.Salsa;
+                else if (WedgeCount > 0) fill = RecipeData.Fill.Wedges;
+                else if (SliceCount > 0) fill = RecipeData.Fill.Slices;
+                else if (CloveCount > 0) fill = RecipeData.Fill.Cloves;
+                else return null;
+
+                var counted = new Dictionary<string, float>(amounts);
+                // Extras with the slices (garlic, dill) don't count toward what it mostly is.
+                float main = 0f;
+                foreach (var kind in counted)
                 {
-                    return RecipeFor(RecipeData.Fill.Salsa);
+                    if (fill != RecipeData.Fill.Slices || kind.Key != "Clove") main += kind.Value;
                 }
-                if (SliceCount == 0 && CloveCount == 0 && WedgeCount == 0)
+                if (HasDill) counted["Dill"] = 1f;
+                foreach (var recipe in recipes)
                 {
-                    return null;
+                    if (recipe != null && recipe.fill == fill && recipe.Matches(counted, main))
+                    {
+                        return recipe;
+                    }
                 }
-                var fill = WedgeCount > 0 ? RecipeData.Fill.Wedges : SliceCount > 0 ? RecipeData.Fill.Slices : RecipeData.Fill.Cloves;
                 return RecipeFor(fill);
             }
+        }
+
+        // What it'll be called once it's labeled.
+        public string Contents => Recipe != null ? Recipe.displayName : null;
+
+        void Count(string kind, float amount)
+        {
+            amounts.TryGetValue(kind, out float had);
+            amounts[kind] = had + amount;
         }
         public Vector3 Mouth => inside.position + inside.up * innerHeight;
 
@@ -227,6 +260,8 @@ namespace GrandmasHouse.Kitchen
             public int wedges;
             public bool lemon;
             public bool salsa;
+            public List<string> kinds = new List<string>();
+            public List<float> kindAmounts = new List<float>();
             public int peppercorns;
             public bool dill;
             public float brine;
@@ -236,21 +271,60 @@ namespace GrandmasHouse.Kitchen
             public bool labeled;
         }
 
-        public string Capture() => JsonUtility.ToJson(new State
+        public string Capture()
         {
-            slices = SliceCount, cloves = CloveCount, wedges = WedgeCount, lemon = HasLemon, salsa = HasSalsa, peppercorns = PeppercornCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
-        });
+            var state = new State
+            {
+                slices = SliceCount, cloves = CloveCount, wedges = WedgeCount, lemon = HasLemon, salsa = HasSalsa, peppercorns = PeppercornCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
+            };
+            foreach (var kind in amounts)
+            {
+                state.kinds.Add(kind.Key);
+                state.kindAmounts.Add(kind.Value);
+            }
+            return JsonUtility.ToJson(state);
+        }
 
         public void Restore(string json)
         {
             var state = JsonUtility.FromJson<State>(json);
+            amounts.Clear();
+            if (state.kinds != null && state.kinds.Count > 0)
+            {
+                for (int i = 0; i < state.kinds.Count; i++) amounts[state.kinds[i]] = state.kindAmounts[i];
+            }
+            else
+            {
+                // Older saves: slices were all cucumber.
+                if (state.slices > 0) amounts["Cucumber"] = state.slices;
+                if (state.cloves > 0) amounts["Clove"] = state.cloves;
+                if (state.wedges > 0) amounts["Tomato"] = state.wedges;
+            }
+            // Slices come back in their own kinds, in the jar's proportions.
+            var sliceKinds = new List<string>();
+            foreach (var kind in amounts)
+            {
+                if (state.salsa || kind.Key == "Clove" || kind.Key == "Tomato") continue;
+                for (int n = 0; n < Mathf.RoundToInt(kind.Value); n++) sliceKinds.Add(kind.Key);
+            }
             for (int i = 0; i < state.slices; i++)
             {
+                string kind = i < sliceKinds.Count ? sliceKinds[i] : "Cucumber";
+                Material look = chipMaterial;
+                Vector2 size = chipSize;
+                foreach (var known in sliceLooks)
+                {
+                    if (known.kind == kind)
+                    {
+                        look = known.material;
+                        size = known.size;
+                    }
+                }
                 var chip = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                chip.name = "Slice";
+                chip.name = kind + " Slice";
                 Destroy(chip.GetComponent<Collider>());
-                chip.GetComponent<Renderer>().sharedMaterial = chipMaterial;
-                chip.transform.localScale = new Vector3(chipSize.x, chipSize.y / 2f, chipSize.x);
+                chip.GetComponent<Renderer>().sharedMaterial = look;
+                chip.transform.localScale = new Vector3(size.x, size.y / 2f, size.x);
                 chip.transform.SetParent(inside, false);
                 NoShadows(chip.transform);
                 Vector2 jitter = Random.insideUnitCircle * (innerRadius - 0.026f);
@@ -343,6 +417,7 @@ namespace GrandmasHouse.Kitchen
             WedgeCount = 0;
             HasLemon = false;
             HasSalsa = false;
+            amounts.Clear();
             PeppercornCount = 0;
             HasDill = false;
             BrineLevel = 0f;
@@ -356,6 +431,7 @@ namespace GrandmasHouse.Kitchen
         public void AddSlice(Transform slice, float delay)
         {
             int index = SliceCount++;
+            Count(RecipeData.KindOf(slice.name), 1f);
             float y = 0.004f + index * sliceStep;
             Vector2 jitter = Random.insideUnitCircle * (innerRadius - 0.026f);
             var end = new Vector3(jitter.x, y, jitter.y);
@@ -371,6 +447,7 @@ namespace GrandmasHouse.Kitchen
         public void AddClove(Transform clove, float delay)
         {
             CloveCount++;
+            Count("Clove", 1f);
             clove.SetParent(inside, worldPositionStays: true);
             NoShadows(clove);
             StartCoroutine(Drop(clove, ClovePlace(), Random.rotation, delay));
@@ -398,6 +475,7 @@ namespace GrandmasHouse.Kitchen
         public void AddWedge(Transform wedge, float delay)
         {
             WedgeCount++;
+            Count("Tomato", 1f);
             wedge.SetParent(inside, worldPositionStays: true);
             NoShadows(wedge);
             StartCoroutine(Drop(wedge, WedgePlace(), WedgeRotation(), delay));
@@ -494,11 +572,18 @@ namespace GrandmasHouse.Kitchen
             NoShadows(dill.transform);
         }
 
-        // Ladled in from the pot of salsa.
-        public void AddSalsa(float amount)
+        // Ladled in from the pot: what's in it comes along in the pot's proportions.
+        public void AddSalsa(float amount, IDictionary<string, float> shares)
         {
             HasSalsa = true;
+            float before = BrineLevel;
             AddBrine(amount);
+            float added = BrineLevel - before;
+            foreach (var share in shares)
+            {
+                Count(share.Key, added * share.Value);
+            }
+            ShowBrine();
         }
 
         public void AddBrine(float amount)
