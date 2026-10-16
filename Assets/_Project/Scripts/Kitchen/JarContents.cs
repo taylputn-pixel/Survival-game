@@ -24,9 +24,9 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] int capacity = 22;
         [SerializeField] float sliceStep = 0.0052f;
         [Tooltip("Cloves that fill a jar packed with garlic alone.")]
-        [SerializeField] int cloveCapacity = 30;
-        [SerializeField] int clovesPerLayer = 6;
-        [SerializeField] float cloveLayer = 0.02f;
+        [SerializeField] int cloveCapacity = 20;
+        [SerializeField] int clovesPerLayer = 5;
+        [SerializeField] float cloveLayer = 0.024f;
         [Tooltip("Everything this jar can be put up as.")]
         [SerializeField] RecipeData[] recipes;
 
@@ -41,7 +41,7 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Vector2 chipSize = new Vector2(0.05f, 0.006f);
         [SerializeField] Material cloveMaterial;
         [Tooltip("Width, height and length of a clove, in meters.")]
-        [SerializeField] Vector3 cloveSize = new Vector3(0.0126f, 0.0108f, 0.0216f);
+        [SerializeField] Vector3 cloveSize = new Vector3(0.014f, 0.012f, 0.024f);
         [SerializeField] Material peppercornMaterial;
         [SerializeField] float peppercornSize = 0.005f;
 

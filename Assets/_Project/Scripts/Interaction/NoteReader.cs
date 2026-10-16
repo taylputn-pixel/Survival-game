@@ -35,6 +35,7 @@ namespace GrandmasHouse.Interaction
 
         public bool IsOpen => open;
         public bool HasNextPage => open && showing != null && page < showing.PageCount - 1;
+        public bool HasPreviousPage => open && showing != null && page > 0;
         // The frame the note was put down, so the same press doesn't also pause.
         public int ClosedFrame { get; private set; } = -1;
 

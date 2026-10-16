@@ -64,6 +64,8 @@ namespace GrandmasHouse.Kitchen
         public Vector3 SurfaceWorld => waterSurface.position;
         public bool HasContents => water > 0f;
         public bool LidOn => lidOn;
+        // Not enough water yet to cover the jars, so it won't come to a boil.
+        public bool NeedsWater => water < waterNeeded;
         public bool CanMoveLid => !lidMoving;
 
         void Awake()

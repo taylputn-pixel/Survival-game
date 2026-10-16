@@ -9,7 +9,7 @@ namespace GrandmasHouse.Interaction
     // under the dot for what Interact would do, and beside it what Pick up
     // would do when that's something different. At a station: what Interact
     // does right now, and Back to step away. Reading a note: Back to put it
-    // down. Every prompt asks ButtonGlyphs for its icon, so rebinding or a
+    // down, and in a book, Previous to turn back. Every prompt asks ButtonGlyphs for its icon, so rebinding or a
     // new style shows up everywhere at once.
     public class PromptBar : MonoBehaviour
     {
@@ -28,12 +28,20 @@ namespace GrandmasHouse.Interaction
         InputAction interactAction;
         InputAction pickUpAction;
         InputAction backAction;
+        InputAction previousAction;
+        // A copy of the use prompt, sitting before it in the row.
+        PromptView previousPrompt;
 
         void Awake()
         {
             interactAction = InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
             pickUpAction = InputSystem.actions.FindAction("Player/PickUp", throwIfNotFound: true);
             backAction = InputSystem.actions.FindAction("Player/Back", throwIfNotFound: true);
+            previousAction = InputSystem.actions.FindAction("Player/Previous", throwIfNotFound: true);
+            previousPrompt = Instantiate(usePrompt, usePrompt.transform.parent);
+            previousPrompt.name = "Previous Prompt";
+            previousPrompt.transform.SetSiblingIndex(usePrompt.transform.GetSiblingIndex());
+            previousPrompt.Hide();
             style = PlayerOptions.PromptStyle;
         }
 
@@ -61,6 +69,14 @@ namespace GrandmasHouse.Interaction
             if (reader.IsOpen)
             {
                 lookPrompt.Hide();
+                if (reader.HasPreviousPage)
+                {
+                    previousPrompt.Show(previousAction, "Previous page");
+                }
+                else
+                {
+                    previousPrompt.Hide();
+                }
                 if (reader.HasNextPage)
                 {
                     usePrompt.Show(interactAction, "Turn the page");
@@ -74,6 +90,7 @@ namespace GrandmasHouse.Interaction
             else if (station != null && station.Working)
             {
                 lookPrompt.Hide();
+                previousPrompt.Hide();
                 if (station.UseHint != null)
                 {
                     usePrompt.Show(interactAction, station.UseHint);
@@ -87,6 +104,7 @@ namespace GrandmasHouse.Interaction
             else
             {
                 usePrompt.Hide();
+                previousPrompt.Hide();
                 backPrompt.Hide();
                 if (hands.Controller.InputEnabled && hands.Verb != null)
                 {
