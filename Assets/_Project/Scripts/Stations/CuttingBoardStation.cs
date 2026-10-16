@@ -552,22 +552,24 @@ namespace GrandmasHouse.Stations
                 StartCutting();
             }
 
-            if (x > cutEnd - minSliceThickness)
+            // Slices come off whichever end the knife is nearer, so you can
+            // work from either side.
+            bool fromLeft = x - leftEnd < cutEnd - x;
+            if ((fromLeft ? x - leftEnd : cutEnd - x) < minSliceThickness)
             {
                 return; // Just a tap on the very end.
             }
 
-            if (x - leftEnd < minSliceThickness)
+            if (fromLeft)
             {
-                // A chop at the far end takes what's left as one last piece,
-                // rather than leaving a heel too thin to be a slice.
-                CutSlice(leftEnd, cutEnd);
-                FinishItem();
-                return;
+                CutSlice(leftEnd, x);
+                leftEnd = x;
             }
-
-            CutSlice(x, cutEnd);
-            cutEnd = x;
+            else
+            {
+                CutSlice(x, cutEnd);
+                cutEnd = x;
+            }
 
             if (cutEnd - leftEnd <= heelLength)
             {
