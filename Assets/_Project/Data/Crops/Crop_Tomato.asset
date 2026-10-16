@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 886f97837e2bf2f48b6b7a387aa1aa5f, type: 3}
+  m_Name: Crop_Tomato
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.CropData
+  displayName: Tomato
+  seedColor: {r: 0.9, g: 0.82, b: 0.55, a: 1}
+  seedSize: 0.006
+  stages:
+  - {fileID: 7111187515926494678, guid: 386e4c1eba3b31540a0382fb3ab45c6a, type: 3}
+  - {fileID: 8343079582467689747, guid: f901a6d25bbd933448d77d06f2bda594, type: 3}
+  - {fileID: 666603905530759795, guid: 0c88520f2167fa94d8b96a1d3daf293e, type: 3}
+  - {fileID: 4778605655122509656, guid: ec253e67a2247ed4caa1bd16ff36e3a9, type: 3}
+  harvest: {fileID: 3539542275917530591, guid: 73279f66ecc0cd040956f5a971536a31, type: 3}
+  singleHarvest: 0
+  harvestPerNight: 1
+  tendedBonus: 2
+  sucker: {fileID: 7444218156277391428, guid: 5463d74204714384aa2102c105aee51d, type: 3}
+  maxSuckers: 3
+  pest: {fileID: 589568212980281679, guid: 911a25cf0c98c2f419232b7945ac6842, type: 3}
+  pestChance: 0.4
+  companions:
+  - {fileID: 11400000, guid: f743d95c04b51a84c9149a72dcd84dae, type: 2}
+  companionPestChance: 0.05

@@ -9,7 +9,8 @@ namespace GrandmasHouse.Stations
     // A raised garden bed. Step up holding a seed packet to plant seeds one at
     // a time in the marked spots, holding the watering can to water (hold
     // Interact to tip the can and sweep the stream across the bed), or with
-    // empty hands to weed (grab a weed and pull back to get it out by the root).
+    // empty hands to tend: grab a weed and pull back to get it out by the
+    // root, pinch a sucker off a tomato, or pick off a hornworm.
     public class GardenBedStation : Station
     {
         [SerializeField] GardenSettings garden;
@@ -43,7 +44,7 @@ namespace GrandmasHouse.Stations
         {
             if (player.IsEmpty)
             {
-                return bed.Weeds.Count > 0;
+                return bed.Weeds.Count > 0 || bed.Pinchables.GetEnumerator().MoveNext();
             }
             if (player.Held.GetComponent<WateringCan>() != null)
             {
@@ -68,7 +69,7 @@ namespace GrandmasHouse.Stations
         {
             if (player.IsEmpty)
             {
-                return "Weed";
+                return bed.Weeds.Count > 0 ? "Weed" : "Tend";
             }
             return player.Held.GetComponent<WateringCan>() != null ? "Water" : "Plant";
         }
@@ -86,6 +87,10 @@ namespace GrandmasHouse.Stations
                     foreach (var weed in bed.Weeds)
                     {
                         yield return weed.transform.position;
+                    }
+                    foreach (var thing in bed.Pinchables)
+                    {
+                        yield return thing.transform.position;
                     }
                 }
                 yield break;
@@ -248,13 +253,23 @@ namespace GrandmasHouse.Stations
         {
             if (grabbed == null)
             {
-                Weed target = Closest(bed.Weeds, w => w.transform.position);
+                Component target = Closest(Tendables(), c => c.transform.position);
                 reticle.Highlight = target != null;
-                UseHint = target != null ? "Grab weed" : null;
-                if (Time.frameCount != enteredFrame && target != null && UseAction.WasPressedThisFrame())
+                var weed = target as Weed;
+                var pinchable = target as Pinchable;
+                UseHint = weed != null ? "Grab weed" : pinchable != null ? pinchable.Verb : null;
+                if (Time.frameCount == enteredFrame || target == null || !UseAction.WasPressedThisFrame())
                 {
-                    grabbed = target;
+                    return;
+                }
+                if (weed != null)
+                {
+                    grabbed = weed;
                     grabCursorY = CursorPoint.y;
+                }
+                else
+                {
+                    pinchable.Owner.TakeOff(pinchable);
                 }
                 return;
             }
@@ -274,6 +289,12 @@ namespace GrandmasHouse.Stations
                 bed.PullOut(grabbed);
                 grabbed = null;
             }
+        }
+
+        IEnumerable<Component> Tendables()
+        {
+            foreach (var weed in bed.Weeds) yield return weed;
+            foreach (var thing in bed.Pinchables) yield return thing;
         }
 
         void LetGoOfWeed()

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace GrandmasHouse.Garden
 {
     // The soil of one raised bed: its planting spots and the weeds that come
-    // up between them overnight.
+    // up between them overnight. Suckers and pests come up on the plants.
     public class GardenBed : MonoBehaviour, ISaveable
     {
         [SerializeField] GardenSettings settings;
@@ -24,6 +24,16 @@ namespace GrandmasHouse.Garden
 
         public IReadOnlyList<PlantSpot> Spots => spots;
         public IReadOnlyList<Weed> Weeds => weeds;
+        public IEnumerable<Pinchable> Pinchables
+        {
+            get
+            {
+                foreach (var spot in spots)
+                {
+                    foreach (var thing in spot.Pinchables) yield return thing;
+                }
+            }
+        }
         public Plane Soil => new Plane(transform.up, spots[0].transform.position);
 
         void Start()
@@ -95,7 +105,11 @@ namespace GrandmasHouse.Garden
             // Plants grow first, judged by how you left the bed at bedtime.
             foreach (var spot in spots)
             {
-                spot.GrowOvernight(IsCrowded(spot));
+                spot.GrowOvernight(!IsCrowded(spot) && !spot.HasTrouble);
+            }
+            foreach (var spot in spots)
+            {
+                spot.TroubleOvernight(HasCompanion(spot));
             }
             foreach (var weed in weeds)
             {
@@ -146,6 +160,20 @@ namespace GrandmasHouse.Garden
                 }
             }
             position = default;
+            return false;
+        }
+
+        // A companion blooming near this plant (marigolds by the tomatoes).
+        bool HasCompanion(PlantSpot spot)
+        {
+            foreach (var other in spots)
+            {
+                if (other != spot && other.IsCompanionFor(spot)
+                    && Vector3.Distance(other.transform.position, spot.transform.position) < settings.companionRadius)
+                {
+                    return true;
+                }
+            }
             return false;
         }
 

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 886f97837e2bf2f48b6b7a387aa1aa5f, type: 3}
+  m_Name: Crop_Marigold
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.CropData
+  displayName: Marigold
+  seedColor: {r: 0.2, g: 0.17, b: 0.12, a: 1}
+  seedSize: 0.007
+  stages:
+  - {fileID: 3871155261096938163, guid: dd96ba006b040a0478632cd049d1e68d, type: 3}
+  - {fileID: 5570697796231016064, guid: 151d82a037c1dd748bc40ac54c0a8d52, type: 3}
+  - {fileID: 2934308514645830047, guid: dcc1ca0747927274784f43e95484a7b7, type: 3}
+  harvest: {fileID: 0}
+  singleHarvest: 0
+  harvestPerNight: 0
+  tendedBonus: 0
+  sucker: {fileID: 0}
+  maxSuckers: 3
+  pest: {fileID: 0}
+  pestChance: 0.4
+  companions: []
+  companionPestChance: 0.05

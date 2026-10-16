@@ -27,6 +27,12 @@ namespace GrandmasHouse.Data
         [Tooltip("Weeds closer than this crowd a plant and it loses its tended bonus, in meters.")]
         public float crowdingRadius = 0.25f;
 
+        [Header("Suckers and pests")]
+        [Tooltip("New suckers on each plant that grows them, each night.")]
+        public int suckersPerNight = 1;
+        [Tooltip("A companion plant this close draws pests away, in meters (reaches the spots beside and diagonal).")]
+        public float companionRadius = 0.85f;
+
         [Header("Weeds")]
         [Tooltip("Weeds already in the bed on the first day (the garden sat untended).")]
         public int startingWeeds = 4;

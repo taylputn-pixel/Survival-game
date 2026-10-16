@@ -10,7 +10,8 @@ namespace GrandmasHouse.Garden
 {
     // One place in a garden bed where a single plant can grow. A watered plant
     // moves up one stage each night; a dry one just waits (it never dies in
-    // Cozy). Once ready, it holds its harvest for you to pick by hand.
+    // Cozy). Once ready, it holds its harvest for you to pick by hand. Some
+    // crops grow suckers or draw pests overnight, to take off by hand.
     public class PlantSpot : MonoBehaviour, IAfterLoad
     {
         [SerializeField] Material soilMaterial;
@@ -28,12 +29,26 @@ namespace GrandmasHouse.Garden
         public int Stage { get; private set; } = -1;
         public bool IsReady => Crop != null && Stage == Crop.stages.Length - 1;
         public int RipeCount => ripe.Count;
+        // Suckers or pests on it, so it isn't tended.
+        public bool HasTrouble => suckers.Count > 0 || pests.Count > 0;
+        public IEnumerable<Pinchable> Pinchables
+        {
+            get
+            {
+                foreach (var sucker in suckers) yield return sucker;
+                foreach (var pest in pests) yield return pest;
+            }
+        }
 
         MaterialPropertyBlock block;
         GameObject mound;
         GameObject plant;
         readonly List<Transform> harvestPoints = new List<Transform>();
         readonly List<Pickup> ripe = new List<Pickup>();
+        readonly List<Transform> suckerPoints = new List<Transform>();
+        readonly List<Transform> pestPoints = new List<Transform>();
+        readonly List<Pinchable> suckers = new List<Pinchable>();
+        readonly List<Pinchable> pests = new List<Pinchable>();
         bool harvested;
 
         void Awake()
@@ -81,6 +96,8 @@ namespace GrandmasHouse.Garden
             public float water;
             public bool harvested;
             public float yaw;
+            public int suckers;
+            public int pests;
         }
 
         public State Capture() => new State
@@ -90,6 +107,8 @@ namespace GrandmasHouse.Garden
             water = Water,
             harvested = harvested,
             yaw = plant != null ? plant.transform.localEulerAngles.y : 0f,
+            suckers = suckers.Count,
+            pests = pests.Count,
         };
 
         // Puts the plant back as it was; the picking on it comes back with the items.
@@ -102,6 +121,8 @@ namespace GrandmasHouse.Garden
             mound = null;
             harvestPoints.Clear();
             ripe.Clear();
+            suckers.Clear();
+            pests.Clear();
 
             Crop = string.IsNullOrEmpty(state.crop) ? null : SaveManager.Catalog.Crop(state.crop);
             Water = state.water;
@@ -114,6 +135,8 @@ namespace GrandmasHouse.Garden
                 {
                     ShowStage(state.stage);
                     plant.transform.localRotation = Quaternion.Euler(0f, state.yaw, 0f);
+                    for (int i = 0; i < state.suckers; i++) AddSucker();
+                    for (int i = 0; i < state.pests; i++) AddPest();
                 }
                 else
                 {
@@ -136,8 +159,9 @@ namespace GrandmasHouse.Garden
             }
         }
 
-        // Called once each night, before the soil dries out again.
-        public void GrowOvernight(bool crowded)
+        // Called once each night, before the soil dries out again. A tended
+        // plant (no weeds crowding it, no suckers or pests) yields more.
+        public void GrowOvernight(bool tended)
         {
             if (Crop != null && Water >= settings.wateredEnough)
             {
@@ -146,16 +170,75 @@ namespace GrandmasHouse.Garden
                     ShowStage(Stage + 1);
                     if (IsReady)
                     {
-                        Ripen(Crop.singleHarvest ? harvestPoints.Count : Crop.harvestPerNight + (crowded ? 0 : Crop.tendedBonus));
+                        Ripen(Crop.singleHarvest ? harvestPoints.Count : Crop.harvestPerNight + (tended ? Crop.tendedBonus : 0));
                     }
                 }
                 else if (!Crop.singleHarvest)
                 {
-                    Ripen(Crop.harvestPerNight + (crowded ? 0 : Crop.tendedBonus));
+                    Ripen(Crop.harvestPerNight + (tended ? Crop.tendedBonus : 0));
                 }
             }
             Water = 0f;
             ShowWater();
+        }
+
+        // After growing: new suckers sprout, and pests may turn up, fewer with
+        // a companion blooming nearby.
+        public void TroubleOvernight(bool companionNearby)
+        {
+            if (Crop == null || Stage < 0)
+            {
+                return;
+            }
+            if (Crop.sucker != null)
+            {
+                for (int i = 0; i < settings.suckersPerNight && suckers.Count < Crop.maxSuckers; i++)
+                {
+                    AddSucker();
+                }
+            }
+            if (Crop.pest != null && Random.value < (companionNearby ? Crop.companionPestChance : Crop.pestChance))
+            {
+                AddPest();
+            }
+        }
+
+        // Blooming and the kind of plant that draws the other's pests away.
+        public bool IsCompanionFor(PlantSpot other) =>
+            IsReady && other.Crop != null && other.Crop.companions != null && System.Array.IndexOf(other.Crop.companions, Crop) >= 0;
+
+        // Pinched or picked off by hand.
+        public void TakeOff(Pinchable thing)
+        {
+            if (suckers.Remove(thing) || pests.Remove(thing))
+            {
+                thing.Remove(transform.position);
+            }
+        }
+
+        void AddSucker() => Place(Crop.sucker, suckerPoints, suckers);
+        void AddPest() => Place(Crop.pest, pestPoints, pests);
+
+        // On a free point of the plant as it looks now, if there is one.
+        void Place(Pinchable prefab, List<Transform> points, List<Pinchable> into)
+        {
+            var free = new List<Transform>();
+            foreach (var point in points)
+            {
+                if (point.GetComponentInChildren<Pinchable>() == null)
+                {
+                    free.Add(point);
+                }
+            }
+            if (prefab == null || free.Count == 0)
+            {
+                return;
+            }
+            Pinchable thing = Instantiate(prefab, free[Random.Range(0, free.Count)]);
+            thing.name = prefab.name;
+            thing.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            thing.Owner = this;
+            into.Add(thing);
         }
 
         // Press a hole into the soil, drop the seed in, and cover it over.
@@ -180,21 +263,42 @@ namespace GrandmasHouse.Garden
             {
                 Destroy(plant);
             }
+            // Suckers and pests carry over to the grown plant.
+            int keepSuckers = suckers.Count;
+            int keepPests = pests.Count;
+            suckers.Clear();
+            pests.Clear();
             plant = Instantiate(Crop.stages[stage], transform);
             plant.transform.localRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
 
             harvestPoints.Clear();
+            suckerPoints.Clear();
+            pestPoints.Clear();
             foreach (var child in plant.GetComponentsInChildren<Transform>())
             {
                 if (child.name.StartsWith("HarvestPoint"))
                 {
                     harvestPoints.Add(child);
                 }
+                else if (child.name.StartsWith("SuckerPoint"))
+                {
+                    suckerPoints.Add(child);
+                }
+                else if (child.name.StartsWith("PestPoint"))
+                {
+                    pestPoints.Add(child);
+                }
             }
+            for (int i = 0; i < keepSuckers; i++) AddSucker();
+            for (int i = 0; i < keepPests; i++) AddPest();
         }
 
         void Ripen(int count)
         {
+            if (Crop.harvest == null)
+            {
+                return;
+            }
             foreach (var point in harvestPoints)
             {
                 if (count <= 0)
@@ -227,6 +331,10 @@ namespace GrandmasHouse.Garden
             Destroy(plant);
             plant = null;
             harvestPoints.Clear();
+            suckerPoints.Clear();
+            pestPoints.Clear();
+            suckers.Clear();
+            pests.Clear();
             Crop = null;
             Stage = -1;
             harvested = false;
