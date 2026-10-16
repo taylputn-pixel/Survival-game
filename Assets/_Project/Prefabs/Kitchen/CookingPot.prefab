@@ -6958,6 +6958,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Stations.BrinePotStation
   recipe: {fileID: 11400000, guid: 705a86bb90da65f46b9907627ca8c014, type: 2}
+  salsaRecipe: {fileID: 11400000, guid: 65cf7262a0545e24fbf9980797fffdbe, type: 2}
   surface: {fileID: 8860931131707681763}
   surfaceRenderer: {fileID: 140592182412010998}
   bottom: {fileID: 7648095880140566943}
@@ -6971,6 +6972,13 @@ MonoBehaviour:
   followSharpness: 10
   waterColor: {r: 0.78, g: 0.88, b: 0.92, a: 0.5}
   brineColor: {r: 0.86, g: 0.83, b: 0.5, a: 0.6}
+  innerRadius: 0.08
+  rawSalsaColor: {r: 0.85, g: 0.35, b: 0.25, a: 0.35}
+  cookedSalsaColor: {r: 0.72, g: 0.2, b: 0.12, a: 0.7}
+  tomatoPiece: {fileID: 2100000, guid: 3c7bd32fe50be3149986c95ac3164442, type: 2}
+  onionPiece: {fileID: 2100000, guid: 15d3bbdd7826710498b7a3f5f015bfcd, type: 2}
+  pepperPiece: {fileID: 2100000, guid: 7e0dbb2b8bfffd64e9e8d466e104af62, type: 2}
+  garlicPiece: {fileID: 2100000, guid: 0d71eb380eaf18041b99b1ebf9bc115f, type: 2}
 --- !u!1 &7445557332765031106
 GameObject:
   m_ObjectHideFlags: 0

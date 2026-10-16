@@ -15,8 +15,23 @@ namespace GrandmasHouse.Stations
     // in a little pile of their own. A tomato takes two chops with the knife,
     // one to halve it and one to quarter it, and the wedges gather in a pile
     // of their own.
+    //
+    // More produce can wait in a row at the back of the board (set it down
+    // one at a time, or empty a basket onto it); when one is finished the
+    // next rolls forward. For salsa, carry the cooking pot over and scrape
+    // everything chopped into it.
     public class CuttingBoardStation : Station, ISaveable, IAfterLoad
     {
+        [System.Serializable]
+        struct SliceLook
+        {
+            [Tooltip("The produce's name, as its slices are named (Onion).")]
+            public string produce;
+            public Material material;
+            [Tooltip("Diameter and thickness of a saved slice, in meters.")]
+            public Vector2 size;
+        }
+
         [Tooltip("Center of the board's top. Its X axis is the direction of cutting.")]
         [SerializeField] Transform itemSlot;
         [SerializeField] Transform knife;
@@ -52,10 +67,18 @@ namespace GrandmasHouse.Stations
         [Tooltip("For rebuilding saved wedges.")]
         [SerializeField] Material wedgeMaterial;
 
+        [Header("Waiting their turn")]
+        [Tooltip("Where produce waits in a row at the back of the board. Its X axis runs along the row.")]
+        [SerializeField] Transform waitingRow;
+        [SerializeField] int maxWaiting = 6;
+        [SerializeField] float waitingSpacing = 0.075f;
+
         [Header("Rebuilding saved chips")]
         [SerializeField] Material chipMaterial;
         [Tooltip("Diameter and thickness of a saved chip, in meters.")]
         [SerializeField] Vector2 chipSize = new Vector2(0.05f, 0.006f);
+        [Tooltip("Slices of other produce (onion, jalapeño), by name. Anything else comes back as a pickle chip.")]
+        [SerializeField] SliceLook[] sliceLooks;
 
         Pickup item;
         Sliceable sliceable;
@@ -81,6 +104,8 @@ namespace GrandmasHouse.Stations
         readonly List<Transform> halves = new List<Transform>();
         readonly List<Transform> pileWedges = new List<Transform>();
         int wedgePileCount;
+        // Produce waiting at the back of the board, next one first.
+        readonly List<Pickup> waiting = new List<Pickup>();
 
         // Cut slices resting on the board, ready to be packed.
         public int SliceCount => Settled(pileSlices);
@@ -96,23 +121,51 @@ namespace GrandmasHouse.Stations
         bool HasSomethingToCut => sliceable != null || tomato != null;
         bool HasGarlicWork => garlic != null || unpeeled.Count > 0;
 
+        static bool IsChoppable(Pickup produce) => produce != null
+            && (produce.GetComponent<Sliceable>() != null || produce.GetComponent<GarlicBulb>() != null || produce.GetComponent<Quarterable>() != null);
+
+        bool SlotFree => item == null && unpeeled.Count == 0;
+        bool HasRoom => SlotFree || Waiting.Count < maxWaiting;
+        int ChoppedCount => SliceCount + WedgeCount + CloveCount;
+
         public override bool CanInteract(PlayerHands hands)
         {
             if (!hands.IsEmpty)
             {
-                return item == null && unpeeled.Count == 0
-                    && (hands.Held.GetComponent<Sliceable>() != null || hands.Held.GetComponent<GarlicBulb>() != null || hands.Held.GetComponent<Quarterable>() != null);
+                Pickup held = hands.Held;
+                if (held.GetComponent<CookingPot>() is CookingPot pot)
+                {
+                    return ChoppedCount > 0 && pot.RoomForPieces > 0;
+                }
+                if (held.OwnContainer != null)
+                {
+                    return HasRoom && FirstChoppable(held.OwnContainer) != null;
+                }
+                return HasRoom && IsChoppable(held);
             }
-            return HasSomethingToCut || HasGarlicWork;
+            return HasSomethingToCut || HasGarlicWork || Waiting.Count > 0;
         }
 
         public override void Interact(PlayerHands hands)
         {
             if (!hands.IsEmpty)
             {
-                LayOnBoard(hands.TakeHeld());
+                Pickup held = hands.Held;
+                if (held.GetComponent<CookingPot>() is CookingPot pot)
+                {
+                    ScrapeInto(pot);
+                }
+                else if (held.OwnContainer != null)
+                {
+                    EmptyOnto(held.OwnContainer);
+                }
+                else
+                {
+                    Accept(hands.TakeHeld());
+                }
                 return;
             }
+            NextUp();
             enteredFrame = Time.frameCount;
             Enter(hands);
         }
@@ -121,9 +174,102 @@ namespace GrandmasHouse.Stations
         {
             if (!hands.IsEmpty)
             {
-                return "Lay on board";
+                Pickup held = hands.Held;
+                if (held.GetComponent<CookingPot>() != null) return "Scrape into pot";
+                if (held.OwnContainer != null) return "Empty onto board";
+                return SlotFree ? "Lay on board" : "Set by board";
             }
             return HasGarlicWork ? "Peel garlic" : "Slice";
+        }
+
+        // Produce still in the row (anything picked back up has left it).
+        List<Pickup> Waiting
+        {
+            get
+            {
+                waiting.RemoveAll(p => p == null || p.transform.parent != waitingRow);
+                return waiting;
+            }
+        }
+
+        static Pickup FirstChoppable(Container basket)
+        {
+            foreach (var inside in basket.Contents)
+            {
+                if (IsChoppable(inside)) return inside;
+            }
+            return null;
+        }
+
+        // On the board if it's free, otherwise at the end of the row.
+        void Accept(Pickup produce)
+        {
+            if (SlotFree)
+            {
+                LayOnBoard(produce);
+                return;
+            }
+            Waiting.Add(produce);
+            produce.AttachTo(waitingRow, WaitingSpot(waiting.Count - 1, produce), WaitingTilt(produce), settings.placeGlideSeconds, collidersOn: true);
+        }
+
+        // Everything choppable in the basket comes out, as far as there's room.
+        void EmptyOnto(Container basket)
+        {
+            var produce = new List<Pickup>();
+            foreach (var inside in basket.Contents)
+            {
+                if (IsChoppable(inside)) produce.Add(inside);
+            }
+            foreach (var p in produce)
+            {
+                if (!HasRoom)
+                {
+                    break;
+                }
+                basket.Remove(p);
+                Accept(p);
+            }
+        }
+
+        // The next one in the row rolls forward onto the board.
+        void NextUp()
+        {
+            if (!SlotFree || Waiting.Count == 0)
+            {
+                return;
+            }
+            Pickup next = waiting[0];
+            waiting.RemoveAt(0);
+            LayOnBoard(next);
+            for (int i = 0; i < waiting.Count; i++)
+            {
+                waiting[i].AttachTo(waitingRow, WaitingSpot(i, waiting[i]), WaitingTilt(waiting[i]), 0.25f, collidersOn: true);
+            }
+        }
+
+        // Long produce (cucumbers, peppers) lies on its side, pointing across the row.
+        Vector3 WaitingSpot(int index, Pickup produce)
+        {
+            var slicer = produce.GetComponent<Sliceable>();
+            float height = slicer != null ? slicer.Diameter / 2f : produce.RestHalfHeight;
+            return new Vector3(index * waitingSpacing, height, 0f);
+        }
+
+        static Quaternion WaitingTilt(Pickup produce) => produce.GetComponent<Sliceable>() != null ? Quaternion.Euler(90f, 0f, 0f) : produce.RestTilt;
+
+        // Everything chopped slides off the board into the pot.
+        void ScrapeInto(CookingPot pot)
+        {
+            int room = pot.RoomForPieces;
+            var scraped = new List<Transform>();
+            scraped.AddRange(TakeWedges(room));
+            scraped.AddRange(TakeSlices(room - scraped.Count));
+            scraped.AddRange(TakeCloves(room - scraped.Count));
+            if (scraped.Count > 0)
+            {
+                pot.AddPieces(scraped);
+            }
         }
 
         protected override IEnumerable<Vector3> SnapTargets()
@@ -155,12 +301,18 @@ namespace GrandmasHouse.Stations
             public int cloves;
             public int unpeeled;
             public int wedges;
+            public List<string> sliceNames = new List<string>();
         }
 
         // Chips, cloves and unpeeled cloves waiting on the board are saved as
         // counts and laid out again.
         public string SaveKey => "board:" + name;
-        public string Capture() => JsonUtility.ToJson(new State { slices = pileSlices.Count, cloves = pileCloves.Count, unpeeled = unpeeled.Count, wedges = pileWedges.Count });
+        public string Capture()
+        {
+            var state = new State { slices = pileSlices.Count, cloves = pileCloves.Count, unpeeled = unpeeled.Count, wedges = pileWedges.Count };
+            foreach (var slice in pileSlices) state.sliceNames.Add(slice.name);
+            return JsonUtility.ToJson(state);
+        }
 
         public void Restore(string json)
         {
@@ -211,26 +363,47 @@ namespace GrandmasHouse.Stations
             pile.SetParent(slicePile, false);
             for (int i = 0; i < count; i++)
             {
-                Transform slice = MakeRound("Slice", chipMaterial).transform;
+                string sliceName = state.sliceNames != null && i < state.sliceNames.Count ? state.sliceNames[i] : "Cucumber Slice";
+                Material look = chipMaterial;
+                Vector2 size = chipSize;
+                foreach (var known in sliceLooks)
+                {
+                    if (sliceName.StartsWith(known.produce))
+                    {
+                        look = known.material;
+                        size = known.size;
+                    }
+                }
+                Transform slice = MakeRound(sliceName, look).transform;
                 slice.SetParent(pile, false);
-                slice.localScale = new Vector3(chipSize.x, chipSize.y / 2f, chipSize.x);
+                slice.localScale = new Vector3(size.x, size.y / 2f, size.x);
                 int n = pileCount++;
-                float d = chipSize.x;
+                float d = size.x;
                 slice.SetLocalPositionAndRotation(
-                    new Vector3((n % 4) * d * 0.8f, chipSize.y / 2f + (n / 12) * 0.004f, ((n / 4) % 3) * d * 0.8f),
+                    new Vector3((n % 4) * d * 0.8f, size.y / 2f + (n / 12) * 0.004f, ((n / 4) % 3) * d * 0.8f),
                     Quaternion.Euler(0f, n * 47f, 0f));
                 pileSlices.Add(slice);
             }
         }
 
-        // A cucumber left lying on the board is picked up where it was.
+        // Produce left lying on the board, or waiting behind it, is picked up where it was.
         public void AfterLoad()
         {
             var lying = itemSlot.GetComponentInChildren<Pickup>();
-            if (lying != null && (lying.GetComponent<Sliceable>() != null || lying.GetComponent<GarlicBulb>() != null || lying.GetComponent<Quarterable>() != null))
+            if (IsChoppable(lying))
             {
                 LayOnBoard(lying);
             }
+            waiting.Clear();
+            if (waitingRow != null)
+            {
+                foreach (Transform child in waitingRow)
+                {
+                    var produce = child.GetComponent<Pickup>();
+                    if (IsChoppable(produce)) waiting.Add(produce);
+                }
+            }
+            NextUp();
         }
 
         void LayOnBoard(Pickup produce)
@@ -256,7 +429,8 @@ namespace GrandmasHouse.Stations
             leftEnd = -sliceable.Length / 2f;
             cutEnd = sliceable.Length / 2f;
             thicknesses.Clear();
-            produce.AttachTo(itemSlot, Vector3.up * produce.RestHalfHeight, produce.RestTilt, settings.placeGlideSeconds, collidersOn: false);
+            // It lies along the cutting line, ready for the knife.
+            produce.AttachTo(itemSlot, Vector3.up * sliceable.Diameter / 2f, Quaternion.Euler(0f, 0f, 90f), settings.placeGlideSeconds, collidersOn: false);
         }
 
         protected override void WhileWorking()
@@ -436,7 +610,7 @@ namespace GrandmasHouse.Stations
             float thickness = to - from;
             thicknesses.Add(thickness);
 
-            var slice = MakeRound("Slice", sliceable.FleshMaterial).transform;
+            var slice = MakeRound(item.DisplayName + " Slice", sliceable.FleshMaterial).transform;
             slice.SetParent(itemSlot, false);
             float d = sliceable.Diameter;
             slice.localPosition = new Vector3((from + to) / 2f, d / 2f, 0f);
@@ -514,6 +688,7 @@ namespace GrandmasHouse.Stations
             Destroy(item.gameObject);
             item = null;
             tomato = null;
+            NextUp();
         }
 
         Vector3 WedgePileSpot(int i) => new Vector3((i % 3) * 0.032f, wedgeSize.y / 2f + (i / 9) * 0.02f, ((i / 3) % 3) * 0.036f);
@@ -677,6 +852,7 @@ namespace GrandmasHouse.Stations
             clove.SetParent(clovePile, true);
             pileCloves.Add(clove);
             StartCoroutine(Tumble(clove, ClovePileSpot(i), ClovePileRotation(i)));
+            NextUp();
         }
 
         IEnumerator SkinFlake(Vector3 position, Quaternion rotation)
@@ -756,6 +932,7 @@ namespace GrandmasHouse.Stations
             item = null;
             sliceable = null;
             LogEvenness();
+            NextUp();
         }
 
         void LogEvenness()

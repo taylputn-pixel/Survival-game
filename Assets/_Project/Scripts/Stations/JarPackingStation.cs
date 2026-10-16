@@ -20,6 +20,7 @@ namespace GrandmasHouse.Stations
     // Brine and lids go to the jar you're working on while it still needs
     // them, otherwise on to the next jar that does, so you can pour down the
     // row and then lid them all. Lidded jars pick straight up off the towel.
+    // A pot of cooked salsa is ladled into empty jars the same way.
     public class JarPackingStation : Station, IAfterLoad
     {
         enum Carrying { Nothing, Slices, Cloves, Dill, Peppercorns, Wedges }
@@ -182,7 +183,7 @@ namespace GrandmasHouse.Stations
                     yield return lidStack.position;
                 }
                 CookingPot ready = CookingPot.ReadyPot();
-                if (ready != null && BrineTarget() != null)
+                if (ready != null && PourTarget(ready) != null)
                 {
                     yield return ready.transform.position;
                 }
@@ -515,9 +516,9 @@ namespace GrandmasHouse.Stations
                 }
                 return true;
             }
-            if (CookingPot.ReadyPot() is CookingPot ready && BrineTarget() is JarContents forBrine && CursorNear(ready.transform.position))
+            if (CookingPot.ReadyPot() is CookingPot ready && PourTarget(ready) is JarContents forBrine && CursorNear(ready.transform.position))
             {
-                Hint("Pour brine");
+                Hint(ready.HasSalsa ? "Ladle salsa" : "Pour brine");
                 if (pressed)
                 {
                     jar = forBrine;
@@ -649,6 +650,12 @@ namespace GrandmasHouse.Stations
         JarContents BrineTarget() => NextNeeding(j => j.TakesBrine && j.BrineLevel < recipe.brineEnough)
             ?? (IsOpen(jar) && jar.TakesBrine && jar.BrineLevel < 1f ? jar : null);
 
+        // Salsa goes into empty jars (or ones started with salsa) the same way.
+        JarContents SalsaTarget(RecipeData salsa) => NextNeeding(j => j.TakesSalsa && j.BrineLevel < salsa.brineEnough)
+            ?? (IsOpen(jar) && jar.TakesSalsa && jar.BrineLevel < 1f ? jar : null);
+
+        JarContents PourTarget(CookingPot from) => from.HasSalsa ? SalsaTarget(from.SalsaRecipe) : BrineTarget();
+
         void Pour()
         {
             if (!UseAction.IsPressed() || !pot.IsReady || jar == null)
@@ -662,8 +669,21 @@ namespace GrandmasHouse.Stations
             {
                 // The pot only loses what the jar actually takes.
                 float before = jar.BrineLevel;
-                jar.AddBrine(pourRate * Time.deltaTime);
-                pot.Use((jar.BrineLevel - before) * recipe.potPerJar);
+                if (pot.HasSalsa)
+                {
+                    if (!jar.TakesSalsa)
+                    {
+                        StopPouring();
+                        return;
+                    }
+                    jar.AddSalsa(pourRate * Time.deltaTime);
+                    pot.Use((jar.BrineLevel - before) * pot.SalsaRecipe.potPerJar);
+                }
+                else
+                {
+                    jar.AddBrine(pourRate * Time.deltaTime);
+                    pot.Use((jar.BrineLevel - before) * recipe.potPerJar);
+                }
             }
         }
 

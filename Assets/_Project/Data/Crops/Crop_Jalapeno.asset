@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 886f97837e2bf2f48b6b7a387aa1aa5f, type: 3}
+  m_Name: Crop_Jalapeno
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.CropData
+  displayName: "Jalape\xF1o"
+  seedColor: {r: 0.93, g: 0.85, b: 0.6, a: 1}
+  seedSize: 0.005
+  stages:
+  - {fileID: 1350195610900442282, guid: c132c36d69cc7a4438c2357ebbf2d5c4, type: 3}
+  - {fileID: 4586829093259938053, guid: a7fef2ca760ed5247b01240831386694, type: 3}
+  - {fileID: 7731913240114861043, guid: d3d60fc7366bc7a4bbed0d79fac7f474, type: 3}
+  - {fileID: 7597100620451013197, guid: f84e4ed8202886d4dbed9ec391ac2fbc, type: 3}
+  harvest: {fileID: 6892653883721051213, guid: a89ec12016070494eafb9a8f1bc542d1, type: 3}
+  singleHarvest: 0
+  harvestPerNight: 1
+  tendedBonus: 1
+  sucker: {fileID: 0}
+  maxSuckers: 3
+  pest: {fileID: 0}
+  pestChance: 0.4
+  companions: []
+  companionPestChance: 0.05

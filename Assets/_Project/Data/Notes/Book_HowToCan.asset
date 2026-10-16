@@ -129,6 +129,22 @@ MonoBehaviour:
     Add a spoonful of lemon juice to every jar, then a lid.
     Tomatoes take much longer in the water bath than pickles; leave them boiling
     while you do something else, or let them finish overnight.'
+  - "Salsa\n\nYou will need about five ripe tomatoes, an onion and two jalape\xF1os
+    for a pot, which makes four pints. A clove of garlic is nice too.\n\nQuarter
+    the tomatoes and slice the onion and peppers on the cutting board. Line them
+    up at the back of the board, or empty the basket onto it, and they'll come to
+    you one at a time."
+  - 'Cooking the salsa
+
+
+    Carry the cooking pot to the board and scrape everything
+    in. Add a splash of vinegar and a scoop of salt, set it on a burner, and bring
+    it to a good boil.
+
+
+    Set the pot on the hot pad and ladle the salsa into
+    empty jars, half an inch from the top. Lids on, then fifteen minutes in the water
+    bath.'
   mentions:
   - {fileID: 11400000, guid: 705a86bb90da65f46b9907627ca8c014, type: 2}
   - {fileID: 11400000, guid: 896573569d607674fbf46701d86820eb, type: 2}

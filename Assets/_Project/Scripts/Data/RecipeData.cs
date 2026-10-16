@@ -9,7 +9,7 @@ namespace GrandmasHouse.Data
     public class RecipeData : ScriptableObject
     {
         // What fills the jar, which is how a packed jar knows what it is.
-        public enum Fill { Slices, Cloves, Wedges }
+        public enum Fill { Slices, Cloves, Wedges, Salsa }
 
         public string displayName = "Dill Pickle Chips";
         public Fill fill = Fill.Slices;
@@ -49,6 +49,14 @@ namespace GrandmasHouse.Data
         public float heatSeconds = 8f;
         [Tooltip("How much of a full pot one pint of brine uses.")]
         [Range(0f, 1f)] public float potPerJar = 0.2f;
+
+        [Header("Cooked in the pot (salsa)")]
+        [Tooltip("Chopped pieces (tomato wedges, onion and pepper rings, cloves) that fill the pot.")]
+        public int piecesPerPot = 44;
+        [Tooltip("What the recipe calls for in a full pot, for the card and for tuning.")]
+        public int tomatoesPerPot = 5;
+        public int onionsPerPot = 1;
+        public int peppersPerPot = 2;
 
         [Header("Canning")]
         [Tooltip("Minutes in the boiling water bath.")]

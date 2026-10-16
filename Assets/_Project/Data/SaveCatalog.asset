@@ -51,15 +51,26 @@ MonoBehaviour:
     prefab: {fileID: 1568808308163170717, guid: 9e12faa193f7f5a44891ff2caac1ef89, type: 3}
   - key: LemonJuice
     prefab: {fileID: 355099171364270092, guid: 534552fdd0260874589117c0127afa20, type: 3}
+  - key: Onion
+    prefab: {fileID: 767647525408192853, guid: 2e4dc7b103f837741884f2cf60ff8085, type: 3}
+  - key: Jalapeno
+    prefab: {fileID: 767647525408192853, guid: a89ec12016070494eafb9a8f1bc542d1, type: 3}
+  - key: OnionSeeds
+    prefab: {fileID: 1568808308163170717, guid: c24e4a985a969064faa25b886423926e, type: 3}
+  - key: JalapenoSeeds
+    prefab: {fileID: 1568808308163170717, guid: 4eb5586c93b597443bbdb47c80d8904c, type: 3}
   crops:
   - {fileID: 11400000, guid: 5e15d42a32eb7a64e9c79284b28618b4, type: 2}
   - {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}
   - {fileID: 11400000, guid: 9af239fa2afbd5e44842982a5680ab7f, type: 2}
   - {fileID: 11400000, guid: edddd54c16ce1b84388dc080e9029f3d, type: 2}
   - {fileID: 11400000, guid: f743d95c04b51a84c9149a72dcd84dae, type: 2}
+  - {fileID: 11400000, guid: 3d49c90e35d374142a91fc2c9d694222, type: 2}
+  - {fileID: 11400000, guid: f4cd3f718810c2d4b802fae5792b8f58, type: 2}
   notes:
   - {fileID: 11400000, guid: 149d6410b1a001c4894606af98f6c982, type: 2}
   - {fileID: 11400000, guid: b0a6924016e1b994488c4ad2355a1822, type: 2}
   - {fileID: 11400000, guid: a9574fdc16b57934fb6d8c34a3e108db, type: 2}
   - {fileID: 11400000, guid: 5646a821065704240bcbbb348eceb16e, type: 2}
   - {fileID: 11400000, guid: fda507e35871be24692f0dd83c4b0c4b, type: 2}
+  - {fileID: 11400000, guid: 1f4813b0823c2be46ba8986fe31d3e04, type: 2}

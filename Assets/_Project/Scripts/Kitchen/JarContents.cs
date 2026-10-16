@@ -10,9 +10,10 @@ namespace GrandmasHouse.Kitchen
 {
     // What's inside a glass jar: slices, garlic cloves or tomato wedges
     // packed in, a head of dill, peppercorns, lemon juice, and brine (or the
-    // tomatoes' own juice). Everything is visible through the glass. What
-    // it's packed with decides what it is (dill pickles, pickled garlic,
-    // canned tomatoes), and so which label it gets.
+    // tomatoes' own juice), or salsa ladled in from the pot. Everything is
+    // visible through the glass. What it's filled with decides what it is
+    // (dill pickles, pickled garlic, canned tomatoes, salsa), and so which
+    // label it gets.
     [RequireComponent(typeof(Pickup))]
     public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard
     {
@@ -53,6 +54,8 @@ namespace GrandmasHouse.Kitchen
         public int CloveCount { get; private set; }
         public int WedgeCount { get; private set; }
         public bool HasLemon { get; private set; }
+        // Filled with salsa from the pot (its level is BrineLevel).
+        public bool HasSalsa { get; private set; }
         public int PeppercornCount { get; private set; }
         public bool HasLid { get; private set; }
         // Through the water bath and out to cool.
@@ -90,7 +93,7 @@ namespace GrandmasHouse.Kitchen
         public bool ReadyForLid(RecipeData fallback)
         {
             RecipeData r = Recipe != null ? Recipe : fallback;
-            if (r.usesBrine)
+            if (r.usesBrine || r.fill == RecipeData.Fill.Salsa)
             {
                 return BrineLevel >= r.brineEnough;
             }
@@ -99,6 +102,8 @@ namespace GrandmasHouse.Kitchen
 
         // Brine goes in jars whose recipe uses it (or that are still empty).
         public bool TakesBrine => Recipe == null || Recipe.usesBrine;
+        // Salsa goes in a clean empty jar, or tops up one that has salsa.
+        public bool TakesSalsa => HasSalsa || !HasContents;
         // Cloves that fill a jar packed with garlic alone, from the garlic recipe.
         int CloveCapacity
         {
@@ -119,6 +124,10 @@ namespace GrandmasHouse.Kitchen
         {
             get
             {
+                if (HasSalsa)
+                {
+                    return RecipeFor(RecipeData.Fill.Salsa);
+                }
                 if (SliceCount == 0 && CloveCount == 0 && WedgeCount == 0)
                 {
                     return null;
@@ -217,6 +226,7 @@ namespace GrandmasHouse.Kitchen
             public int cloves;
             public int wedges;
             public bool lemon;
+            public bool salsa;
             public int peppercorns;
             public bool dill;
             public float brine;
@@ -228,7 +238,7 @@ namespace GrandmasHouse.Kitchen
 
         public string Capture() => JsonUtility.ToJson(new State
         {
-            slices = SliceCount, cloves = CloveCount, wedges = WedgeCount, lemon = HasLemon, peppercorns = PeppercornCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
+            slices = SliceCount, cloves = CloveCount, wedges = WedgeCount, lemon = HasLemon, salsa = HasSalsa, peppercorns = PeppercornCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
         });
 
         public void Restore(string json)
@@ -271,6 +281,7 @@ namespace GrandmasHouse.Kitchen
                 wedge.SetLocalPositionAndRotation(WedgePlace(), WedgeRotation());
             }
             HasLemon = state.lemon;
+            HasSalsa = state.salsa;
             PeppercornCount = state.peppercorns;
             for (int i = 0; i < state.peppercorns; i++)
             {
@@ -315,7 +326,7 @@ namespace GrandmasHouse.Kitchen
         }
 
         // An open jar can be poured out at the sink and packed again.
-        public bool HasContents => !HasLid && (SliceCount > 0 || CloveCount > 0 || WedgeCount > 0 || HasLemon || PeppercornCount > 0 || HasDill || BrineLevel > 0f);
+        public bool HasContents => !HasLid && (SliceCount > 0 || CloveCount > 0 || WedgeCount > 0 || HasLemon || HasSalsa || PeppercornCount > 0 || HasDill || BrineLevel > 0f);
 
         public void Empty()
         {
@@ -331,6 +342,7 @@ namespace GrandmasHouse.Kitchen
             CloveCount = 0;
             WedgeCount = 0;
             HasLemon = false;
+            HasSalsa = false;
             PeppercornCount = 0;
             HasDill = false;
             BrineLevel = 0f;
@@ -480,6 +492,13 @@ namespace GrandmasHouse.Kitchen
             dill.AttachTo(inside, new Vector3(innerRadius * 0.4f, 0.01f, 0f), Quaternion.Euler(0f, 0f, 8f), 0.35f, collidersOn: false);
             dill.transform.localScale = Vector3.Scale(dill.transform.localScale, new Vector3(0.6f, 0.9f, 0.6f));
             NoShadows(dill.transform);
+        }
+
+        // Ladled in from the pot of salsa.
+        public void AddSalsa(float amount)
+        {
+            HasSalsa = true;
+            AddBrine(amount);
         }
 
         public void AddBrine(float amount)

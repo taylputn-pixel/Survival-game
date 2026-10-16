@@ -24,6 +24,18 @@ namespace GrandmasHouse.Carrying
         public int Count { get; private set; }
         public bool IsFull => Count >= capacity;
 
+        // What's inside, in slot order.
+        public System.Collections.Generic.IEnumerable<Pickup> Contents
+        {
+            get
+            {
+                foreach (var item in slots)
+                {
+                    if (item != null) yield return item;
+                }
+            }
+        }
+
         Pickup self;
         Pickup[] slots;
         bool isHeld;
