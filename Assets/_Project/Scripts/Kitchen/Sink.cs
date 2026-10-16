@@ -30,6 +30,7 @@ namespace GrandmasHouse.Kitchen
     // The kitchen sink. Hold the cooking pot or the canner under the faucet to fill it
     // with water (Interact, held), or pour a pot or jar out down the drain
     // (Interact for a jar; the second button for a pot, since Interact fills it).
+    // Even a sealed jar can be opened and poured out to use the jar again.
     public class Sink : MonoBehaviour, IInteractable, IAltInteractable
     {
         [Tooltip("Above the drain, where things are tipped out.")]
@@ -102,7 +103,7 @@ namespace GrandmasHouse.Kitchen
             Transform t = item.transform;
             Vector3 startPosition = t.position;
             Quaternion startRotation = t.rotation;
-            yield return Move(t, startPosition, startRotation, fillSpot.position, fillSpot.rotation, tipSeconds);
+            yield return TipOut.Move(t, startPosition, startRotation, fillSpot.position, fillSpot.rotation, tipSeconds);
 
             tapSound.Set(true);
             faucetStream.gameObject.SetActive(true);
@@ -137,44 +138,25 @@ namespace GrandmasHouse.Kitchen
             hands.Controller.InputEnabled = false;
             Pickup item = hands.TakeHeld();
             var emptyable = item.GetComponent<IEmptyable>();
-            Transform t = item.transform;
 
             // Over the drain, tipped away from you.
-            Vector3 startPosition = t.position;
-            Quaternion startRotation = t.rotation;
-            Vector3 away = Vector3.ProjectOnPlane(drain.position - hands.ViewPoint.position, Vector3.up).normalized;
-            Vector3 axis = Vector3.Cross(Vector3.up, away);
-            Quaternion upright = Quaternion.LookRotation(away, Vector3.up);
-            Quaternion tipped = Quaternion.AngleAxis(tipAngle, axis) * upright;
-            Vector3 over = drain.position + Vector3.up * holdHeight - away * 0.05f;
-
-            yield return Move(t, startPosition, startRotation, over, upright, tipSeconds);
-            yield return Move(t, over, upright, over, tipped, tipSeconds);
-            emptyable.SetPouring(true);
-            if (!(emptyable is CookingPot))
+            yield return TipOut.Over(hands, item.transform, drain.position, holdHeight, tipAngle, tipSeconds, pourSeconds, tipped =>
             {
-                // Only the pot has a pouring sound of its own.
-                Sfx.Play(SoundId.Pour, drain.position, 0.8f);
-            }
-            yield return new WaitForSeconds(pourSeconds);
-            emptyable.Empty();
-            emptyable.SetPouring(false);
-            yield return Move(t, over, tipped, over, upright, tipSeconds);
+                if (tipped && !(emptyable is CookingPot))
+                {
+                    // Only the pot has a pouring sound of its own.
+                    Sfx.Play(SoundId.Pour, drain.position, 0.8f);
+                }
+                if (!tipped)
+                {
+                    emptyable.Empty();
+                }
+                emptyable.SetPouring(tipped);
+            });
 
             hands.Give(item);
             hands.Controller.InputEnabled = true;
             busy = false;
-        }
-
-        static IEnumerator Move(Transform t, Vector3 fromPosition, Quaternion fromRotation, Vector3 toPosition, Quaternion toRotation, float seconds)
-        {
-            for (float time = 0f; time < seconds; time += Time.deltaTime)
-            {
-                float k = Mathf.SmoothStep(0f, 1f, time / seconds);
-                t.SetPositionAndRotation(Vector3.Lerp(fromPosition, toPosition, k), Quaternion.Slerp(fromRotation, toRotation, k));
-                yield return null;
-            }
-            t.SetPositionAndRotation(toPosition, toRotation);
         }
     }
 }

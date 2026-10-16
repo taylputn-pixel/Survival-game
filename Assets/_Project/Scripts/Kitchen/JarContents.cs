@@ -176,8 +176,13 @@ namespace GrandmasHouse.Kitchen
         }
         public Vector3 Mouth => inside.position + inside.up * innerHeight;
 
+        Vector3 lidSeat;
+        Vector3 lidSize;
+
         void Awake()
         {
+            lidSeat = lid.localPosition;
+            lidSize = lid.localScale;
             ShowBrine();
             lid.gameObject.SetActive(false);
             label.SetActive(false);
@@ -428,8 +433,9 @@ namespace GrandmasHouse.Kitchen
 
         int RoomFor(Handful handful) => handful.IsWedges ? RoomForWedges : handful.IsCloves ? RoomForCloves : RoomForSlices;
 
-        // An open jar can be poured out at the sink and packed again.
-        public bool HasContents => !HasLid && (SliceCount > 0 || CloveCount > 0 || WedgeCount > 0 || HasLemon || HasSalsa || PeppercornCount > 0 || HasDill || BrineLevel > 0f);
+        // Any jar can be poured out at the sink or thrown out in the trash,
+        // sealed or not; it comes back clean and empty, to be packed again.
+        public bool HasContents => SliceCount > 0 || CloveCount > 0 || WedgeCount > 0 || HasLemon || HasSalsa || PeppercornCount > 0 || HasDill || BrineLevel > 0f;
 
         public void Empty()
         {
@@ -451,10 +457,28 @@ namespace GrandmasHouse.Kitchen
             HasDill = false;
             BrineLevel = 0f;
             ShowBrine();
+            // The lid and label come off with it; the jar is ready to use again.
+            StopAllCoroutines();
+            HasLid = false;
+            IsProcessed = false;
+            IsSealed = false;
+            IsLabeled = false;
+            lid.gameObject.SetActive(false);
+            lid.localPosition = lidSeat;
+            lid.localScale = lidSize;
+            label.SetActive(false);
         }
 
-        // A jar has no spout to stream from; it just empties.
-        public void SetPouring(bool pouring) { }
+        // A jar has no spout to stream from; it just empties. A lid pops off
+        // as it tips.
+        public void SetPouring(bool pouring)
+        {
+            if (pouring && HasLid)
+            {
+                lid.gameObject.SetActive(false);
+                Sfx.Play(SoundId.LidClink, lid.position);
+            }
+        }
 
         // A slice drops in and settles on the pile inside, a little askew.
         public void AddSlice(Transform slice, float delay)
