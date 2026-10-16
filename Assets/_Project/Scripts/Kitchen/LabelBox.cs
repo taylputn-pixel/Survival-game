@@ -14,12 +14,12 @@ namespace GrandmasHouse.Kitchen
 
         public void Interact(PlayerHands hands) => Unlabeled(hands).PutOnLabel();
 
-        // The jar in your main hand first, then the one in your other hand.
+        // The jar you picked up last first, then the one in your other hand.
         static JarContents Unlabeled(PlayerHands hands)
         {
-            foreach (var held in new[] { hands.Held, hands.Extra })
+            for (int i = hands.Carried.Count - 1; i >= 0; i--)
             {
-                var jar = held != null ? held.GetComponent<JarContents>() : null;
+                var jar = hands.Carried[i].GetComponent<JarContents>();
                 if (jar != null && jar.CanLabel)
                 {
                     return jar;

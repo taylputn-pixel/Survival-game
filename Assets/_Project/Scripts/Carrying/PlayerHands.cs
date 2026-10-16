@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GrandmasHouse.Data;
 using GrandmasHouse.Interaction;
 using GrandmasHouse.Player;
@@ -6,22 +7,31 @@ using UnityEngine.InputSystem;
 
 namespace GrandmasHouse.Carrying
 {
-    // What the player is looking at, and the one thing they're holding.
-    // Interact picks up, gathers into a held basket, puts into a basket,
-    // or sets down what you hold.
+    // What the player is looking at, and what they're carrying in their two
+    // hands. How much fits depends on the thing: a hand holds a few small
+    // things of one kind (jalapeños, garlic), a couple of tomatoes, or one
+    // jar; a pot, the canner or a basket takes both hands. Whatever you
+    // picked up last is what you use next. Interact picks up, gathers into a
+    // held basket, puts into a basket, or sets down what you hold.
     public class PlayerHands : MonoBehaviour
     {
+        const int RightHand = 0;
+        const int LeftHand = 1;
+        const int BothHands = -1;
+        const int NoRoom = -2;
+
         public enum Focus { Nothing, CanInteract, CanPlace }
 
         [SerializeField] PlayerSettings settings;
         [SerializeField] Transform viewPoint;
         [SerializeField] FirstPersonController controller;
 
-        public Pickup Held { get; private set; }
-        // A second jar in the other hand. Whatever takes the first jar gets
-        // it, and this one moves over to take its place.
-        public Pickup Extra { get; private set; }
-        public bool IsEmpty => Held == null;
+        // The thing you'd use next: the last one picked up.
+        public Pickup Held => carried.Count > 0 ? carried[carried.Count - 1] : null;
+        // Everything in your hands, in the order it was picked up.
+        public IReadOnlyList<Pickup> Carried => carried;
+        public bool IsEmpty => carried.Count == 0;
+        public bool IsHolding(Pickup item) => carried.Contains(item);
         public Focus CurrentFocus { get; private set; }
         // What pressing Interact would do right now, for the button prompt.
         public string Verb { get; private set; }
@@ -36,31 +46,73 @@ namespace GrandmasHouse.Carrying
         public bool HeldPosed { get; set; }
         public FirstPersonController Controller => controller;
 
+        readonly List<Pickup> carried = new List<Pickup>();
+        readonly Dictionary<Pickup, int> handOf = new Dictionary<Pickup, int>();
+
         // Hands the held item over to something else (a station, a board).
-        public Pickup TakeHeld()
+        public Pickup TakeHeld() => Take(Held);
+
+        // Hands over one particular thing you're carrying.
+        public Pickup Take(Pickup item)
         {
-            Pickup item = Held;
-            Held = Extra;
-            Extra = null;
+            if (item == null || !carried.Remove(item))
+            {
+                return null;
+            }
+            handOf.Remove(item);
             return item;
         }
 
-        // Jars can be carried two at a time, one in each hand.
-        public bool CanCarrySecond(Pickup target)
-        {
-            return Held != null && Extra == null && target != Held
-                && Held.Category == ItemCategory.Jar && target.Category == ItemCategory.Jar;
-        }
+        // Room in your hands for this as well as what you already carry.
+        public bool CanCarryMore(Pickup target) => !IsEmpty && !carried.Contains(target) && HandFor(target) != NoRoom;
 
-        // Puts something back in your empty hands (a filled watering can).
+        // Puts something in your hands (a filled watering can, a jar back
+        // off the towel), if there's room.
         public void Give(Pickup item)
         {
-            if (Held != null)
+            if (carried.Contains(item) || HandFor(item) == NoRoom)
             {
                 return;
             }
             item.transform.SetParent(null, worldPositionStays: true);
             Hold(item);
+        }
+
+        // Which hand it would go in: stacked with the same kind if that hand
+        // has room, otherwise an empty hand; something big needs both.
+        int HandFor(Pickup target)
+        {
+            if (target.NeedsBothHands)
+            {
+                return IsEmpty ? BothHands : NoRoom;
+            }
+            if (Held != null && Held.NeedsBothHands)
+            {
+                return NoRoom;
+            }
+            for (int hand = RightHand; hand <= LeftHand; hand++)
+            {
+                int count = 0;
+                Pickup first = null;
+                foreach (var item in carried)
+                {
+                    if (handOf[item] != hand) continue;
+                    if (first == null) first = item;
+                    count++;
+                }
+                if (first != null && first.DisplayName == target.DisplayName && count < target.PerHand)
+                {
+                    return hand;
+                }
+            }
+            for (int hand = RightHand; hand <= LeftHand; hand++)
+            {
+                if (!handOf.ContainsValue(hand))
+                {
+                    return hand;
+                }
+            }
+            return NoRoom;
         }
 
         InputAction interactAction;
@@ -100,30 +152,36 @@ namespace GrandmasHouse.Carrying
 
         void LateUpdate()
         {
-            if (Held == null || HeldPosed)
+            if (IsEmpty || HeldPosed)
             {
                 return;
             }
 
-            // Ease the held item toward its spot in view so it feels carried, not glued on.
-            Quaternion view = Held.KeepUpright
-                ? Quaternion.Euler(0f, viewPoint.eulerAngles.y, 0f)
-                : viewPoint.rotation;
-            Vector3 target = viewPoint.position + view * Held.HoldOffset(settings.holdOffset);
-            Quaternion targetRotation = view * Held.HeldRotation;
+            // Ease each held thing toward its spot in view so it feels carried,
+            // not glued on: the right hand, the left mirrored, and a few of a
+            // kind bunched together in one hand.
             float t = 1f - Mathf.Exp(-settings.holdFollowSharpness * Time.deltaTime);
-            Held.transform.SetPositionAndRotation(
-                Vector3.Lerp(Held.transform.position, target, t),
-                Quaternion.Slerp(Held.transform.rotation, targetRotation, t));
-
-            if (Extra != null)
+            int[] inHand = new int[2];
+            foreach (var item in carried)
             {
-                // The other hand, mirrored to the left.
-                Vector3 offset = Extra.HoldOffset(settings.holdOffset);
-                offset.x = -offset.x;
-                Extra.transform.SetPositionAndRotation(
-                    Vector3.Lerp(Extra.transform.position, viewPoint.position + view * offset, t),
-                    Quaternion.Slerp(Extra.transform.rotation, view * Extra.HeldRotation, t));
+                int hand = handOf[item];
+                Quaternion view = item.KeepUpright
+                    ? Quaternion.Euler(0f, viewPoint.eulerAngles.y, 0f)
+                    : viewPoint.rotation;
+                Vector3 offset = item.HoldOffset(settings.holdOffset);
+                Quaternion turn = Quaternion.identity;
+                if (hand != BothHands)
+                {
+                    int k = inHand[hand]++;
+                    float side = hand == RightHand ? 1f : -1f;
+                    offset.x *= side;
+                    // A loose handful: each one tucked in beside and a little above the last.
+                    offset += new Vector3(-side * 0.018f * k, 0.012f * k, 0.008f * (k % 2));
+                    turn = Quaternion.Euler(0f, k * 20f * side, k * 8f);
+                }
+                item.transform.SetPositionAndRotation(
+                    Vector3.Lerp(item.transform.position, viewPoint.position + view * offset, t),
+                    Quaternion.Slerp(item.transform.rotation, view * turn * item.HeldRotation, t));
             }
         }
 
@@ -137,7 +195,7 @@ namespace GrandmasHouse.Carrying
             {
                 return Held.OwnContainer.Accepts(target);
             }
-            return (target.OwnContainer != null && target.OwnContainer.Accepts(Held)) || CanCarrySecond(target);
+            return (target.OwnContainer != null && target.OwnContainer.Accepts(Held)) || CanCarryMore(target);
         }
 
         public void Handle(Pickup target)
@@ -153,20 +211,27 @@ namespace GrandmasHouse.Carrying
             }
             else if (target.OwnContainer != null && target.OwnContainer.Accepts(Held))
             {
-                target.OwnContainer.Add(TakeHeld(), settings.placeGlideSeconds);
+                // Everything in your hands that goes in the basket goes in.
+                foreach (var item in carried.ToArray())
+                {
+                    if (target.OwnContainer.Accepts(item))
+                    {
+                        target.OwnContainer.Add(Take(item), settings.placeGlideSeconds);
+                    }
+                }
             }
-            else if (CanCarrySecond(target))
+            else if (CanCarryMore(target))
             {
-                Lift(target);
-                Extra = target;
-                target.OnPickedUp();
+                Hold(target);
             }
         }
 
         void Hold(Pickup item)
         {
+            int hand = HandFor(item);
             Lift(item);
-            Held = item;
+            carried.Add(item);
+            handOf[item] = hand;
             item.OnPickedUp();
         }
 

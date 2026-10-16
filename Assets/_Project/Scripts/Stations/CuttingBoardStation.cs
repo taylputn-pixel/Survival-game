@@ -190,7 +190,15 @@ namespace GrandmasHouse.Stations
                 }
                 else
                 {
-                    Accept(hands.TakeHeld());
+                    // Everything choppable in your hands goes down, last picked up first.
+                    for (int i = hands.Carried.Count - 1; i >= 0 && HasRoom; i--)
+                    {
+                        Pickup carried = hands.Carried[i];
+                        if (IsChoppable(carried))
+                        {
+                            Accept(hands.Take(carried));
+                        }
+                    }
                 }
                 return;
             }

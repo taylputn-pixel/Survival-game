@@ -18,6 +18,10 @@ namespace GrandmasHouse.Carrying
         [SerializeField] Vector3 heldRotation;
         [Tooltip("Stay level while carried instead of tilting with your view (baskets, crates).")]
         [SerializeField] bool keepUpright;
+        [Tooltip("How many of these fit in one hand (jalapeños 4, tomatoes 2, a jar 1).")]
+        [Min(1)] [SerializeField] int perHand = 1;
+        [Tooltip("Takes both hands to carry. Baskets, cookware and tools always do.")]
+        [SerializeField] bool bothHands;
         [Tooltip("Use a different hold spot than the default in PlayerSettings.")]
         [SerializeField] bool useCustomHoldOffset;
         [SerializeField] Vector3 customHoldOffset = new Vector3(0f, -0.45f, 0.55f);
@@ -25,6 +29,8 @@ namespace GrandmasHouse.Carrying
         public string DisplayName => displayName;
         public ItemCategory Category => category;
         public Quaternion HeldRotation => Quaternion.Euler(heldRotation);
+        public int PerHand => perHand;
+        public bool NeedsBothHands => bothHands || OwnContainer != null || category == ItemCategory.Cookware || category == ItemCategory.Tool;
         public bool KeepUpright => keepUpright;
         // How the item rests when set down (e.g. a cucumber lies on its side).
         public Quaternion RestTilt { get; private set; }
@@ -93,9 +99,9 @@ namespace GrandmasHouse.Carrying
             {
                 return "Pick up";
             }
-            if (hands.CanCarrySecond(this))
+            if (hands.CanCarryMore(this))
             {
-                return "Pick up another";
+                return hands.Held.DisplayName == DisplayName ? "Pick up another" : "Pick up";
             }
             return hands.Held.OwnContainer != null ? "Gather" : "Put in";
         }

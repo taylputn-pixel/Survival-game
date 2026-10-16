@@ -91,7 +91,7 @@ namespace GrandmasHouse.Kitchen
         // down somewhere (not in your hands).
         public bool IsReady => !InHands && Fill > 0.02f && Salt > 0 && Heat >= 1f && (!HasSalsa || Vinegar > 0f);
         public Transform Lip => lip;
-        bool InHands => player != null && (player.Held == cookware.Pickup || player.Extra == cookware.Pickup);
+        bool InHands => player != null && player.IsHolding(cookware.Pickup);
 
         // A pot of boiled brine set down somewhere, if there is one.
         public static CookingPot ReadyPot()

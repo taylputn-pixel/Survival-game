@@ -162,6 +162,8 @@ MonoBehaviour:
   category: 1
   heldRotation: {x: 0, y: 0, z: 75}
   keepUpright: 0
+  perHand: 4
+  bothHands: 0
   useCustomHoldOffset: 0
   customHoldOffset: {x: 0, y: -0.45, z: 0.55}
 --- !u!114 &2326324230459876994
