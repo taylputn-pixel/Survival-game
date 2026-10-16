@@ -524,6 +524,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 705a86bb90da65f46b9907627ca8c014, type: 2}
   - {fileID: 11400000, guid: 896573569d607674fbf46701d86820eb, type: 2}
   - {fileID: 11400000, guid: 1aede0e4f23a0b645a20bc3ee1a8284d, type: 2}
+  - {fileID: 11400000, guid: 28b8e61668d540b43a699fed95638422, type: 2}
   - {fileID: 11400000, guid: 65cf7262a0545e24fbf9980797fffdbe, type: 2}
   inedible: {fileID: 11400000, guid: f92c0e4ed4a0a8443876f4a2f75b2127, type: 2}
   lid: {fileID: 8101993745699184547}
