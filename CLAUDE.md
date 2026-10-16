@@ -13,7 +13,8 @@ Every session working on this project must:
    - Tick off finished items under Current phase.
    - Bring any section that changed up to date.
    - Add a row to the **Decision log** (Date · Decision · Why) for every meaningful decision, newest first. When a decision changes, add a new row; don't rewrite old rows.
-3. **Test every idea** against: *Does this make you feel like you're living Grandma's life, at her pace?* If an idea adds pressure, danger, or optimizing, it goes on the later list or gets dropped.
+3. **No hand-holding.** Don't block steps until earlier ones are done, and don't show reminders like "needs salt" or "add lemon juice first". Let the player do things in any order or skip them; the result shows in what they made (a jar that isn't one of Grandma's recipes is "Don't eat!"). Button prompts for what you can do right now are fine.
+4. **Test every idea** against: *Does this make you feel like you're living Grandma's life, at her pace?* If an idea adds pressure, danger, or optimizing, it goes on the later list or gets dropped.
 
 ## Current phase: Phase 2, Garden depth
 

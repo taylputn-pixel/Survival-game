@@ -537,28 +537,19 @@ namespace GrandmasHouse.Stations
             }
         }
 
-        // The lemon juice, lids and the pot go to the jar that needs them.
+        // The lemon juice, lids and the pot go to the jar you're on, or the
+        // next one they'd go in. Nothing waits on anything else: what you
+        // leave out shows in what the jar turns out to be.
         bool UseTools(bool pressed)
         {
-            if (Lemon is LemonJuice lemon && !lemon.Busy && CursorNear(lemon.transform.position))
+            if (Lemon is LemonJuice lemon && !lemon.Busy && LemonTarget() is JarContents forLemon && CursorNear(lemon.transform.position))
             {
-                JarContents forLemon = LemonTarget();
-                if (forLemon == null)
-                {
-                    UseHint = "No jar needs lemon juice";
-                    return true;
-                }
                 Hint("Add lemon juice");
                 if (pressed)
                 {
                     jar = forLemon;
                     StartCoroutine(lemon.SpoonInto(forLemon));
                 }
-                return true;
-            }
-            if (LidTarget() == null && CursorNear(lidStack.position) && NextNeeding(j => j.IsFull && j.NeedsLemon) != null)
-            {
-                UseHint = "Add lemon juice first";
                 return true;
             }
             if (LidTarget() is JarContents forLid && CursorNear(lidStack.position))
@@ -584,15 +575,6 @@ namespace GrandmasHouse.Stations
                     reticle.Hidden = true;
                 }
                 return true;
-            }
-            // A pot that isn't ready yet says what it still needs.
-            foreach (var cooking in CookingPot.All)
-            {
-                if (cooking.IsSetDown && cooking.Missing != null && CursorNear(cooking.transform.position))
-                {
-                    UseHint = cooking.Missing;
-                    return true;
-                }
             }
             return false;
         }
@@ -704,10 +686,10 @@ namespace GrandmasHouse.Stations
             return null;
         }
 
-        JarContents LidTarget() => pouring ? null : NextNeeding(j => j.ReadyForLid(recipe));
+        JarContents LidTarget() => pouring ? null : NextNeeding(j => j.CanTakeLid);
 
-        // Lemon juice goes to the next jar of tomatoes without it.
-        JarContents LemonTarget() => NextNeeding(j => j.NeedsLemon);
+        // Lemon juice goes to the jar you're on, or the next one without it.
+        JarContents LemonTarget() => NextNeeding(j => !j.HasLemon && j.HasContents);
 
         // Brine goes to the next jar short of the line; once every jar is up
         // to it, the jar you're on can still be topped up. Tomatoes take none.
@@ -740,12 +722,12 @@ namespace GrandmasHouse.Stations
                         StopPouring();
                         return;
                     }
-                    jar.AddSalsa(pourRate * Time.deltaTime, pot.Composition());
+                    jar.AddSalsa(pourRate * Time.deltaTime, pot.Composition(), pot.DoneRight);
                     pot.Use((jar.BrineLevel - before) * pot.SalsaRecipe.potPerJar);
                 }
                 else
                 {
-                    jar.AddBrine(pourRate * Time.deltaTime);
+                    jar.AddBrine(pourRate * Time.deltaTime, pot.DoneRight);
                     pot.Use((jar.BrineLevel - before) * recipe.potPerJar);
                 }
             }

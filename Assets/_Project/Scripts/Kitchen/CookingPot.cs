@@ -87,13 +87,17 @@ namespace GrandmasHouse.Kitchen
         public bool HasSalsa => pieces.Count > 0;
         public RecipeData SalsaRecipe => salsaRecipe;
         RecipeData Cooking => HasSalsa ? salsaRecipe : recipe;
-        // Boiled brine (or salsa, which needs its vinegar) in a pot that's set
-        // down somewhere (not in your hands).
-        public bool IsReady => !InHands && Fill > 0.02f && Salt > 0 && Heat >= 1f && (!HasSalsa || Vinegar > 0f);
+        // Something in a pot that's set down somewhere (not in your hands) can
+        // be poured or ladled out, whatever state it's in.
+        public bool IsReady => !InHands && Fill > 0.02f;
+        // Made the way it should be: vinegar and salt in, brought to a boil.
+        // Brine or salsa that isn't goes into the jar anyway, and the jar
+        // knows it didn't come out.
+        public bool DoneRight => Vinegar > 0f && Salt > 0 && Heat >= 1f;
         public Transform Lip => lip;
         bool InHands => player != null && player.IsHolding(cookware.Pickup);
 
-        // A pot of boiled brine set down somewhere, if there is one.
+        // A pot with something in it set down somewhere, if there is one.
         public static CookingPot ReadyPot()
         {
             foreach (var pot in all)
@@ -360,18 +364,6 @@ namespace GrandmasHouse.Kitchen
         // Set down somewhere, not in your hands.
         public bool IsSetDown => !InHands;
 
-        // What's still to do before it can go into jars, or none.
-        public string Missing
-        {
-            get
-            {
-                if (Fill <= 0.02f) return null;
-                if (HasSalsa && Vinegar <= 0f) return "Needs a splash of vinegar";
-                if (Salt == 0) return "Needs a scoop of salt";
-                if (Heat < 1f) return "Needs to come to a boil";
-                return null;
-            }
-        }
 
         public static IEnumerable<CookingPot> All => all;
 

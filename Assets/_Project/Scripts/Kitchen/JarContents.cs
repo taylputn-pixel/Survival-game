@@ -83,8 +83,8 @@ namespace GrandmasHouse.Kitchen
         public int RoomForSlices => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * capacity + 0.001f));
         public int RoomForCloves => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * CloveCapacity + 0.001f));
         public int RoomForWedges => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * WedgeCapacity + 0.001f));
-        // Tomatoes need their lemon juice before the lid goes on.
-        public bool NeedsLemon => !HasLemon && Recipe != null && Recipe.needsLemon;
+        // Poured from a pot that wasn't salted, vinegared and boiled.
+        public bool BadBatch { get; private set; }
         int WedgeCapacity => RecipeFor(RecipeData.Fill.Wedges) is RecipeData r ? Mathf.Max(1, r.wedgesPerJar) : 12;
 
         RecipeData RecipeFor(RecipeData.Fill fill)
@@ -99,21 +99,13 @@ namespace GrandmasHouse.Kitchen
             return null;
         }
 
-        // Ready for its lid: brined to the line, or for tomatoes packed full
-        // in their own juice with the lemon juice in.
-        public bool ReadyForLid(RecipeData fallback)
-        {
-            RecipeData r = Recipe != null ? Recipe : fallback;
-            if (HasSalsa || r.usesBrine)
-            {
-                return BrineLevel >= r.brineEnough;
-            }
-            return IsFull && !NeedsLemon;
-        }
+        // Anything in it can have a lid put on; what it turns out to be is
+        // up to what went in.
+        public bool CanTakeLid => !HasLid && HasContents;
 
         // Brine goes in jars whose recipe uses it (or that are still empty);
         // never over something ladled from the pot.
-        public bool TakesBrine => !HasSalsa && (Recipe == null || Recipe.usesBrine);
+        public bool TakesBrine => !HasSalsa;
         public bool IsInedible => Recipe != null && Recipe == inedible;
         // Salsa goes in a clean empty jar, or tops up one that has salsa.
         public bool TakesSalsa => HasSalsa || !HasContents;
@@ -155,11 +147,17 @@ namespace GrandmasHouse.Kitchen
                     if (fill != RecipeData.Fill.Slices || kind.Key != "Clove") main += kind.Value;
                 }
                 if (HasDill) counted["Dill"] = 1f;
+                if (HasLemon) counted["Lemon"] = 1f;
+                if (BadBatch)
+                {
+                    return inedible;
+                }
                 foreach (var recipe in recipes)
                 {
                     if (recipe != null && recipe.fill == fill && recipe.Matches(counted, main))
                     {
-                        return recipe;
+                        // Pickles need their brine up over them.
+                        return recipe.usesBrine && BrineLevel < recipe.brineEnough ? inedible : recipe;
                     }
                 }
                 return inedible;
@@ -270,6 +268,7 @@ namespace GrandmasHouse.Kitchen
             public int wedges;
             public bool lemon;
             public bool salsa;
+            public bool badBatch;
             public List<string> kinds = new List<string>();
             public List<float> kindAmounts = new List<float>();
             public int peppercorns;
@@ -285,7 +284,7 @@ namespace GrandmasHouse.Kitchen
         {
             var state = new State
             {
-                slices = SliceCount, cloves = CloveCount, wedges = WedgeCount, lemon = HasLemon, salsa = HasSalsa, peppercorns = PeppercornCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
+                slices = SliceCount, cloves = CloveCount, wedges = WedgeCount, lemon = HasLemon, salsa = HasSalsa, badBatch = BadBatch, peppercorns = PeppercornCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
             };
             foreach (var kind in amounts)
             {
@@ -366,6 +365,7 @@ namespace GrandmasHouse.Kitchen
             }
             HasLemon = state.lemon;
             HasSalsa = state.salsa;
+            BadBatch = state.badBatch;
             PeppercornCount = state.peppercorns;
             for (int i = 0; i < state.peppercorns; i++)
             {
@@ -452,6 +452,7 @@ namespace GrandmasHouse.Kitchen
             WedgeCount = 0;
             HasLemon = false;
             HasSalsa = false;
+            BadBatch = false;
             amounts.Clear();
             PeppercornCount = 0;
             HasDill = false;
@@ -626,9 +627,10 @@ namespace GrandmasHouse.Kitchen
         }
 
         // Ladled in from the pot: what's in it comes along in the pot's proportions.
-        public void AddSalsa(float amount, IDictionary<string, float> shares)
+        public void AddSalsa(float amount, IDictionary<string, float> shares, bool doneRight)
         {
             HasSalsa = true;
+            BadBatch |= !doneRight;
             float before = BrineLevel;
             AddBrine(amount);
             float added = BrineLevel - before;
@@ -637,6 +639,13 @@ namespace GrandmasHouse.Kitchen
                 Count(share.Key, added * share.Value);
             }
             ShowBrine();
+        }
+
+        // Brine from the pot; brine that wasn't made right spoils the jar.
+        public void AddBrine(float amount, bool doneRight)
+        {
+            BadBatch |= !doneRight;
+            AddBrine(amount);
         }
 
         public void AddBrine(float amount)
