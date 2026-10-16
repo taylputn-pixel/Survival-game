@@ -105,6 +105,7 @@ GameObject:
   - component: {fileID: 766475715937293941}
   - component: {fileID: 3539542275917530591}
   - component: {fileID: 5023520696590173128}
+  - component: {fileID: 1731033781847750173}
   m_Layer: 0
   m_Name: Tomato
   m_TagString: Untagged
@@ -269,6 +270,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Saving.SavedItem
   key: Tomato
+--- !u!114 &1731033781847750173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4159793868779256115}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7248ed8eb2a087d41a2518e1f1da5f82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Stations.Quarterable
+  fleshMaterial: {fileID: 2100000, guid: 3c7bd32fe50be3149986c95ac3164442, type: 2}
 --- !u!1 &5310577734255922944
 GameObject:
   m_ObjectHideFlags: 0

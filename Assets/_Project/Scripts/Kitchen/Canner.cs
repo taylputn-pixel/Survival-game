@@ -258,8 +258,22 @@ namespace GrandmasHouse.Kitchen
 
             if (putOn && !done)
             {
-                boilLeft = recipe.processMinutes * secondsPerRecipeMinute;
+                boilLeft = ProcessMinutes() * secondsPerRecipeMinute;
             }
+        }
+
+        // The longest time any jar in the load needs (tomatoes take far longer
+        // than pickles).
+        float ProcessMinutes()
+        {
+            float minutes = 0f;
+            foreach (var jar in rack.Values)
+            {
+                var contents = jar != null ? jar.GetComponent<JarContents>() : null;
+                RecipeData packed = contents != null && contents.Recipe != null ? contents.Recipe : recipe;
+                minutes = Mathf.Max(minutes, packed.processMinutes);
+            }
+            return minutes > 0f ? minutes : recipe.processMinutes;
         }
 
         // Jars can only be reached into while the lid is off.

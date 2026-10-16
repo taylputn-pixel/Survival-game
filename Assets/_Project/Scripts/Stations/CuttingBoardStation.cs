@@ -12,7 +12,9 @@ namespace GrandmasHouse.Stations
     // slices. Each press is one chop where the knife is; slices tumble to a
     // pile at the side of the board. A head of garlic needs no knife: press
     // it to break it into cloves, then peel each one; peeled cloves gather
-    // in a little pile of their own.
+    // in a little pile of their own. A tomato takes two chops with the knife,
+    // one to halve it and one to quarter it, and the wedges gather in a pile
+    // of their own.
     public class CuttingBoardStation : Station, ISaveable, IAfterLoad
     {
         [Tooltip("Center of the board's top. Its X axis is the direction of cutting.")]
@@ -42,6 +44,14 @@ namespace GrandmasHouse.Stations
         [Tooltip("How far from the middle of the board the broken cloves land.")]
         [SerializeField] float cloveSpread = 0.06f;
 
+        [Header("Tomatoes")]
+        [Tooltip("Where tomato wedges gather, on the board top.")]
+        [SerializeField] Transform wedgePile;
+        [Tooltip("Width, height and length of a wedge, in meters.")]
+        [SerializeField] Vector3 wedgeSize = new Vector3(0.034f, 0.026f, 0.036f);
+        [Tooltip("For rebuilding saved wedges.")]
+        [SerializeField] Material wedgeMaterial;
+
         [Header("Rebuilding saved chips")]
         [SerializeField] Material chipMaterial;
         [Tooltip("Diameter and thickness of a saved chip, in meters.")]
@@ -66,6 +76,11 @@ namespace GrandmasHouse.Stations
         readonly List<Transform> unpeeled = new List<Transform>();
         readonly List<Transform> pileCloves = new List<Transform>();
         int clovePileCount;
+        Quarterable tomato;
+        // The two halves after the first chop.
+        readonly List<Transform> halves = new List<Transform>();
+        readonly List<Transform> pileWedges = new List<Transform>();
+        int wedgePileCount;
 
         // Cut slices resting on the board, ready to be packed.
         public int SliceCount => Settled(pileSlices);
@@ -73,9 +88,12 @@ namespace GrandmasHouse.Stations
         // Peeled cloves resting on the board.
         public int CloveCount => Settled(pileCloves);
         public Vector3 ClovePilePosition => clovePile.position;
+        // Tomato wedges resting on the board.
+        public int WedgeCount => Settled(pileWedges);
+        public Vector3 WedgePilePosition => wedgePile.position;
         readonly List<float> thicknesses = new List<float>();
 
-        bool HasSomethingToCut => sliceable != null;
+        bool HasSomethingToCut => sliceable != null || tomato != null;
         bool HasGarlicWork => garlic != null || unpeeled.Count > 0;
 
         public override bool CanInteract(PlayerHands hands)
@@ -83,7 +101,7 @@ namespace GrandmasHouse.Stations
             if (!hands.IsEmpty)
             {
                 return item == null && unpeeled.Count == 0
-                    && (hands.Held.GetComponent<Sliceable>() != null || hands.Held.GetComponent<GarlicBulb>() != null);
+                    && (hands.Held.GetComponent<Sliceable>() != null || hands.Held.GetComponent<GarlicBulb>() != null || hands.Held.GetComponent<Quarterable>() != null);
             }
             return HasSomethingToCut || HasGarlicWork;
         }
@@ -136,18 +154,22 @@ namespace GrandmasHouse.Stations
             public int slices;
             public int cloves;
             public int unpeeled;
+            public int wedges;
         }
 
         // Chips, cloves and unpeeled cloves waiting on the board are saved as
         // counts and laid out again.
         public string SaveKey => "board:" + name;
-        public string Capture() => JsonUtility.ToJson(new State { slices = pileSlices.Count, cloves = pileCloves.Count, unpeeled = unpeeled.Count });
+        public string Capture() => JsonUtility.ToJson(new State { slices = pileSlices.Count, cloves = pileCloves.Count, unpeeled = unpeeled.Count, wedges = pileWedges.Count });
 
         public void Restore(string json)
         {
             foreach (var piece in pileSlices) Destroy(piece.gameObject);
             foreach (var piece in pileCloves) Destroy(piece.gameObject);
             foreach (var piece in unpeeled) Destroy(piece.gameObject);
+            foreach (var piece in pileWedges) Destroy(piece.gameObject);
+            pileWedges.Clear();
+            wedgePileCount = 0;
             pileSlices.Clear();
             pileCloves.Clear();
             unpeeled.Clear();
@@ -163,6 +185,14 @@ namespace GrandmasHouse.Stations
                 clove.SetParent(clovePile, false);
                 clove.SetLocalPositionAndRotation(ClovePileSpot(clovePileCount++), ClovePileRotation(i));
                 pileCloves.Add(clove);
+            }
+            for (int i = 0; i < state.wedges; i++)
+            {
+                Transform wedge = JarContents.MakeWedge(wedgeMaterial, wedgeSize);
+                wedge.SetParent(wedgePile, false);
+                wedge.SetLocalPositionAndRotation(WedgePileSpot(wedgePileCount), WedgePileRotation(wedgePileCount));
+                wedgePileCount++;
+                pileWedges.Add(wedge);
             }
             for (int i = 0; i < state.unpeeled; i++)
             {
@@ -197,7 +227,7 @@ namespace GrandmasHouse.Stations
         public void AfterLoad()
         {
             var lying = itemSlot.GetComponentInChildren<Pickup>();
-            if (lying != null && (lying.GetComponent<Sliceable>() != null || lying.GetComponent<GarlicBulb>() != null))
+            if (lying != null && (lying.GetComponent<Sliceable>() != null || lying.GetComponent<GarlicBulb>() != null || lying.GetComponent<Quarterable>() != null))
             {
                 LayOnBoard(lying);
             }
@@ -210,6 +240,14 @@ namespace GrandmasHouse.Stations
             if (garlic != null)
             {
                 sliceable = null;
+                produce.AttachTo(itemSlot, Vector3.up * produce.RestHalfHeight, produce.RestTilt, settings.placeGlideSeconds, collidersOn: false);
+                return;
+            }
+            tomato = produce.GetComponent<Quarterable>();
+            if (tomato != null)
+            {
+                sliceable = null;
+                halves.Clear();
                 produce.AttachTo(itemSlot, Vector3.up * produce.RestHalfHeight, produce.RestTilt, settings.placeGlideSeconds, collidersOn: false);
                 return;
             }
@@ -275,7 +313,10 @@ namespace GrandmasHouse.Stations
             if (chopTime < 0f && board.Raycast(ray, out float distance))
             {
                 float x = itemSlot.InverseTransformPoint(ray.GetPoint(distance)).x;
-                knifeX = HasSomethingToCut ? Mathf.Clamp(x, leftEnd, cutEnd) : Mathf.Clamp(x, -0.15f, 0.15f);
+                float half = tomato != null ? tomato.Diameter * 0.3f : 0f;
+                knifeX = sliceable != null ? Mathf.Clamp(x, leftEnd, cutEnd)
+                    : tomato != null ? Mathf.Clamp(x, -half, half)
+                    : Mathf.Clamp(x, -0.15f, 0.15f);
             }
         }
 
@@ -286,7 +327,7 @@ namespace GrandmasHouse.Stations
 
             if (knifeHeld)
             {
-                float hover = (sliceable != null ? sliceable.Diameter : 0.03f) + knifeHoverHeight;
+                float hover = (sliceable != null ? sliceable.Diameter : tomato != null ? tomato.Diameter : 0.03f) + knifeHoverHeight;
                 float height = hover;
 
                 if (chopTime >= 0f)
@@ -324,6 +365,11 @@ namespace GrandmasHouse.Stations
         {
             if (!HasSomethingToCut)
             {
+                return;
+            }
+            if (tomato != null)
+            {
+                ChopTomato();
                 return;
             }
 
@@ -415,6 +461,84 @@ namespace GrandmasHouse.Stations
                 pileCount = 0;
             }
             return taken;
+        }
+
+        // First chop: two halves fall open. Second: they're cut again, and the
+        // four wedges hop onto their pile.
+        void ChopTomato()
+        {
+            float d = tomato.Diameter;
+            Material skin = item.GetComponent<Renderer>().sharedMaterial;
+            if (halves.Count == 0)
+            {
+                item.GetComponent<Renderer>().enabled = false;
+                foreach (var part in item.GetComponentsInChildren<Renderer>()) part.enabled = false;
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    var half = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
+                    half.name = "Tomato Half";
+                    Destroy(half.GetComponent<Collider>());
+                    half.GetComponent<Renderer>().sharedMaterial = skin;
+                    half.SetParent(itemSlot, false);
+                    half.localScale = new Vector3(d * 0.5f, d * 0.9f, d);
+                    half.localPosition = new Vector3(0f, d * 0.45f, 0f);
+                    halves.Add(half);
+                    // The cut face shows red flesh.
+                    var face = MakeRound("Cut Face", tomato.FleshMaterial).transform;
+                    face.SetParent(half, false);
+                    face.localPosition = new Vector3(-side * 0.02f, 0f, 0f);
+                    face.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                    face.localScale = new Vector3(0.95f, 0.01f, 0.95f);
+                    StartCoroutine(Tumble(half, new Vector3(side * d * 0.4f, d * 0.25f, 0f), Quaternion.Euler(0f, 0f, side * 90f)));
+                }
+                return;
+            }
+
+            foreach (var half in halves)
+            {
+                Vector3 from = half.localPosition;
+                tumbling.Remove(half);
+                Destroy(half.gameObject);
+                for (int k = 0; k < 2; k++)
+                {
+                    Transform wedge = JarContents.MakeWedge(tomato.FleshMaterial, wedgeSize);
+                    wedge.SetParent(itemSlot, false);
+                    wedge.localPosition = from;
+                    int i = wedgePileCount++;
+                    wedge.SetParent(wedgePile, true);
+                    pileWedges.Add(wedge);
+                    StartCoroutine(Tumble(wedge, WedgePileSpot(i), WedgePileRotation(i)));
+                }
+            }
+            halves.Clear();
+            Destroy(item.gameObject);
+            item = null;
+            tomato = null;
+        }
+
+        Vector3 WedgePileSpot(int i) => new Vector3((i % 3) * 0.032f, wedgeSize.y / 2f + (i / 9) * 0.02f, ((i / 3) % 3) * 0.036f);
+
+        Quaternion WedgePileRotation(int i) => Quaternion.Euler(0f, i * 37f, 0f);
+
+        public List<Transform> TakeWedges(int count)
+        {
+            var taken = Take(pileWedges, count);
+            if (pileWedges.Count == 0)
+            {
+                wedgePileCount = 0;
+            }
+            return taken;
+        }
+
+        public void ReturnWedges(List<Transform> wedges)
+        {
+            foreach (var wedge in wedges)
+            {
+                int i = wedgePileCount++;
+                wedge.SetParent(wedgePile, true);
+                pileWedges.Add(wedge);
+                StartCoroutine(Tumble(wedge, WedgePileSpot(i), WedgePileRotation(i)));
+            }
         }
 
         public List<Transform> TakeCloves(int count)
@@ -607,13 +731,21 @@ namespace GrandmasHouse.Stations
             const float seconds = 0.25f;
             for (float time = 0f; time < seconds; time += Time.deltaTime)
             {
+                // Cut again before it landed (a quick second chop on a tomato).
+                if (slice == null)
+                {
+                    yield break;
+                }
                 float t = 1f - Mathf.Pow(1f - time / seconds, 2f);
                 Vector3 arc = Vector3.up * Mathf.Sin(t * Mathf.PI) * 0.02f;
                 slice.SetLocalPositionAndRotation(Vector3.Lerp(start, localEnd, t) + arc, Quaternion.Slerp(startRotation, localEndRotation, t));
                 yield return null;
             }
-            slice.SetLocalPositionAndRotation(localEnd, localEndRotation);
             tumbling.Remove(slice);
+            if (slice != null)
+            {
+                slice.SetLocalPositionAndRotation(localEnd, localEndRotation);
+            }
         }
 
         void FinishItem()

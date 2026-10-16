@@ -8,10 +8,11 @@ using UnityEngine;
 
 namespace GrandmasHouse.Kitchen
 {
-    // What's inside a glass jar: slices or garlic cloves packed in, a head of
-    // dill, peppercorns, and brine. Everything is visible through the glass.
-    // What it's mostly packed with decides what it is (dill pickles or
-    // pickled garlic), and so which label it gets.
+    // What's inside a glass jar: slices, garlic cloves or tomato wedges
+    // packed in, a head of dill, peppercorns, lemon juice, and brine (or the
+    // tomatoes' own juice). Everything is visible through the glass. What
+    // it's packed with decides what it is (dill pickles, pickled garlic,
+    // canned tomatoes), and so which label it gets.
     [RequireComponent(typeof(Pickup))]
     public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard
     {
@@ -25,6 +26,8 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] float sliceStep = 0.0052f;
         [SerializeField] int clovesPerLayer = 5;
         [SerializeField] float cloveLayer = 0.024f;
+        [SerializeField] int wedgesPerLayer = 4;
+        [SerializeField] float wedgeLayer = 0.028f;
         [Tooltip("Everything this jar can be put up as.")]
         [SerializeField] RecipeData[] recipes;
 
@@ -42,9 +45,14 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Vector3 cloveSize = new Vector3(0.014f, 0.012f, 0.024f);
         [SerializeField] Material peppercornMaterial;
         [SerializeField] float peppercornSize = 0.005f;
+        [SerializeField] Material wedgeMaterial;
+        [Tooltip("Width, height and length of a tomato wedge, in meters.")]
+        [SerializeField] Vector3 wedgeSize = new Vector3(0.034f, 0.026f, 0.036f);
 
         public int SliceCount { get; private set; }
         public int CloveCount { get; private set; }
+        public int WedgeCount { get; private set; }
+        public bool HasLemon { get; private set; }
         public int PeppercornCount { get; private set; }
         public bool HasLid { get; private set; }
         // Through the water bath and out to cool.
@@ -56,10 +64,41 @@ namespace GrandmasHouse.Kitchen
         // 0 is empty, 1 is right to the rim.
         public float BrineLevel { get; private set; }
         // How packed it is: slices and cloves both take up room.
-        public float Fullness => SliceCount / (float)capacity + CloveCount / (float)CloveCapacity;
+        public float Fullness => SliceCount / (float)capacity + CloveCount / (float)CloveCapacity + WedgeCount / (float)WedgeCapacity;
         public bool IsFull => Fullness >= 0.999f;
         public int RoomForSlices => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * capacity + 0.001f));
         public int RoomForCloves => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * CloveCapacity + 0.001f));
+        public int RoomForWedges => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * WedgeCapacity + 0.001f));
+        // Tomatoes need their lemon juice before the lid goes on.
+        public bool NeedsLemon => !HasLemon && Recipe != null && Recipe.needsLemon;
+        int WedgeCapacity => RecipeFor(RecipeData.Fill.Wedges) is RecipeData r ? Mathf.Max(1, r.wedgesPerJar) : 12;
+
+        RecipeData RecipeFor(RecipeData.Fill fill)
+        {
+            foreach (var recipe in recipes)
+            {
+                if (recipe != null && recipe.fill == fill)
+                {
+                    return recipe;
+                }
+            }
+            return null;
+        }
+
+        // Ready for its lid: brined to the line, or for tomatoes packed full
+        // in their own juice with the lemon juice in.
+        public bool ReadyForLid(RecipeData fallback)
+        {
+            RecipeData r = Recipe != null ? Recipe : fallback;
+            if (r.usesBrine)
+            {
+                return BrineLevel >= r.brineEnough;
+            }
+            return IsFull && !NeedsLemon;
+        }
+
+        // Brine goes in jars whose recipe uses it (or that are still empty).
+        public bool TakesBrine => Recipe == null || Recipe.usesBrine;
         // Cloves that fill a jar packed with garlic alone, from the garlic recipe.
         int CloveCapacity
         {
@@ -80,19 +119,12 @@ namespace GrandmasHouse.Kitchen
         {
             get
             {
-                if (SliceCount == 0 && CloveCount == 0)
+                if (SliceCount == 0 && CloveCount == 0 && WedgeCount == 0)
                 {
                     return null;
                 }
-                var fill = SliceCount > 0 ? RecipeData.Fill.Slices : RecipeData.Fill.Cloves;
-                foreach (var recipe in recipes)
-                {
-                    if (recipe != null && recipe.fill == fill)
-                    {
-                        return recipe;
-                    }
-                }
-                return null;
+                var fill = WedgeCount > 0 ? RecipeData.Fill.Wedges : SliceCount > 0 ? RecipeData.Fill.Slices : RecipeData.Fill.Cloves;
+                return RecipeFor(fill);
             }
         }
         public Vector3 Mouth => inside.position + inside.up * innerHeight;
@@ -183,6 +215,8 @@ namespace GrandmasHouse.Kitchen
         {
             public int slices;
             public int cloves;
+            public int wedges;
+            public bool lemon;
             public int peppercorns;
             public bool dill;
             public float brine;
@@ -194,7 +228,7 @@ namespace GrandmasHouse.Kitchen
 
         public string Capture() => JsonUtility.ToJson(new State
         {
-            slices = SliceCount, cloves = CloveCount, peppercorns = PeppercornCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
+            slices = SliceCount, cloves = CloveCount, wedges = WedgeCount, lemon = HasLemon, peppercorns = PeppercornCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
         });
 
         public void Restore(string json)
@@ -228,6 +262,15 @@ namespace GrandmasHouse.Kitchen
                 CloveCount++;
                 clove.transform.SetLocalPositionAndRotation(ClovePlace(), Random.rotation);
             }
+            WedgeCount = 0;
+            for (int i = 0; i < state.wedges; i++)
+            {
+                Transform wedge = MakeWedge(wedgeMaterial, wedgeSize);
+                wedge.SetParent(inside, false);
+                WedgeCount++;
+                wedge.SetLocalPositionAndRotation(WedgePlace(), WedgeRotation());
+            }
+            HasLemon = state.lemon;
             PeppercornCount = state.peppercorns;
             for (int i = 0; i < state.peppercorns; i++)
             {
@@ -272,7 +315,7 @@ namespace GrandmasHouse.Kitchen
         }
 
         // An open jar can be poured out at the sink and packed again.
-        public bool HasContents => !HasLid && (SliceCount > 0 || CloveCount > 0 || PeppercornCount > 0 || HasDill || BrineLevel > 0f);
+        public bool HasContents => !HasLid && (SliceCount > 0 || CloveCount > 0 || WedgeCount > 0 || HasLemon || PeppercornCount > 0 || HasDill || BrineLevel > 0f);
 
         public void Empty()
         {
@@ -286,6 +329,8 @@ namespace GrandmasHouse.Kitchen
             }
             SliceCount = 0;
             CloveCount = 0;
+            WedgeCount = 0;
+            HasLemon = false;
             PeppercornCount = 0;
             HasDill = false;
             BrineLevel = 0f;
@@ -334,6 +379,57 @@ namespace GrandmasHouse.Kitchen
             float angle = (index % clovesPerLayer) * Mathf.PI * 2f / clovesPerLayer + layer * 0.5f;
             float ring = index % clovesPerLayer == clovesPerLayer - 1 ? 0f : innerRadius - 0.014f;
             return new Vector3(Mathf.Cos(angle) * ring, 0.008f + layer * cloveLayer, Mathf.Sin(angle) * ring);
+        }
+
+        // A tomato wedge is pressed in; the juice it gives up rises with the
+        // packing, so a full jar is full of its own juice.
+        public void AddWedge(Transform wedge, float delay)
+        {
+            WedgeCount++;
+            wedge.SetParent(inside, worldPositionStays: true);
+            NoShadows(wedge);
+            StartCoroutine(Drop(wedge, WedgePlace(), WedgeRotation(), delay));
+            if (Recipe != null && !Recipe.usesBrine)
+            {
+                BrineLevel = Mathf.Max(BrineLevel, Mathf.Min(Fullness, 1f) * Recipe.brineLine);
+                ShowBrine();
+            }
+        }
+
+        // Wedges go round the jar in layers, skin side out.
+        Vector3 WedgePlace()
+        {
+            int index = WedgeCount - 1;
+            int layer = index / wedgesPerLayer;
+            float angle = (index % wedgesPerLayer) * Mathf.PI * 2f / wedgesPerLayer + layer * 0.6f;
+            float ring = innerRadius - wedgeSize.x * 0.45f;
+            return new Vector3(Mathf.Cos(angle) * ring, wedgeSize.y * 0.5f + layer * wedgeLayer, Mathf.Sin(angle) * ring);
+        }
+
+        Quaternion WedgeRotation()
+        {
+            int index = WedgeCount - 1;
+            int layer = index / wedgesPerLayer;
+            float angle = (index % wedgesPerLayer) * 360f / wedgesPerLayer + layer * 0.6f * Mathf.Rad2Deg;
+            return Quaternion.Euler(0f, 90f - angle, Random.Range(-10f, 10f));
+        }
+
+        public static Transform MakeWedge(Material material, Vector3 size)
+        {
+            var wedge = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            wedge.name = "Tomato Wedge";
+            Destroy(wedge.GetComponent<Collider>());
+            var look = wedge.GetComponent<Renderer>();
+            look.sharedMaterial = material;
+            look.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            wedge.transform.localScale = size;
+            return wedge.transform;
+        }
+
+        // A spoonful of lemon juice.
+        public void AddLemon()
+        {
+            HasLemon = true;
         }
 
         // A pinch of peppercorns falls in and settles among what's packed.
@@ -392,8 +488,15 @@ namespace GrandmasHouse.Kitchen
             ShowBrine();
         }
 
+        Material brineLook;
+
         void ShowBrine()
         {
+            // Tomatoes show their own red juice instead of clear brine.
+            var look = brine.GetComponent<Renderer>();
+            if (brineLook == null) brineLook = look.sharedMaterial;
+            RecipeData recipe = Recipe;
+            look.sharedMaterial = recipe != null && recipe.liquid != null ? recipe.liquid : brineLook;
             brine.gameObject.SetActive(BrineLevel > 0f);
             float height = BrineLevel * innerHeight;
             brine.localScale = new Vector3(innerRadius * 2f, height / 2f, innerRadius * 2f);

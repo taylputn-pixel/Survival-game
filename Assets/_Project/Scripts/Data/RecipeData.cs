@@ -9,7 +9,7 @@ namespace GrandmasHouse.Data
     public class RecipeData : ScriptableObject
     {
         // What fills the jar, which is how a packed jar knows what it is.
-        public enum Fill { Slices, Cloves }
+        public enum Fill { Slices, Cloves, Wedges }
 
         public string displayName = "Dill Pickle Chips";
         public Fill fill = Fill.Slices;
@@ -19,6 +19,8 @@ namespace GrandmasHouse.Data
         [Header("Packing a jar")]
         [Tooltip("Slices that fill one jar snugly.")]
         public int slicesPerJar = 20;
+        [Tooltip("Tomato wedges that fill one jar, pressed down (four to a tomato).")]
+        public int wedgesPerJar = 12;
         [Tooltip("A head of dill goes in each jar.")]
         public bool needsDill = true;
         [Tooltip("Peeled cloves that fill one jar packed with garlic alone. Write {cloves} in card or book text to show this number.")]
@@ -31,6 +33,12 @@ namespace GrandmasHouse.Data
         [Range(0f, 1f)] public float brineLine = 0.88f;
         [Tooltip("Brine at least this high counts as filled and ready to can.")]
         [Range(0f, 1f)] public float brineEnough = 0.75f;
+        [Tooltip("Brine is poured over what's packed. Off for tomatoes packed raw, which make their own juice as they're pressed in.")]
+        public bool usesBrine = true;
+        [Tooltip("A spoonful of lemon juice goes in each jar before the lid.")]
+        public bool needsLemon;
+        [Tooltip("What the liquid in the jar looks like (brine if empty).")]
+        public Material liquid;
 
         [Header("Brine")]
         [Tooltip("Share of the brine that's vinegar; the rest is water.")]

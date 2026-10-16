@@ -12,14 +12,17 @@ namespace GrandmasHouse.Stations
     // them, then step up and pack by hand: pick up a handful of slices or
     // garlic cloves from the board, a head of dill, or a pinch of peppercorns
     // from the tin, carry it over a jar and drop it in. A jar of slices is
-    // dill pickles; a jar of cloves is pickled garlic. Hold Interact on the pot of boiling brine (on the hot pad
+    // dill pickles; a jar of cloves is pickled garlic. A jar of tomato wedges
+    // is canned tomatoes: pressing them in fills it with their own juice, and
+    // the lemon juice bottle tips a spoonful into each before its lid. Hold
+    // Interact on the pot of boiling brine (on the hot pad
     // or the stove) to pour up to the line, and put a lid on from the stack.
     // Brine and lids go to the jar you're working on while it still needs
     // them, otherwise on to the next jar that does, so you can pour down the
     // row and then lid them all. Lidded jars pick straight up off the towel.
     public class JarPackingStation : Station, IAfterLoad
     {
-        enum Carrying { Nothing, Slices, Cloves, Dill, Peppercorns }
+        enum Carrying { Nothing, Slices, Cloves, Dill, Peppercorns, Wedges }
 
         [SerializeField] RecipeData recipe;
         [Tooltip("Slices and peeled garlic are taken from this board's piles.")]
@@ -34,6 +37,8 @@ namespace GrandmasHouse.Stations
         [SerializeField] Transform lidStack;
         [Tooltip("Where the peppercorn tin stands on the towel.")]
         [SerializeField] Transform spiceSpot;
+        [Tooltip("Where the lemon juice bottle stands on the towel.")]
+        [SerializeField] Transform lemonSpot;
 
         [Header("Feel")]
         [Tooltip("How close the cursor must be to something to use it, in screen heights.")]
@@ -43,6 +48,8 @@ namespace GrandmasHouse.Stations
         [SerializeField] int maxSlicesCarried = 12;
         [SerializeField] int clovesPerGrab = 3;
         [SerializeField] int maxClovesCarried = 12;
+        [SerializeField] int wedgesPerGrab = 2;
+        [SerializeField] int maxWedgesCarried = 6;
         [Tooltip("How high above the towel things are carried, in meters.")]
         [SerializeField] float carryHeight = 0.2f;
         [SerializeField] float carrySharpness = 18f;
@@ -85,10 +92,15 @@ namespace GrandmasHouse.Stations
             {
                 return Tin == null;
             }
+            if (hands.Held.GetComponent<LemonJuice>() != null)
+            {
+                return Lemon == null;
+            }
             return dills.Count < maxDill && IsDill(hands.Held);
         }
 
         PeppercornTin Tin => spiceSpot.GetComponentInChildren<PeppercornTin>();
+        LemonJuice Lemon => lemonSpot.GetComponentInChildren<LemonJuice>();
 
         public override void Interact(PlayerHands hands)
         {
@@ -102,6 +114,10 @@ namespace GrandmasHouse.Stations
                 else if (item.GetComponent<PeppercornTin>() != null)
                 {
                     item.AttachTo(spiceSpot, Vector3.zero, Quaternion.identity, settings.placeGlideSeconds, collidersOn: true);
+                }
+                else if (item.GetComponent<LemonJuice>() != null)
+                {
+                    item.AttachTo(lemonSpot, Vector3.zero, Quaternion.identity, settings.placeGlideSeconds, collidersOn: true);
                 }
                 else
                 {
@@ -125,6 +141,7 @@ namespace GrandmasHouse.Stations
                 return "Pack jars";
             }
             if (hands.Held.GetComponent<JarContents>() != null) return "Set jar down";
+            if (hands.Held.GetComponent<LemonJuice>() != null) return "Set lemon juice down";
             return hands.Held.GetComponent<PeppercornTin>() != null ? "Set peppercorns down" : "Set dill down";
         }
 
@@ -143,6 +160,14 @@ namespace GrandmasHouse.Stations
                 if (board.CloveCount > 0)
                 {
                     yield return board.ClovePilePosition;
+                }
+                if (board.WedgeCount > 0)
+                {
+                    yield return board.WedgePilePosition;
+                }
+                if (Lemon != null && LemonTarget() != null)
+                {
+                    yield return Lemon.transform.position;
                 }
                 if (dills.Count > 0)
                 {
@@ -249,6 +274,15 @@ namespace GrandmasHouse.Stations
                 }
                 return true;
             }
+            if (board.WedgeCount > 0 && CursorNear(board.WedgePilePosition))
+            {
+                Hint("Pick up tomatoes");
+                if (pressed)
+                {
+                    Grab(Carrying.Wedges, board.TakeWedges(wedgesPerGrab));
+                }
+                return true;
+            }
             if (Tin is PeppercornTin tin && CursorNear(tin.transform.position))
             {
                 Hint("Pick up a pinch of peppercorns");
@@ -298,7 +332,8 @@ namespace GrandmasHouse.Stations
                     continue;
                 }
                 bool noRoom = (carrying == Carrying.Slices && onTowel.RoomForSlices == 0)
-                    || (carrying == Carrying.Cloves && onTowel.RoomForCloves == 0);
+                    || (carrying == Carrying.Cloves && onTowel.RoomForCloves == 0)
+                    || (carrying == Carrying.Wedges && onTowel.RoomForWedges == 0);
                 if (noRoom)
                 {
                     UseHint = "This jar is full";
@@ -323,6 +358,14 @@ namespace GrandmasHouse.Stations
                 if (pressed)
                 {
                     Grab(Carrying.Slices, board.TakeSlices(Mathf.Min(handful, maxSlicesCarried - carried.Count)));
+                }
+            }
+            else if (carrying == Carrying.Wedges && carried.Count < maxWedgesCarried && board.WedgeCount > 0 && CursorNear(board.WedgePilePosition))
+            {
+                Hint("Pick up more");
+                if (pressed)
+                {
+                    Grab(Carrying.Wedges, board.TakeWedges(Mathf.Min(wedgesPerGrab, maxWedgesCarried - carried.Count)));
                 }
             }
             else if (carrying == Carrying.Cloves && carried.Count < maxClovesCarried && board.CloveCount > 0 && CursorNear(board.ClovePilePosition))
@@ -352,7 +395,7 @@ namespace GrandmasHouse.Stations
                 carrying = Carrying.Nothing;
                 return;
             }
-            int room = carrying == Carrying.Slices ? target.RoomForSlices : target.RoomForCloves;
+            int room = carrying == Carrying.Slices ? target.RoomForSlices : carrying == Carrying.Wedges ? target.RoomForWedges : target.RoomForCloves;
             int count = Mathf.Min(carried.Count, room);
             for (int i = 0; i < count; i++)
             {
@@ -361,6 +404,10 @@ namespace GrandmasHouse.Stations
                 if (carrying == Carrying.Slices)
                 {
                     target.AddSlice(piece, i * 0.06f);
+                }
+                else if (carrying == Carrying.Wedges)
+                {
+                    target.AddWedge(piece, i * 0.1f);
                 }
                 else
                 {
@@ -383,6 +430,10 @@ namespace GrandmasHouse.Stations
             else if (carrying == Carrying.Cloves)
             {
                 board.ReturnCloves(new List<Transform>(carried));
+            }
+            else if (carrying == Carrying.Wedges)
+            {
+                board.ReturnWedges(new List<Transform>(carried));
             }
             else if (carrying == Carrying.Dill && carriedDill != null)
             {
@@ -430,9 +481,30 @@ namespace GrandmasHouse.Stations
             }
         }
 
-        // The lids and the pot go to the jar that needs them.
+        // The lemon juice, lids and the pot go to the jar that needs them.
         bool UseTools(bool pressed)
         {
+            if (Lemon is LemonJuice lemon && !lemon.Busy && CursorNear(lemon.transform.position))
+            {
+                JarContents forLemon = LemonTarget();
+                if (forLemon == null)
+                {
+                    UseHint = "No jar needs lemon juice";
+                    return true;
+                }
+                Hint("Add lemon juice");
+                if (pressed)
+                {
+                    jar = forLemon;
+                    StartCoroutine(lemon.SpoonInto(forLemon));
+                }
+                return true;
+            }
+            if (LidTarget() == null && CursorNear(lidStack.position) && NextNeeding(j => j.IsFull && j.NeedsLemon) != null)
+            {
+                UseHint = "Add lemon juice first";
+                return true;
+            }
             if (LidTarget() is JarContents forLid && CursorNear(lidStack.position))
             {
                 Hint("Put on lid");
@@ -567,11 +639,15 @@ namespace GrandmasHouse.Stations
             return null;
         }
 
-        JarContents LidTarget() => pouring ? null : NextNeeding(j => j.BrineLevel >= recipe.brineEnough);
+        JarContents LidTarget() => pouring ? null : NextNeeding(j => j.ReadyForLid(recipe));
+
+        // Lemon juice goes to the next jar of tomatoes without it.
+        JarContents LemonTarget() => NextNeeding(j => j.NeedsLemon);
 
         // Brine goes to the next jar short of the line; once every jar is up
-        // to it, the jar you're on can still be topped up.
-        JarContents BrineTarget() => NextNeeding(j => j.BrineLevel < recipe.brineEnough) ?? (IsOpen(jar) && jar.BrineLevel < 1f ? jar : null);
+        // to it, the jar you're on can still be topped up. Tomatoes take none.
+        JarContents BrineTarget() => NextNeeding(j => j.TakesBrine && j.BrineLevel < recipe.brineEnough)
+            ?? (IsOpen(jar) && jar.TakesBrine && jar.BrineLevel < 1f ? jar : null);
 
         void Pour()
         {

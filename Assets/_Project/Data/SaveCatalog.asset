@@ -49,6 +49,8 @@ MonoBehaviour:
     prefab: {fileID: 1568808308163170717, guid: 672c528a41ebcbb4aa39e6c96abf82e3, type: 3}
   - key: MarigoldSeeds
     prefab: {fileID: 1568808308163170717, guid: 9e12faa193f7f5a44891ff2caac1ef89, type: 3}
+  - key: LemonJuice
+    prefab: {fileID: 355099171364270092, guid: 534552fdd0260874589117c0127afa20, type: 3}
   crops:
   - {fileID: 11400000, guid: 5e15d42a32eb7a64e9c79284b28618b4, type: 2}
   - {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}
@@ -60,3 +62,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b0a6924016e1b994488c4ad2355a1822, type: 2}
   - {fileID: 11400000, guid: a9574fdc16b57934fb6d8c34a3e108db, type: 2}
   - {fileID: 11400000, guid: 5646a821065704240bcbbb348eceb16e, type: 2}
+  - {fileID: 11400000, guid: fda507e35871be24692f0dd83c4b0c4b, type: 2}

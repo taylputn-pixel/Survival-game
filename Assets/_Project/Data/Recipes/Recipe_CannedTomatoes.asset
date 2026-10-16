@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb4b8b46663cf1c45ad7e49c6467dca8, type: 3}
+  m_Name: Recipe_CannedTomatoes
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.RecipeData
+  displayName: Canned Tomatoes
+  fill: 2
+  label: {fileID: 2100000, guid: 448d801ac0690b849b1a04a945bb9e4b, type: 2}
+  slicesPerJar: 20
+  wedgesPerJar: 12
+  needsDill: 0
+  clovesPerJar: 20
+  garlicPerJar: 0
+  peppercornPinches: 0
+  brineLine: 0.88
+  brineEnough: 0.75
+  usesBrine: 0
+  needsLemon: 1
+  liquid: {fileID: 2100000, guid: 3424002c028b3904aa0ae626634d6ff8, type: 2}
+  vinegarShare: 0.5
+  saltScoops: 2
+  heatSeconds: 8
+  potPerJar: 0.2
+  processMinutes: 85
+  cardText: '(stand-in until Grandma''s own card is added)
+
+
+    Canned Tomatoes
+
+
+    Core
+    the tomatoes and cut them in quarters. Pack them into the jars raw, pressing
+    down until their own juice fills in around them. Leave half an inch at the top.
+
+
+    A
+    spoonful of lemon juice in every pint. Don''t skip it.
+
+
+    Lids on and into
+    the water bath. Pints take 85 minutes.'

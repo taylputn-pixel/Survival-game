@@ -516,9 +516,12 @@ MonoBehaviour:
   sliceStep: 0.0052
   clovesPerLayer: 5
   cloveLayer: 0.024
+  wedgesPerLayer: 4
+  wedgeLayer: 0.028
   recipes:
   - {fileID: 11400000, guid: 705a86bb90da65f46b9907627ca8c014, type: 2}
   - {fileID: 11400000, guid: 896573569d607674fbf46701d86820eb, type: 2}
+  - {fileID: 11400000, guid: 1aede0e4f23a0b645a20bc3ee1a8284d, type: 2}
   lid: {fileID: 8101993745699184547}
   label: {fileID: 151480534958748030}
   lidSeconds: 0.5
@@ -528,6 +531,8 @@ MonoBehaviour:
   cloveSize: {x: 0.014, y: 0.012, z: 0.024}
   peppercornMaterial: {fileID: 2100000, guid: 234adcde5119a6948b3673c49e099c02, type: 2}
   peppercornSize: 0.005
+  wedgeMaterial: {fileID: 2100000, guid: 3c7bd32fe50be3149986c95ac3164442, type: 2}
+  wedgeSize: {x: 0.034, y: 0.026, z: 0.036}
 --- !u!114 &37119894869995612
 MonoBehaviour:
   m_ObjectHideFlags: 0
