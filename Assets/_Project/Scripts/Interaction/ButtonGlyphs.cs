@@ -119,6 +119,11 @@ namespace GrandmasHouse.Interaction
                 case "rightStickPress": return new[] { "RS", "R3", "RS" }[f];
                 case "start": return new[] { "Menu", "Opt", "+" }[f];
                 case "select": return new[] { "View", "Share", "-" }[f];
+                // The d-pad's directions, as arrows.
+                case "left": return "←";
+                case "right": return "→";
+                case "up": return "↑";
+                case "down": return "↓";
                 default: return name.Length > 5 ? name.Substring(0, 5) : name;
             }
         }

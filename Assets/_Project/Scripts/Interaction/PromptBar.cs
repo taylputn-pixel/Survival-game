@@ -9,7 +9,8 @@ namespace GrandmasHouse.Interaction
     // under the dot for what Interact would do, and beside it what Pick up
     // would do when that's something different. At a station: what Interact
     // does right now, and Back to step away. Reading a note: Back to put it
-    // down, and in a book, Previous to turn back. Every prompt asks ButtonGlyphs for its icon, so rebinding or a
+    // down, and in a book, Previous to turn back. At a station whose work can
+    // be turned (a plant), Previous and Next to turn it. Every prompt asks ButtonGlyphs for its icon, so rebinding or a
     // new style shows up everywhere at once.
     public class PromptBar : MonoBehaviour
     {
@@ -29,8 +30,10 @@ namespace GrandmasHouse.Interaction
         InputAction pickUpAction;
         InputAction backAction;
         InputAction previousAction;
-        // A copy of the use prompt, sitting before it in the row.
+        InputAction nextAction;
+        // Copies of the use prompt, sitting before it in the row.
         PromptView previousPrompt;
+        PromptView nextPrompt;
 
         void Awake()
         {
@@ -43,6 +46,11 @@ namespace GrandmasHouse.Interaction
             previousPrompt.transform.SetSiblingIndex(usePrompt.transform.GetSiblingIndex());
             previousPrompt.Hide();
             style = PlayerOptions.PromptStyle;
+            nextAction = InputSystem.actions.FindAction("Player/Next", throwIfNotFound: true);
+            nextPrompt = Instantiate(usePrompt, usePrompt.transform.parent);
+            nextPrompt.name = "Next Prompt";
+            nextPrompt.transform.SetSiblingIndex(usePrompt.transform.GetSiblingIndex());
+            nextPrompt.Hide();
         }
 
         void OnValidate()
@@ -77,6 +85,7 @@ namespace GrandmasHouse.Interaction
                 {
                     previousPrompt.Hide();
                 }
+                nextPrompt.Hide();
                 if (reader.HasNextPage)
                 {
                     usePrompt.Show(interactAction, "Turn the page");
@@ -90,7 +99,16 @@ namespace GrandmasHouse.Interaction
             else if (station != null && station.Working)
             {
                 lookPrompt.Hide();
-                previousPrompt.Hide();
+                if (station.CanTurn)
+                {
+                    previousPrompt.Show(previousAction, "Turn left");
+                    nextPrompt.Show(nextAction, "Turn right");
+                }
+                else
+                {
+                    previousPrompt.Hide();
+                    nextPrompt.Hide();
+                }
                 if (station.UseHint != null)
                 {
                     usePrompt.Show(interactAction, station.UseHint);
@@ -105,6 +123,7 @@ namespace GrandmasHouse.Interaction
             {
                 usePrompt.Hide();
                 previousPrompt.Hide();
+                nextPrompt.Hide();
                 backPrompt.Hide();
                 if (hands.Controller.InputEnabled && hands.Verb != null)
                 {

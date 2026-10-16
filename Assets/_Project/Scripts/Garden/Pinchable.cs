@@ -1,16 +1,16 @@
 using System.Collections;
 using GrandmasHouse.Audio;
-using GrandmasHouse.Carrying;
-using GrandmasHouse.Interaction;
 using UnityEngine;
 
 namespace GrandmasHouse.Garden
 {
     // Something on a plant you take off by hand: a tomato sucker you pinch
     // off where it meets the stem, or a hornworm you pick off and flick out
-    // of the bed. Look at it with empty hands and press Interact. While any
-    // are on a plant it isn't tended, so it yields less (it never dies in Cozy).
-    public class Pinchable : MonoBehaviour, IInteractable
+    // of the bed. You find them by looking closer at the plant and turning it
+    // (PlantStation). While any are on a plant it isn't tended, so it yields
+    // less (it never dies in Cozy). Its collider only helps your eye land on
+    // the plant.
+    public class Pinchable : MonoBehaviour
     {
         [Tooltip("What the prompt says, like \"Pinch off\" or \"Pick off\".")]
         [SerializeField] string verb = "Pinch off";
@@ -28,12 +28,6 @@ namespace GrandmasHouse.Garden
         bool removed;
 
         void Awake() => phase = Random.Range(0f, 10f);
-
-        public bool CanInteract(PlayerHands hands) => hands.IsEmpty && !removed && Owner != null;
-
-        public string PromptVerb(PlayerHands hands) => verb;
-
-        public void Interact(PlayerHands hands) => Owner.TakeOff(this);
 
         void Update()
         {

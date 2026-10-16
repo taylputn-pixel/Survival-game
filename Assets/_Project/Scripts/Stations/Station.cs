@@ -26,6 +26,8 @@ namespace GrandmasHouse.Stations
         // What Interact does at this station right now ("Chop", "Scoop chips"), or none.
         public string UseHint { get; protected set; }
         public bool Working => IsWorking;
+        // Whatever you're working on can be turned round (Previous/Next).
+        public virtual bool CanTurn => false;
 
         protected bool IsWorking => isActive && !leaving;
         // Where the camera goes; a station can pick a different spot (the stove front).

@@ -29,6 +29,23 @@ namespace GrandmasHouse.Garden
         public int Stage { get; private set; } = -1;
         public bool IsReady => Crop != null && Stage == Crop.stages.Length - 1;
         public int RipeCount => ripe.Count;
+        public IReadOnlyList<Pickup> Ripe => ripe;
+        // The space the plant takes up, for looking closer at it.
+        public Bounds PlantBounds
+        {
+            get
+            {
+                var bounds = new Bounds(transform.position, Vector3.one * 0.05f);
+                if (plant != null)
+                {
+                    foreach (var part in plant.GetComponentsInChildren<Renderer>())
+                    {
+                        bounds.Encapsulate(part.bounds);
+                    }
+                }
+                return bounds;
+            }
+        }
         // Suckers or pests on it, so it isn't tended.
         public bool HasTrouble => suckers.Count > 0 || pests.Count > 0;
         public IEnumerable<Pinchable> Pinchables
@@ -206,6 +223,15 @@ namespace GrandmasHouse.Garden
         // Blooming and the kind of plant that draws the other's pests away.
         public bool IsCompanionFor(PlantSpot other) =>
             IsReady && other.Crop != null && other.Crop.companions != null && System.Array.IndexOf(other.Crop.companions, Crop) >= 0;
+
+        // Turned round to see the other side; it stays turned.
+        public void Turn(float degrees)
+        {
+            if (plant != null)
+            {
+                plant.transform.Rotate(0f, degrees, 0f, Space.Self);
+            }
+        }
 
         // Pinched or picked off by hand.
         public void TakeOff(Pinchable thing)

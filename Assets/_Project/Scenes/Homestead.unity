@@ -11630,6 +11630,7 @@ GameObject:
   - component: {fileID: 589195393}
   - component: {fileID: 589195394}
   - component: {fileID: 589195395}
+  - component: {fileID: 589195396}
   m_Layer: 0
   m_Name: GardenBed
   m_TagString: Untagged
@@ -11703,6 +11704,28 @@ MonoBehaviour:
   wateringMargin: 0.15
   canYaw: -75
   canReach: 1.1
+--- !u!114 &589195396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 589195391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 367bbdaf59b8b7d4cae78aa858ae8eac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Stations.PlantStation
+  settings: {fileID: 11400000, guid: e68f130955f30ca438ccc0109a110e38, type: 2}
+  viewPoint: {fileID: 0}
+  reticle: {fileID: 371697905}
+  clock: {fileID: 2003454500}
+  bed: {fileID: 589195394}
+  lookRadius: 0.18
+  viewDistance: 0.55
+  viewHeight: 0.22
+  turnSpeed: 140
+  cursorRadius: 0.05
 --- !u!1 &590060512
 GameObject:
   m_ObjectHideFlags: 0
