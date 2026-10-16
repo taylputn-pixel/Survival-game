@@ -360,6 +360,19 @@ namespace GrandmasHouse.Kitchen
         // Set down somewhere, not in your hands.
         public bool IsSetDown => !InHands;
 
+        // What's still to do before it can go into jars, or none.
+        public string Missing
+        {
+            get
+            {
+                if (Fill <= 0.02f) return null;
+                if (HasSalsa && Vinegar <= 0f) return "Needs a splash of vinegar";
+                if (Salt == 0) return "Needs a scoop of salt";
+                if (Heat < 1f) return "Needs to come to a boil";
+                return null;
+            }
+        }
+
         public static IEnumerable<CookingPot> All => all;
 
         static int CountOf(List<Transform> list, string prefix)

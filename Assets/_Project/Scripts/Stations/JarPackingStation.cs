@@ -585,6 +585,15 @@ namespace GrandmasHouse.Stations
                 }
                 return true;
             }
+            // A pot that isn't ready yet says what it still needs.
+            foreach (var cooking in CookingPot.All)
+            {
+                if (cooking.IsSetDown && cooking.Missing != null && CursorNear(cooking.transform.position))
+                {
+                    UseHint = cooking.Missing;
+                    return true;
+                }
+            }
             return false;
         }
 
