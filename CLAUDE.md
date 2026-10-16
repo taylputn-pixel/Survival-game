@@ -17,7 +17,7 @@ Every session working on this project must:
 
 ## Current phase: Phase 2, Garden depth
 
-Goal: tomatoes from seed to jar. Grow them on a stake, pinch suckers, pick off hornworms, plant marigolds as companions, then can whole tomatoes (lemon juice, no blanching) and later salsa (needs onions and peppers). The checklist is in the design doc under Roadmap. Phase 1 (seed to sealed jar for dill pickles and pickled garlic) is built; its outside-playtester gate is still open.
+Goal: tomatoes from seed to jar. Grow them on a stake, pinch suckers, pick off hornworms, plant marigolds as companions, then can whole tomatoes (lemon juice, no blanching) and salsa (onion and jalapeño crops; chopped pieces are scraped from the board into the cooking pot, cooked with vinegar and salt, and ladled into jars). All built; next is tweaking from a friend's playtest of the 0.1.0 Windows build (builds go in `C:\Dev\GrandmasHouse-Builds`, outside the repo). The checklist is in the design doc under Roadmap. Phase 1 (seed to sealed jar for dill pickles and pickled garlic) is built; its outside-playtester gate is still open.
 
 ## Key decisions (summary; reasons are in the doc's Decision log)
 
@@ -41,6 +41,7 @@ Goal: tomatoes from seed to jar. Grow them on a stake, pinch suckers, pick off h
 - Prefer composition: stations, containers, and pickups are components on GameObjects.
 - Dev menu (Editor and development builds only, `Scripts/DevTools/DevMenu` on the Homestead "Dev Tools" object): F1 while walking opens it; click a category (from each Pickup's `ItemCategory`) to see its items, pick how many, then click any item from `Data/SaveCatalog` to spawn it in front of the player. Items added to the catalog appear automatically; add future testing tools (time skip, etc.) to this menu rather than new hotkeys.
 - Garden tending: a crop opts into suckers and pests through `CropData`'s Tending fields; both use the `Pinchable` component (taken off only in `PlantStation`'s close look) and appear at stage-prefab children named `SuckerPoint`/`PestPoint` (`HarvestPoint` for the harvest). A plant with suckers, pests or crowding weeds loses its tended bonus that night.
+- Cutting board: produce set down while the board is busy waits in `WaitingRow` (up to six); a held basket empties onto it; the next piece rolls forward when one is finished. Pieces are named after their produce ("Onion Slice", "Tomato Wedge", "Clove"), which is how the pot and saves tell them apart.
 - Co-op groundwork (online co-op is being considered; see the doc's Co-op section): add no new statics or lone `FindAnyObjectByType` lookups for "the player" (pass the player in); route every world change through one method on its owner (like `GardenBed.PullOut(weed)`) so it can become a network call; keep visuals (stretch, wobble, steam) apart from state (pulled out, sealed); keep random rolls in one place the host can own.
 - Saving: a new item prefab needs a `SavedItem` key and an entry in `Data/SaveCatalog`; extra item state implements `IItemState`, scene systems implement `ISaveable`, and stations that hold things re-adopt them in `IAfterLoad`.
 
