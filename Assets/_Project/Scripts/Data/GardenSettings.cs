@@ -41,8 +41,14 @@ namespace GrandmasHouse.Data
         public int maxWeeds = 10;
         [Tooltip("How far weeds keep from planting spots and each other, in meters.")]
         public float weedSpacing = 0.12f;
-        [Tooltip("How long you hold Interact to work a young weed out by the root, in seconds. Older weeds take a little longer.")]
-        public float pullSeconds = 0.6f;
+        [Tooltip("How far you drag the mouse back (in pixels) to pull a young weed out by the root. Older weeds take a little more.")]
+        public float pullMouseDistance = 260f;
+        [Tooltip("How long the stick held fully back takes to pull a young weed, in seconds. Older weeds take a little longer.")]
+        public float pullStickSeconds = 0.8f;
+        [Tooltip("How fast a stretched weed settles back while you hold it without pulling (fraction of a full pull per second).")]
+        public float pullSlackPerSecond = 0.3f;
+        [Tooltip("How much a weed's leafy top stretches just before it pops free (1 = twice its height).")]
+        public float pullStretch = 1.2f;
         [Tooltip("Weeds get bigger each night they're left, up to this many nights.")]
         public int weedMaxAge = 3;
 
