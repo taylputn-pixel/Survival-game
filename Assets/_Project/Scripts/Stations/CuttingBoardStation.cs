@@ -10,7 +10,8 @@ namespace GrandmasHouse.Stations
 {
     // Lay produce on the board, step up, pick up the knife, and chop it into
     // slices. Each press is one chop where the knife is; slices tumble to a
-    // pile at the side of the board. A head of garlic needs no knife: press
+    // pile at the side of the board, each kind (cucumber, onion, jalapeño)
+    // to a pile of its own. A head of garlic needs no knife: press
     // it to break it into cloves, then peel each one; peeled cloves gather
     // in a little pile of their own. A tomato takes two chops with the knife,
     // one to halve it and one to quarter it, and the wedges gather in a pile
@@ -39,6 +40,8 @@ namespace GrandmasHouse.Stations
         [SerializeField] Transform knifeRest;
         [Tooltip("Where cut slices gather, on the board top.")]
         [SerializeField] Transform slicePile;
+        [Tooltip("More spots for slice piles, so each kind of produce keeps to its own pile.")]
+        [SerializeField] Transform[] moreSlicePiles;
 
         [Header("Cutting")]
         [SerializeField] float minSliceThickness = 0.003f;
@@ -90,9 +93,15 @@ namespace GrandmasHouse.Stations
         float chopTime = -1f;
         bool chopLanded;
         int enteredFrame;
-        Transform pile;
-        int pileCount;
-        readonly List<Transform> pileSlices = new List<Transform>();
+        // One pile of slices of a single kind ("Cucumber Slice"), at its own spot.
+        class SlicePile
+        {
+            public string kind;
+            public Transform root;
+            public readonly List<Transform> slices = new List<Transform>();
+            public int placed;
+        }
+        readonly List<SlicePile> slicePiles = new List<SlicePile>();
         readonly HashSet<Transform> tumbling = new HashSet<Transform>();
         GarlicBulb garlic;
         // Cloves broken off the head, still in their skins.
@@ -108,8 +117,28 @@ namespace GrandmasHouse.Stations
         readonly List<Pickup> waiting = new List<Pickup>();
 
         // Cut slices resting on the board, ready to be packed.
-        public int SliceCount => Settled(pileSlices);
-        public Vector3 PilePosition => slicePile.position;
+        public int SliceCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (var pile in slicePiles) count += Settled(pile.slices);
+                return count;
+            }
+        }
+
+        // Each pile with slices ready to pick up: what kind they are and
+        // where the pile sits.
+        public IEnumerable<KeyValuePair<string, Vector3>> SlicePiles()
+        {
+            foreach (var pile in slicePiles)
+            {
+                if (Settled(pile.slices) > 0)
+                {
+                    yield return new KeyValuePair<string, Vector3>(pile.kind, PileCenter(pile));
+                }
+            }
+        }
         // Peeled cloves resting on the board.
         public int CloveCount => Settled(pileCloves);
         public Vector3 ClovePilePosition => clovePile.position;
@@ -309,24 +338,27 @@ namespace GrandmasHouse.Stations
         public string SaveKey => "board:" + name;
         public string Capture()
         {
-            var state = new State { slices = pileSlices.Count, cloves = pileCloves.Count, unpeeled = unpeeled.Count, wedges = pileWedges.Count };
-            foreach (var slice in pileSlices) state.sliceNames.Add(slice.name);
+            var state = new State { cloves = pileCloves.Count, unpeeled = unpeeled.Count, wedges = pileWedges.Count };
+            foreach (var pile in slicePiles)
+            {
+                foreach (var slice in pile.slices) state.sliceNames.Add(slice.name);
+            }
+            state.slices = state.sliceNames.Count;
             return JsonUtility.ToJson(state);
         }
 
         public void Restore(string json)
         {
-            foreach (var piece in pileSlices) Destroy(piece.gameObject);
+            foreach (var pile in slicePiles) Destroy(pile.root.gameObject);
+            slicePiles.Clear();
             foreach (var piece in pileCloves) Destroy(piece.gameObject);
             foreach (var piece in unpeeled) Destroy(piece.gameObject);
             foreach (var piece in pileWedges) Destroy(piece.gameObject);
             pileWedges.Clear();
             wedgePileCount = 0;
-            pileSlices.Clear();
             pileCloves.Clear();
             unpeeled.Clear();
             tumbling.Clear();
-            pileCount = 0;
             clovePileCount = 0;
             // Older saves stored just the number of chips.
             var state = json.StartsWith("{") ? JsonUtility.FromJson<State>(json) : new State { slices = int.Parse(json) };
@@ -354,14 +386,7 @@ namespace GrandmasHouse.Stations
                 unpeeled.Add(clove);
             }
 
-            int count = state.slices;
-            if (count == 0)
-            {
-                return;
-            }
-            pile = new GameObject("Slices").transform;
-            pile.SetParent(slicePile, false);
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < state.slices; i++)
             {
                 string sliceName = state.sliceNames != null && i < state.sliceNames.Count ? state.sliceNames[i] : "Cucumber Slice";
                 Material look = chipMaterial;
@@ -375,14 +400,12 @@ namespace GrandmasHouse.Stations
                     }
                 }
                 Transform slice = MakeRound(sliceName, look).transform;
-                slice.SetParent(pile, false);
+                SlicePile pile = PileFor(sliceName);
+                slice.SetParent(pile.root, false);
                 slice.localScale = new Vector3(size.x, size.y / 2f, size.x);
-                int n = pileCount++;
-                float d = size.x;
-                slice.SetLocalPositionAndRotation(
-                    new Vector3((n % 4) * d * 0.8f, size.y / 2f + (n / 12) * 0.004f, ((n / 4) % 3) * d * 0.8f),
-                    Quaternion.Euler(0f, n * 47f, 0f));
-                pileSlices.Add(slice);
+                int n = pile.placed++;
+                slice.SetLocalPositionAndRotation(SliceSpot(n, size.x, size.y), SliceTurn(n));
+                pile.slices.Add(slice);
             }
         }
 
@@ -589,13 +612,6 @@ namespace GrandmasHouse.Stations
             remaining.SetParent(itemSlot, false);
             item.GetComponent<Renderer>().enabled = false;
             ShapeRemaining();
-
-            if (pile == null)
-            {
-                pile = new GameObject(item.DisplayName + " Slices").transform;
-                pile.SetParent(slicePile, false);
-                pileCount = 0;
-            }
         }
 
         void ShapeRemaining()
@@ -619,22 +635,87 @@ namespace GrandmasHouse.Stations
             slice.localRotation = Quaternion.Euler(0f, 0f, 90f);
             slice.localScale = new Vector3(d, thickness / 2f, d);
 
-            // Slices fan out in loose rows on the pile spot, lying flat.
-            int i = pileCount++;
-            Vector3 spot = new Vector3((i % 4) * d * 0.8f, thickness / 2f + (i / 12) * 0.004f, ((i / 4) % 3) * d * 0.8f);
-            slice.SetParent(pile, true);
-            pileSlices.Add(slice);
-            StartCoroutine(Tumble(slice, spot, Quaternion.Euler(0f, i * 47f, 0f)));
+            AddToPile(slice, thickness);
         }
 
-        // Hands over up to this many settled slices, newest first (another
-        // station, like jar packing, takes them from here).
-        public List<Transform> TakeSlices(int count)
+        // The slice tumbles onto the pile for its kind, starting one if
+        // there isn't one yet.
+        void AddToPile(Transform slice, float thickness)
         {
-            var taken = Take(pileSlices, count);
-            if (pileSlices.Count == 0)
+            SlicePile pile = PileFor(slice.name);
+            int i = pile.placed++;
+            slice.SetParent(pile.root, true);
+            pile.slices.Add(slice);
+            StartCoroutine(Tumble(slice, SliceSpot(i, slice.localScale.x, thickness), SliceTurn(i)));
+        }
+
+        SlicePile PileFor(string kind)
+        {
+            foreach (var existing in slicePiles)
             {
-                pileCount = 0;
+                if (existing.kind == kind) return existing;
+            }
+            // The first free spot; with more kinds than spots, the last one is shared.
+            var spots = new List<Transform> { slicePile };
+            if (moreSlicePiles != null) spots.AddRange(moreSlicePiles);
+            Transform spot = spots[spots.Count - 1];
+            foreach (var candidate in spots)
+            {
+                if (!slicePiles.Exists(p => p.root.parent == candidate))
+                {
+                    spot = candidate;
+                    break;
+                }
+            }
+            var root = new GameObject(kind + " Pile").transform;
+            root.SetParent(spot, false);
+            var pile = new SlicePile { kind = kind, root = root };
+            slicePiles.Add(pile);
+            return pile;
+        }
+
+        // Slices fan out in a little two-by-two stack on the pile spot, lying flat.
+        static Vector3 SliceSpot(int i, float diameter, float thickness) =>
+            new Vector3((i % 2) * diameter * 0.8f, thickness / 2f + (i / 4) * 0.004f, ((i / 2) % 2) * diameter * 0.8f);
+
+        static Quaternion SliceTurn(int i) => Quaternion.Euler(0f, i * 47f, 0f);
+
+        static Vector3 PileCenter(SlicePile pile)
+        {
+            Vector3 sum = Vector3.zero;
+            foreach (var slice in pile.slices) sum += slice.position;
+            return pile.slices.Count > 0 ? sum / pile.slices.Count : pile.root.position;
+        }
+
+        // Hands over up to this many settled slices of one kind, newest first
+        // (another station, like jar packing, takes them from here).
+        public List<Transform> TakeSlices(string kind, int count)
+        {
+            var taken = new List<Transform>();
+            foreach (var pile in slicePiles.ToArray())
+            {
+                if (kind == null || pile.kind == kind)
+                {
+                    taken.AddRange(TakeFrom(pile, count - taken.Count));
+                }
+            }
+            return taken;
+        }
+
+        // Settled slices of any kind (scraping the board into the pot).
+        public List<Transform> TakeSlices(int count) => TakeSlices(null, count);
+
+        List<Transform> TakeFrom(SlicePile pile, int count)
+        {
+            var taken = Take(pile.slices, count);
+            foreach (var slice in taken)
+            {
+                slice.SetParent(null, worldPositionStays: true);
+            }
+            if (pile.slices.Count == 0)
+            {
+                Destroy(pile.root.gameObject);
+                slicePiles.Remove(pile);
             }
             return taken;
         }
@@ -731,19 +812,9 @@ namespace GrandmasHouse.Stations
         // Slices carried off but not used go back on the pile.
         public void ReturnSlices(List<Transform> slices)
         {
-            if (pile == null)
-            {
-                pile = new GameObject("Slices").transform;
-                pile.SetParent(slicePile, false);
-            }
             foreach (var slice in slices)
             {
-                int i = pileCount++;
-                float d = slice.localScale.x;
-                Vector3 spot = new Vector3((i % 4) * d * 0.8f, slice.localScale.y + (i / 12) * 0.004f, ((i / 4) % 3) * d * 0.8f);
-                slice.SetParent(pile, true);
-                pileSlices.Add(slice);
-                StartCoroutine(Tumble(slice, spot, Quaternion.Euler(0f, i * 47f, 0f)));
+                AddToPile(slice, slice.localScale.y * 2f);
             }
         }
 

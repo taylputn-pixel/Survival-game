@@ -77,6 +77,8 @@ namespace GrandmasHouse.Stations
         Carrying carrying;
         readonly List<Transform> carried = new List<Transform>();
         Pickup carriedDill;
+        // Which pile the slices in hand came from ("Cucumber Slice").
+        string carriedKind;
 
         public override bool CanInteract(PlayerHands hands)
         {
@@ -154,9 +156,9 @@ namespace GrandmasHouse.Stations
             }
             if (carrying == Carrying.Nothing)
             {
-                if (board.SliceCount > 0)
+                foreach (var pile in board.SlicePiles())
                 {
-                    yield return board.PilePosition;
+                    yield return pile.Value;
                 }
                 if (board.CloveCount > 0)
                 {
@@ -257,12 +259,17 @@ namespace GrandmasHouse.Stations
         // Slices, a garlic clove, or a head of dill come up into your hand.
         bool PickUpIngredient(bool pressed)
         {
-            if (board.SliceCount > 0 && CursorNear(board.PilePosition))
+            foreach (var pile in board.SlicePiles())
             {
-                Hint("Pick up slices");
+                if (!CursorNear(pile.Value))
+                {
+                    continue;
+                }
+                Hint("Pick up " + pile.Key.ToLower() + "s");
                 if (pressed)
                 {
-                    Grab(Carrying.Slices, board.TakeSlices(handful));
+                    carriedKind = pile.Key;
+                    Grab(Carrying.Slices, board.TakeSlices(pile.Key, handful));
                 }
                 return true;
             }
@@ -353,12 +360,12 @@ namespace GrandmasHouse.Stations
                 return;
             }
 
-            if (carrying == Carrying.Slices && carried.Count < maxSlicesCarried && board.SliceCount > 0 && CursorNear(board.PilePosition))
+            if (carrying == Carrying.Slices && carried.Count < maxSlicesCarried && MorePile() is Vector3 more && CursorNear(more))
             {
                 Hint("Pick up more");
                 if (pressed)
                 {
-                    Grab(Carrying.Slices, board.TakeSlices(Mathf.Min(handful, maxSlicesCarried - carried.Count)));
+                    Grab(Carrying.Slices, board.TakeSlices(carriedKind, Mathf.Min(handful, maxSlicesCarried - carried.Count)));
                 }
             }
             else if (carrying == Carrying.Wedges && carried.Count < maxWedgesCarried && board.WedgeCount > 0 && CursorNear(board.WedgePilePosition))
@@ -419,6 +426,16 @@ namespace GrandmasHouse.Stations
             {
                 carrying = Carrying.Nothing;
             }
+        }
+
+        // The pile the slices in hand came from, if it has more.
+        Vector3? MorePile()
+        {
+            foreach (var pile in board.SlicePiles())
+            {
+                if (pile.Key == carriedKind) return pile.Value;
+            }
+            return null;
         }
 
         // Stepping back with something in hand puts it back where it came from.
