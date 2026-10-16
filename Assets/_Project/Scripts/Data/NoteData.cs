@@ -21,8 +21,23 @@ namespace GrandmasHouse.Data
         [Tooltip("A book's pages, read in order. Leave empty for a single-page note.")]
         [TextArea(6, 20)] public string[] pages;
 
-        public string Body => recipe != null && !string.IsNullOrEmpty(recipe.cardText) ? recipe.cardText : body;
+        [Tooltip("Recipes whose numbers ({cloves}) appear in this text, like a book covering several.")]
+        public RecipeData[] mentions;
+
+        public string Body => recipe != null && !string.IsNullOrEmpty(recipe.cardText) ? recipe.FillIn(recipe.cardText) : FillIn(body);
         public int PageCount => pages != null && pages.Length > 0 ? pages.Length : 1;
-        public string Page(int index) => pages != null && pages.Length > 0 ? pages[index] : Body;
+        public string Page(int index) => pages != null && pages.Length > 0 ? FillIn(pages[index]) : Body;
+
+        string FillIn(string text)
+        {
+            if (mentions != null)
+            {
+                foreach (var mentioned in mentions)
+                {
+                    if (mentioned != null) text = mentioned.FillIn(text);
+                }
+            }
+            return text;
+        }
     }
 }

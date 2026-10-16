@@ -514,7 +514,6 @@ MonoBehaviour:
   brine: {fileID: 8655880477618518376}
   capacity: 22
   sliceStep: 0.0052
-  cloveCapacity: 20
   clovesPerLayer: 5
   cloveLayer: 0.024
   recipes:

@@ -90,13 +90,13 @@ MonoBehaviour:
   - 'Pickled garlic
 
 
-    You will need about two heads of garlic for each pint,
-    a head of dill, and the peppercorn tin from the pantry.
+    You will need about {cloves} peeled cloves for each pint
+    (a couple of heads), a head of dill, and the peppercorn tin from the pantry.
 
 
-    Break and peel
-    the garlic on the cutting board. Set the jars and the peppercorn tin on the dish
-    towel.'
+    Break
+    and peel the garlic on the cutting board. Set the jars and the peppercorn tin
+    on the dish towel.'
   - 'Packing pickled garlic
 
 
@@ -108,3 +108,6 @@ MonoBehaviour:
     the same brine as for pickles, pour it over the garlic to the line, and put on
     a lid. It goes through the same ten-minute water bath, and gets its own label
     at the table.'
+  mentions:
+  - {fileID: 11400000, guid: 705a86bb90da65f46b9907627ca8c014, type: 2}
+  - {fileID: 11400000, guid: 896573569d607674fbf46701d86820eb, type: 2}

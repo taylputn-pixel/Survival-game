@@ -21,6 +21,8 @@ namespace GrandmasHouse.Data
         public int slicesPerJar = 20;
         [Tooltip("A head of dill goes in each jar.")]
         public bool needsDill = true;
+        [Tooltip("Peeled cloves that fill one jar packed with garlic alone. Write {cloves} in card or book text to show this number.")]
+        public int clovesPerJar = 20;
         [Tooltip("Garlic cloves the recipe calls for in each jar (more is fine, just extra garlic).")]
         public int garlicPerJar = 2;
         [Tooltip("Pinches of peppercorns in each jar.")]
@@ -46,5 +48,9 @@ namespace GrandmasHouse.Data
 
         [Header("Recipe card")]
         [TextArea(6, 20)] public string cardText;
+
+        // Card or book text with this recipe's numbers filled in, so the
+        // words always match how the game plays.
+        public string FillIn(string text) => text?.Replace("{cloves}", clovesPerJar.ToString());
     }
 }

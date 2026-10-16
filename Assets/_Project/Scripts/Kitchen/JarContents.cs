@@ -23,8 +23,6 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Transform brine;
         [SerializeField] int capacity = 22;
         [SerializeField] float sliceStep = 0.0052f;
-        [Tooltip("Cloves that fill a jar packed with garlic alone.")]
-        [SerializeField] int cloveCapacity = 20;
         [SerializeField] int clovesPerLayer = 5;
         [SerializeField] float cloveLayer = 0.024f;
         [Tooltip("Everything this jar can be put up as.")]
@@ -58,10 +56,25 @@ namespace GrandmasHouse.Kitchen
         // 0 is empty, 1 is right to the rim.
         public float BrineLevel { get; private set; }
         // How packed it is: slices and cloves both take up room.
-        public float Fullness => SliceCount / (float)capacity + CloveCount / (float)cloveCapacity;
+        public float Fullness => SliceCount / (float)capacity + CloveCount / (float)CloveCapacity;
         public bool IsFull => Fullness >= 0.999f;
         public int RoomForSlices => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * capacity + 0.001f));
-        public int RoomForCloves => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * cloveCapacity + 0.001f));
+        public int RoomForCloves => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * CloveCapacity + 0.001f));
+        // Cloves that fill a jar packed with garlic alone, from the garlic recipe.
+        int CloveCapacity
+        {
+            get
+            {
+                foreach (var recipe in recipes)
+                {
+                    if (recipe != null && recipe.fill == RecipeData.Fill.Cloves)
+                    {
+                        return Mathf.Max(1, recipe.clovesPerJar);
+                    }
+                }
+                return 20;
+            }
+        }
         // What it's being put up as: slices make pickles, cloves alone make pickled garlic.
         public RecipeData Recipe
         {
