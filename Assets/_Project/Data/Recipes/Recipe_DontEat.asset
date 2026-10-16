@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fb4b8b46663cf1c45ad7e49c6467dca8, type: 3}
-  m_Name: Recipe_PickledOnions
+  m_Name: Recipe_DontEat
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.RecipeData
-  displayName: Pickled Onions
+  displayName: Don't Eat!
   fill: 0
-  label: {fileID: 2100000, guid: 1dc95319877e2224fbb3c80b4b42bb3c, type: 2}
+  label: {fileID: 2100000, guid: ea353c50b955ba5499ed3c2c784ef292, type: 2}
   needs: []
-  mostly: Onion
+  mostly: 
   mostlyShare: 0.75
   slicesPerJar: 20
   wedgesPerJar: 12
@@ -28,7 +28,7 @@ MonoBehaviour:
   brineEnough: 0.75
   usesBrine: 1
   needsLemon: 0
-  liquid: {fileID: 0}
+  liquid: {fileID: 2100000, guid: 1c5c1718780c19c48b75555fc3b3def6, type: 2}
   vinegarShare: 0.5
   saltScoops: 2
   heatSeconds: 8

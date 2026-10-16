@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
+using GrandmasHouse.Interaction;
 using GrandmasHouse.Kitchen;
 using GrandmasHouse.Saving;
 using UnityEngine;
@@ -21,7 +22,11 @@ namespace GrandmasHouse.Stations
     // one at a time, or empty a basket onto it); when one is finished the
     // next rolls forward. For salsa, carry the cooking pot over and scrape
     // everything chopped into it.
-    public class CuttingBoardStation : Station, ISaveable, IAfterLoad
+    //
+    // Cut pieces can also be picked up without stepping up to the board:
+    // look at a pile and press Pick up for a handful (Handful), then drop
+    // it into a jar or the pot, or put it back here.
+    public class CuttingBoardStation : Station, ISaveable, IAfterLoad, IAltInteractable
     {
         [System.Serializable]
         struct SliceLook
@@ -69,6 +74,13 @@ namespace GrandmasHouse.Stations
         [SerializeField] Vector3 wedgeSize = new Vector3(0.034f, 0.026f, 0.036f);
         [Tooltip("For rebuilding saved wedges.")]
         [SerializeField] Material wedgeMaterial;
+
+        [Header("Picking up a handful")]
+        [Tooltip("How close to a pile you must look to pick from it, in meters.")]
+        [SerializeField] float pileReach = 0.07f;
+        [SerializeField] int slicesPerHandful = 12;
+        [SerializeField] int wedgesPerHandful = 8;
+        [SerializeField] int clovesPerHandful = 12;
 
         [Header("Waiting their turn")]
         [Tooltip("Where produce waits in a row at the back of the board. Its X axis runs along the row.")]
@@ -162,6 +174,10 @@ namespace GrandmasHouse.Stations
             if (!hands.IsEmpty)
             {
                 Pickup held = hands.Held;
+                if (held.GetComponent<Handful>() != null)
+                {
+                    return true;
+                }
                 if (held.GetComponent<CookingPot>() is CookingPot pot)
                 {
                     return ChoppedCount > 0 && pot.RoomForPieces > 0;
@@ -180,7 +196,11 @@ namespace GrandmasHouse.Stations
             if (!hands.IsEmpty)
             {
                 Pickup held = hands.Held;
-                if (held.GetComponent<CookingPot>() is CookingPot pot)
+                if (held.GetComponent<Handful>() is Handful handful)
+                {
+                    PutBack(handful, hands);
+                }
+                else if (held.GetComponent<CookingPot>() is CookingPot pot)
                 {
                     ScrapeInto(pot);
                 }
@@ -212,11 +232,101 @@ namespace GrandmasHouse.Stations
             if (!hands.IsEmpty)
             {
                 Pickup held = hands.Held;
+                if (held.GetComponent<Handful>() != null) return "Put back";
                 if (held.GetComponent<CookingPot>() != null) return "Scrape into pot";
                 if (held.OwnContainer != null) return "Empty onto board";
                 return SlotFree ? "Lay on board" : "Set by board";
             }
             return HasGarlicWork ? "Peel garlic" : "Slice";
+        }
+
+        // The pile you're looking at: its pieces' name and where it is, if
+        // there's one within reach of where you look with pieces to take.
+        bool PileAt(PlayerHands hands, out string kind, out Vector3 at)
+        {
+            kind = null;
+            at = Vector3.zero;
+            if (!hands.HasLookPoint)
+            {
+                return false;
+            }
+            float best = pileReach;
+            foreach (var pile in SlicePiles())
+            {
+                Consider(pile.Key, pile.Value, hands.LookPoint, ref best, ref kind, ref at);
+            }
+            if (WedgeCount > 0) Consider("Tomato Wedge", wedgePile.position, hands.LookPoint, ref best, ref kind, ref at);
+            if (CloveCount > 0) Consider("Clove", clovePile.position, hands.LookPoint, ref best, ref kind, ref at);
+            return kind != null;
+        }
+
+        static void Consider(string kind, Vector3 pile, Vector3 look, ref float best, ref string bestKind, ref Vector3 at)
+        {
+            Vector3 offset = pile - look;
+            offset.y = 0f;
+            if (offset.magnitude < best)
+            {
+                best = offset.magnitude;
+                bestKind = kind;
+                at = pile;
+            }
+        }
+
+        int HandfulOf(string kind) => kind == "Tomato Wedge" ? wedgesPerHandful : kind == "Clove" ? clovesPerHandful : slicesPerHandful;
+
+        public bool CanAltInteract(PlayerHands hands)
+        {
+            if (!PileAt(hands, out string kind, out _))
+            {
+                return false;
+            }
+            if (hands.IsEmpty)
+            {
+                return true;
+            }
+            var handful = Handful.Held(hands);
+            return handful != null && handful.Kind == kind && handful.Room > 0;
+        }
+
+        public string AltVerb(PlayerHands hands)
+        {
+            PileAt(hands, out string kind, out _);
+            return hands.IsEmpty ? "Pick up " + Handful.Plural(kind) : "Pick up more";
+        }
+
+        public void AltInteract(PlayerHands hands)
+        {
+            PileAt(hands, out string kind, out _);
+            var handful = Handful.Held(hands);
+            int room = handful != null ? handful.Room : HandfulOf(kind);
+            List<Transform> taken = kind == "Tomato Wedge" ? TakeWedges(room) : kind == "Clove" ? TakeCloves(room) : TakeSlices(kind, room);
+            if (taken.Count == 0)
+            {
+                return;
+            }
+            foreach (var piece in taken)
+            {
+                piece.SetParent(null, worldPositionStays: true);
+            }
+            Sfx.Play(SoundId.PickUp, taken[0].position);
+            if (handful != null)
+            {
+                handful.Add(taken);
+                return;
+            }
+            handful = Handful.Make(taken, HandfulOf(kind));
+            handful.Pickup.OnPickedUp();
+            hands.Give(handful.Pickup);
+        }
+
+        // The pieces go back on their pile and your hands are empty again.
+        void PutBack(Handful handful, PlayerHands hands)
+        {
+            var pieces = handful.Take(handful.Count);
+            if (handful.IsWedges) ReturnWedges(pieces);
+            else if (handful.IsCloves) ReturnCloves(pieces);
+            else ReturnSlices(pieces);
+            handful.DoneWith(hands);
         }
 
         // Produce still in the row (anything picked back up has left it).

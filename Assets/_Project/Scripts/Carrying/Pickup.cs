@@ -30,6 +30,19 @@ namespace GrandmasHouse.Carrying
         public ItemCategory Category => category;
         public Quaternion HeldRotation => Quaternion.Euler(heldRotation);
         public int PerHand => perHand;
+        // Can be set down or dropped anywhere (a handful of slices can't).
+        public bool CanSetDown { get; private set; } = true;
+
+        // For things put together while playing (a handful of slices): what
+        // the prefab would otherwise say.
+        public void Configure(string name, ItemCategory itemCategory, bool bothHands, bool upright, bool settable)
+        {
+            displayName = name;
+            category = itemCategory;
+            this.bothHands = bothHands;
+            keepUpright = upright;
+            CanSetDown = settable;
+        }
         public bool NeedsBothHands => bothHands || OwnContainer != null || category == ItemCategory.Cookware || category == ItemCategory.Tool;
         public bool KeepUpright => keepUpright;
         // How the item rests when set down (e.g. a cucumber lies on its side).

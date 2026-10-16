@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
+using GrandmasHouse.Interaction;
 using GrandmasHouse.Saving;
 using GrandmasHouse.Stations;
 using UnityEngine;
@@ -14,10 +15,10 @@ namespace GrandmasHouse.Kitchen
     // tomatoes' own juice), or salsa ladled in from the pot. Everything is
     // visible through the glass. What it's filled with decides what it is,
     // and so which label it gets: dill pickles need mostly cucumber and a
-    // head of dill, salsa needs tomato, onion and jalapeño. Short of a
-    // recipe, it's something plainer (pickles, pickled onions, relish).
+    // head of dill, salsa needs tomato, onion and jalapeño. Anything that
+    // isn't one of Grandma's recipes is a "Don't eat!" jar.
     [RequireComponent(typeof(Pickup))]
-    public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard
+    public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard, IInteractable
     {
         [Tooltip("The bottom of the inside of the jar.")]
         [SerializeField] Transform inside;
@@ -33,6 +34,8 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] float wedgeLayer = 0.028f;
         [Tooltip("Everything this jar can be put up as.")]
         [SerializeField] RecipeData[] recipes;
+        [Tooltip("What it is when it isn't any of those: nobody wants to eat it.")]
+        [SerializeField] RecipeData inedible;
 
         [Tooltip("The lid and ring, hidden until the jar is closed up.")]
         [SerializeField] Transform lid;
@@ -101,15 +104,17 @@ namespace GrandmasHouse.Kitchen
         public bool ReadyForLid(RecipeData fallback)
         {
             RecipeData r = Recipe != null ? Recipe : fallback;
-            if (r.usesBrine || r.fill == RecipeData.Fill.Salsa)
+            if (HasSalsa || r.usesBrine)
             {
                 return BrineLevel >= r.brineEnough;
             }
             return IsFull && !NeedsLemon;
         }
 
-        // Brine goes in jars whose recipe uses it (or that are still empty).
-        public bool TakesBrine => Recipe == null || Recipe.usesBrine;
+        // Brine goes in jars whose recipe uses it (or that are still empty);
+        // never over something ladled from the pot.
+        public bool TakesBrine => !HasSalsa && (Recipe == null || Recipe.usesBrine);
+        public bool IsInedible => Recipe != null && Recipe == inedible;
         // Salsa goes in a clean empty jar, or tops up one that has salsa.
         public bool TakesSalsa => HasSalsa || !HasContents;
         // Cloves that fill a jar packed with garlic alone, from the garlic recipe.
@@ -157,7 +162,7 @@ namespace GrandmasHouse.Kitchen
                         return recipe;
                     }
                 }
-                return RecipeFor(fill);
+                return inedible;
             }
         }
 
@@ -399,6 +404,30 @@ namespace GrandmasHouse.Kitchen
             return HasLid || GetComponentInParent<JarPackingStation>() == null;
         }
 
+        // Carrying a handful of cut pieces, look at an open jar to drop them in.
+        public bool CanInteract(PlayerHands hands)
+        {
+            var handful = Handful.Held(hands);
+            return handful != null && !HasLid && !HasSalsa && RoomFor(handful) > 0;
+        }
+
+        public string PromptVerb(PlayerHands hands) => "Drop in";
+
+        public void Interact(PlayerHands hands)
+        {
+            var handful = Handful.Held(hands);
+            var pieces = handful.Take(RoomFor(handful));
+            for (int i = 0; i < pieces.Count; i++)
+            {
+                if (handful.IsWedges) AddWedge(pieces[i], i * 0.1f);
+                else if (handful.IsCloves) AddClove(pieces[i], i * 0.08f);
+                else AddSlice(pieces[i], i * 0.06f);
+            }
+            handful.DoneWith(hands);
+        }
+
+        int RoomFor(Handful handful) => handful.IsWedges ? RoomForWedges : handful.IsCloves ? RoomForCloves : RoomForSlices;
+
         // An open jar can be poured out at the sink and packed again.
         public bool HasContents => !HasLid && (SliceCount > 0 || CloveCount > 0 || WedgeCount > 0 || HasLemon || HasSalsa || PeppercornCount > 0 || HasDill || BrineLevel > 0f);
 
@@ -600,7 +629,10 @@ namespace GrandmasHouse.Kitchen
             var look = brine.GetComponent<Renderer>();
             if (brineLook == null) brineLook = look.sharedMaterial;
             RecipeData recipe = Recipe;
-            look.sharedMaterial = recipe != null && recipe.liquid != null ? recipe.liquid : brineLook;
+            // A jar that went wrong only looks murky if it came out of the pot
+            // that way; brined slices look like brine until they're labeled.
+            bool show = recipe != null && recipe.liquid != null && (recipe != inedible || HasSalsa);
+            look.sharedMaterial = show ? recipe.liquid : brineLook;
             brine.gameObject.SetActive(BrineLevel > 0f);
             float height = BrineLevel * innerHeight;
             brine.localScale = new Vector3(innerRadius * 2f, height / 2f, innerRadius * 2f);

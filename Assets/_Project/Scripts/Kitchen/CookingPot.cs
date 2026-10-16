@@ -130,6 +130,10 @@ namespace GrandmasHouse.Kitchen
             {
                 return false;
             }
+            if (Handful.Held(hands) != null)
+            {
+                return IsSetDown && RoomForPieces > 0;
+            }
             var seasoning = hands.Held.GetComponent<Seasoning>();
             if (seasoning == null)
             {
@@ -141,11 +145,21 @@ namespace GrandmasHouse.Kitchen
 
         public string PromptVerb(PlayerHands hands)
         {
+            if (Handful.Held(hands) != null)
+            {
+                return "Drop in pot";
+            }
             return hands.Held.GetComponent<Seasoning>().Kind == Seasoning.Type.Salt ? "Add a scoop of salt" : "Hold to pour vinegar";
         }
 
         public void Interact(PlayerHands hands)
         {
+            if (Handful.Held(hands) is Handful handful)
+            {
+                AddPieces(handful.Take(RoomForPieces));
+                handful.DoneWith(hands);
+                return;
+            }
             var seasoning = hands.Held.GetComponent<Seasoning>();
             StartCoroutine(seasoning.Kind == Seasoning.Type.Salt ? ShakeSalt(hands, seasoning) : PourVinegar(hands, seasoning));
         }

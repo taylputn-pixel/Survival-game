@@ -285,7 +285,7 @@ namespace GrandmasHouse.Carrying
                 CurrentFocus = Focus.CanInteract;
                 Verb = lookTarget.PromptVerb(this);
             }
-            else if (Held != null && hasSurface)
+            else if (Held != null && hasSurface && Held.CanSetDown)
             {
                 CurrentFocus = Focus.CanPlace;
                 Verb = "Set down";
@@ -293,7 +293,7 @@ namespace GrandmasHouse.Carrying
             else
             {
                 CurrentFocus = Focus.Nothing;
-                Verb = Held != null && Held.OwnContainer == null ? "Drop" : null;
+                Verb = Held != null && Held.OwnContainer == null && Held.CanSetDown ? "Drop" : null;
             }
         }
 
@@ -312,7 +312,7 @@ namespace GrandmasHouse.Carrying
                 return;
             }
 
-            if (Held == null)
+            if (Held == null || !Held.CanSetDown)
             {
                 return;
             }
