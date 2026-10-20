@@ -124,45 +124,12 @@ namespace GrandmasHouse.Kitchen
                 return 20;
             }
         }
-        // What it's being put up as. What fills it picks the family (slices,
-        // cloves, wedges, or something ladled from the pot); then the first
-        // recipe of that family whose ingredients it has, in the order the
-        // recipes are listed, so the real recipes come before plainer ones.
-        public RecipeData Recipe
+        // What it's being put up as (JarRecipe has the rules).
+        public RecipeData Recipe => JarRecipe.Resolve(recipes, inedible, new JarFacts
         {
-            get
-            {
-                RecipeData.Fill fill;
-                if (HasSalsa) fill = RecipeData.Fill.Salsa;
-                else if (WedgeCount > 0) fill = RecipeData.Fill.Wedges;
-                else if (SliceCount > 0) fill = RecipeData.Fill.Slices;
-                else if (CloveCount > 0) fill = RecipeData.Fill.Cloves;
-                else return null;
-
-                var counted = new Dictionary<string, float>(amounts);
-                // Extras with the slices (garlic, dill) don't count toward what it mostly is.
-                float main = 0f;
-                foreach (var kind in counted)
-                {
-                    if (fill != RecipeData.Fill.Slices || kind.Key != "Clove") main += kind.Value;
-                }
-                if (HasDill) counted["Dill"] = 1f;
-                if (HasLemon) counted["Lemon"] = 1f;
-                if (BadBatch)
-                {
-                    return inedible;
-                }
-                foreach (var recipe in recipes)
-                {
-                    if (recipe != null && recipe.fill == fill && recipe.Matches(counted, main))
-                    {
-                        // Pickles need their brine up over them.
-                        return recipe.usesBrine && BrineLevel < recipe.brineEnough ? inedible : recipe;
-                    }
-                }
-                return inedible;
-            }
-        }
+            amounts = amounts, slices = SliceCount, cloves = CloveCount, wedges = WedgeCount, salsa = HasSalsa,
+            dill = HasDill, lemon = HasLemon, badBatch = BadBatch, brine = BrineLevel,
+        });
 
         // What it'll be called once it's labeled.
         public string Contents => Recipe != null ? Recipe.displayName : null;
