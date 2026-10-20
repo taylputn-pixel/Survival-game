@@ -84415,6 +84415,7 @@ MonoBehaviour:
   red: {fileID: 2100000, guid: 30f4b4ca1804b984081e2c66f5be4c15, type: 2}
   band: {fileID: 2100000, guid: 2049287e577bf9c42b93731702386afb, type: 2}
   font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+  textShader: {fileID: 4800000, guid: 1e3593ed0d65b5d43aa40c8cba23f5dc, type: 3}
 --- !u!1 &1904862512
 GameObject:
   m_ObjectHideFlags: 0

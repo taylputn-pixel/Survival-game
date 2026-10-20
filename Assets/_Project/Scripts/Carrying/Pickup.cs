@@ -108,13 +108,14 @@ namespace GrandmasHouse.Carrying
 
         public string PromptVerb(PlayerHands hands)
         {
+            string pickUp = string.IsNullOrEmpty(DisplayName) ? "Pick up" : "Pick up " + DisplayName;
             if (hands.IsEmpty)
             {
-                return "Pick up";
+                return pickUp;
             }
             if (hands.CanCarryMore(this))
             {
-                return hands.Held.DisplayName == DisplayName ? "Pick up another" : "Pick up";
+                return hands.Held.DisplayName == DisplayName ? "Pick up another " + DisplayName : pickUp;
             }
             return hands.Held.OwnContainer != null ? "Gather" : "Put in";
         }

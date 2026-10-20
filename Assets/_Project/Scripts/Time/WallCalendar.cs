@@ -20,6 +20,8 @@ namespace GrandmasHouse.DayCycle
         [SerializeField] Material red;
         [SerializeField] Material band;
         [SerializeField] Font font;
+        [Tooltip("Draws the letters, hidden behind walls (the font's own shader isn't).")]
+        [SerializeField] Shader textShader;
 
         public int Month { get; private set; } = -1;
         public int DayOfMonth { get; private set; }
@@ -34,10 +36,13 @@ namespace GrandmasHouse.DayCycle
         int shownMonth = -1;
         int shownDay = -1;
         MaterialPropertyBlock block;
+        Material textMaterial;
 
         void Start()
         {
             if (font == null) font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            textMaterial = textShader != null ? new Material(textShader) : font.material;
+            Font.textureRebuilt += FontRebuilt;
             block = new MaterialPropertyBlock();
             Show();
         }
@@ -46,6 +51,18 @@ namespace GrandmasHouse.DayCycle
         void Update()
         {
             if (clock.Day != shownDay) Show();
+        }
+
+        void OnDestroy()
+        {
+            Font.textureRebuilt -= FontRebuilt;
+            if (textMaterial != null && font != null && textMaterial != font.material) Destroy(textMaterial);
+        }
+
+        // The font packs new letters into its texture as they're needed.
+        void FontRebuilt(Font rebuilt)
+        {
+            if (rebuilt == font && textMaterial != null) textMaterial.mainTexture = font.material.mainTexture;
         }
 
         // Brings the page up to today.
@@ -165,7 +182,8 @@ namespace GrandmasHouse.DayCycle
             text.alignment = TextAlignment.Center;
             text.color = color;
             var renderer = go.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = font.material;
+            renderer.sharedMaterial = textMaterial;
+            textMaterial.mainTexture = font.material.mainTexture;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             return text;
         }
