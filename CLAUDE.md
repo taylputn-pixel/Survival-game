@@ -52,7 +52,8 @@ Goal: tomatoes from seed to jar. Grow them on a stake, pinch suckers, pick off h
 
 ```
 Assets/_Project/
-  Scripts/      gameplay code, grouped by system
+  Scripts/      gameplay code, grouped by system; compiles as the GrandmasHouse assembly (GrandmasHouse.asmdef)
+  Tests/        EditMode/ (rules, no scene) and PlayMode/ (full loops) test assemblies; Code Coverage package installed
   Data/         ScriptableObject assets (items, recipes, mode profiles)
   Prefabs/
   Scenes/       Title.unity starts the game; Homestead.unity is the main scene (kitchen, pantry, bedroom, garden); Prototype.unity is the old test room
