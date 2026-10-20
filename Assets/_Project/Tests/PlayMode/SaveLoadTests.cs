@@ -87,7 +87,7 @@ namespace GrandmasHouse.Tests
             clock.SleepUntilMorning();
             spot.AddWater(0.6f);
             string bedName = bed.name;
-            var before = JsonUtility.ToJson(spot.Capture());
+            var before = spot.Capture();
 
             yield return SaveAndContinue();
 
@@ -98,7 +98,10 @@ namespace GrandmasHouse.Tests
             Assert.AreEqual("Crop_Tomato", after.crop);
             Assert.AreEqual(0, after.stage);
             Assert.AreEqual(0.6f, after.water, 0.001f);
-            Assert.AreEqual(before, JsonUtility.ToJson(after));
+            // The turn goes through a rotation and back, so it can shift by a hair.
+            Assert.AreEqual(before.yaw, after.yaw, 0.01f);
+            after.yaw = before.yaw;
+            Assert.AreEqual(JsonUtility.ToJson(before), JsonUtility.ToJson(after));
         }
 
         [UnityTest]

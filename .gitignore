@@ -45,3 +45,6 @@ Thumbs.db
 
 # MCP screenshots
 /Captures/
+
+# Code Coverage reports (regenerated locally)
+CodeCoverage/
