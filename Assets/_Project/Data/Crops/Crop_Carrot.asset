@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 886f97837e2bf2f48b6b7a387aa1aa5f, type: 3}
+  m_Name: Crop_Carrot
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.CropData
+  displayName: Carrot
+  seedColor: {r: 0.35, g: 0.27, b: 0.18, a: 1}
+  seedSize: 0.003
+  stages:
+  - {fileID: 5566466316305038645, guid: a848395d976a3974f9b8657d85161c6f, type: 3}
+  - {fileID: 7406804447702790192, guid: 3c6f23a9de097ee4a8ae74a8002f1378, type: 3}
+  - {fileID: 8464937030076942398, guid: 809bed4a1beaf5c489b17b2d178556fe, type: 3}
+  harvest: {fileID: 6892653883721051213, guid: 7e407eb5f42a015478655aa0a447d9e5, type: 3}
+  singleHarvest: 1
+  harvestPerNight: 1
+  tendedBonus: 0
+  sucker: {fileID: 0}
+  maxSuckers: 3
+  pest: {fileID: 0}
+  pestChance: 0.4
+  companions: []
+  companionPestChance: 0.05

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 886f97837e2bf2f48b6b7a387aa1aa5f, type: 3}
+  m_Name: Crop_Potato
+  m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.CropData
+  displayName: Potato
+  seedColor: {r: 0.66, g: 0.5, b: 0.33, a: 1}
+  seedSize: 0.03
+  stages:
+  - {fileID: 3989243660408126475, guid: 482cbee03b8028c499305919e892ac1e, type: 3}
+  - {fileID: 5377639284874512866, guid: 32a62189dfd16054bbaf2d69a0f7b683, type: 3}
+  - {fileID: 7615085480741441583, guid: bb3472bb89d7f0840916789bd435d133, type: 3}
+  harvest: {fileID: 6892653883721051213, guid: db0a7cecec1d25e4ba4c244d144cb804, type: 3}
+  singleHarvest: 1
+  harvestPerNight: 1
+  tendedBonus: 0
+  sucker: {fileID: 0}
+  maxSuckers: 3
+  pest: {fileID: 0}
+  pestChance: 0.4
+  companions: []
+  companionPestChance: 0.05

@@ -59,6 +59,18 @@ MonoBehaviour:
     prefab: {fileID: 1568808308163170717, guid: c24e4a985a969064faa25b886423926e, type: 3}
   - key: JalapenoSeeds
     prefab: {fileID: 1568808308163170717, guid: 4eb5586c93b597443bbdb47c80d8904c, type: 3}
+  - key: Potato
+    prefab: {fileID: 767647525408192853, guid: db0a7cecec1d25e4ba4c244d144cb804, type: 3}
+  - key: Carrot
+    prefab: {fileID: 767647525408192853, guid: 7e407eb5f42a015478655aa0a447d9e5, type: 3}
+  - key: WinterSquash
+    prefab: {fileID: 767647525408192853, guid: 170bc287e967f4d448884cdc2f18916e, type: 3}
+  - key: CarrotSeeds
+    prefab: {fileID: 1568808308163170717, guid: 04c67d098258bb74186ae01a45e1f6df, type: 3}
+  - key: SquashSeeds
+    prefab: {fileID: 1568808308163170717, guid: 301eda9251462b84db45ea6dd7bb1d57, type: 3}
+  - key: SeedPotatoes
+    prefab: {fileID: 1568808308163170717, guid: 73639deeeb8a90e43b80c991c6d316ac, type: 3}
   crops:
   - {fileID: 11400000, guid: 5e15d42a32eb7a64e9c79284b28618b4, type: 2}
   - {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}
@@ -67,6 +79,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f743d95c04b51a84c9149a72dcd84dae, type: 2}
   - {fileID: 11400000, guid: 3d49c90e35d374142a91fc2c9d694222, type: 2}
   - {fileID: 11400000, guid: f4cd3f718810c2d4b802fae5792b8f58, type: 2}
+  - {fileID: 11400000, guid: 33214c5de57361f40894e8b484f09d36, type: 2}
+  - {fileID: 11400000, guid: 0a799f0a348d3d64db0df188dfc4a7a9, type: 2}
+  - {fileID: 11400000, guid: a4088b03a0c3ac44287c97a3bc608340, type: 2}
   notes:
   - {fileID: 11400000, guid: 149d6410b1a001c4894606af98f6c982, type: 2}
   - {fileID: 11400000, guid: b0a6924016e1b994488c4ad2355a1822, type: 2}
