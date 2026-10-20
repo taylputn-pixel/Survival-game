@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 284d0058e92b78f4cace29b05633598f, type: 3}
+  m_Name: CalendarSettings
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.CalendarSettings
+  months:
+  - name: Spring
+    days: 30
+    color: {r: 0.45, g: 0.65, b: 0.38, a: 1}
+  - name: Summer
+    days: 30
+    color: {r: 0.85, g: 0.65, b: 0.2, a: 1}
+  - name: Fall
+    days: 30
+    color: {r: 0.75, g: 0.38, b: 0.18, a: 1}
+  - name: Winter
+    days: 30
+    color: {r: 0.4, g: 0.55, b: 0.72, a: 1}
