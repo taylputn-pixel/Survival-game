@@ -317,16 +317,16 @@ namespace GrandmasHouse.Kitchen
 
         bool Cooked => Heat >= 1f;
 
-        static bool IsDried(Pickup item) => item.TryGetComponent(out Food.Perishable food) && food.Dried;
+        static bool IsDried(Pickup item) => item.TryGetComponent(out Food.Perishable food) && food.Cured;
 
-        // Dried produce goes in whole, no chopping: it plumps up in the pot as
+        // Dried, smoked or salted food goes in whole, no chopping: it plumps up in the pot as
         // the pieces it would have been cut into.
         public void AddDried(Pickup dried)
         {
             int count = dried.DisplayName switch
             {
                 "Potato" => 8, "Winter Squash" => 12, "Carrot" => 6, "Onion" => 6, "Tomato" => 4,
-                "Cucumber" => 8, "Jalapeño" => 3, _ => 2,
+                "Cucumber" => 8, "Jalapeño" => 3, "Chicken" => 6, _ => 2,
             };
             var look = dried.GetComponent<Renderer>();
             RebuildPieces(dried.DisplayName + " Piece", look != null ? look.sharedMaterial : potatoPiece, Mathf.Min(count, RoomForPieces), new Vector3(0.03f, 0.008f, 0.03f));

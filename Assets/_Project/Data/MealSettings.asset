@@ -33,6 +33,8 @@ MonoBehaviour:
     food: 0.1
   - kind: Cabbage
     food: 0.6
+  - kind: Chicken
+    food: 3
   otherPieceFood: 0.3
   uncookedShare: 0.5
   varietyBonus: 3

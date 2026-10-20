@@ -28,6 +28,8 @@ namespace GrandmasHouse.Animals
         [SerializeField] BoxCollider run;
         [SerializeField] Transform[] nests;
         [SerializeField] Pickup eggPrefab;
+        [Tooltip("What a hen taken for the pot gives.")]
+        [SerializeField] Pickup chickenPrefab;
         [SerializeField] Transform feedLevel;
         [SerializeField] Transform waterLevel;
         [Tooltip("Shown for a day where the fox took a hen.")]
@@ -122,6 +124,34 @@ namespace GrandmasHouse.Animals
                 }
             }
             Overnight?.Invoke($"laid {laid}, starved {starved}" + (taken != null ? ", the fox took " + taken : ""));
+        }
+
+        // ---- Taking a hen for the pot ----
+
+        // The host does it; anyone else asks the host.
+        public void Butcher(Hen hen)
+        {
+            int index = Array.IndexOf(hens, hen);
+            if (index < 0 || !hen.Alive) return;
+            if (!Hosting && TryGetComponent(out FlockNet net))
+            {
+                net.Butcher(index);
+                return;
+            }
+            Butcher(index);
+        }
+
+        public void Butcher(int index)
+        {
+            Hen hen = hens[index];
+            if (!hen.Alive) return;
+            hen.Alive = false;
+            Pickup bird = Instantiate(chickenPrefab, hen.transform.position + Vector3.up * 0.15f, hen.transform.rotation);
+            bird.name = chickenPrefab.name;
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer && bird.TryGetComponent(out NetworkObject shared))
+            {
+                shared.Spawn();
+            }
         }
 
         // An egg in the first nest box with room.

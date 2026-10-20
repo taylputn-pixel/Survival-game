@@ -1,3 +1,5 @@
+using GrandmasHouse.Carrying;
+using GrandmasHouse.Interaction;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -7,7 +9,9 @@ namespace GrandmasHouse.Animals
     // the coop door and goes in if it's open (or waits outside it if it's
     // shut). In the morning she comes back out if the door is open. In a
     // shared game the host moves her and everyone else sees her follow.
-    public class Hen : MonoBehaviour
+    // With empty hands you can take her for the pot: a chicken to cook or
+    // cure, and one less hen laying.
+    public class Hen : MonoBehaviour, IInteractable, ISharedUse
     {
         [SerializeField] Flock flock;
         [Tooltip("Where she roosts inside the coop.")]
@@ -21,6 +25,7 @@ namespace GrandmasHouse.Animals
             {
                 alive = value;
                 foreach (var r in GetComponentsInChildren<Renderer>(true)) r.enabled = value;
+                foreach (var c in GetComponents<Collider>()) c.enabled = value;
             }
         }
         public int DaysHungry { get; set; }
@@ -88,6 +93,10 @@ namespace GrandmasHouse.Animals
         }
 
         void PickSpot() => target = flock.SpotInRun();
+
+        public bool CanInteract(PlayerHands hands) => alive && !Inside && hands.IsEmpty;
+        public string PromptVerb(PlayerHands hands) => "Take her for the pot";
+        public void Interact(PlayerHands hands) => flock.Butcher(this);
 
         // A step toward a place; true once she's there.
         bool WalkTo(Vector3 place, float speed)

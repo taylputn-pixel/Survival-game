@@ -8,16 +8,19 @@ namespace GrandmasHouse.Food
     // Food that goes bad with time: fresh at 1, rotten at 0. It keeps longer
     // somewhere cold (ColdStorage) and darkens as it turns. Something else on
     // the item can keep it from spoiling for now (a sealed jar, an empty one).
-    // Dried (in the dehydrator) it shrinks, darkens a little, and keeps many
-    // times longer.
+    // Cured, it keeps many times longer: dried in the dehydrator (it shrinks
+    // and darkens a little), smoked in the smokehouse (browned), or packed in
+    // the salt box (paler).
     public class Perishable : MonoBehaviour, IItemState, IAfterLoad
     {
         [Tooltip("Days it keeps at room temperature, from fresh to rotten.")]
         [Min(0.1f)] [SerializeField] float shelfLifeDays = 5f;
         [Tooltip("Darken the item as it spoils. Off for jars, whose glass shouldn't change.")]
         [SerializeField] bool darken = true;
-        [Tooltip("Dried food keeps this many times longer.")]
+        [Tooltip("Cured food keeps this many times longer: dried, smoked, salted.")]
         [SerializeField] float driedKeeps = 30f;
+        [SerializeField] float smokedKeeps = 15f;
+        [SerializeField] float saltedKeeps = 40f;
         [Tooltip("How often it checks the clock and where it sits, in real seconds.")]
         [SerializeField] float checkSeconds = 1f;
 
@@ -26,9 +29,21 @@ namespace GrandmasHouse.Food
 
         public float Freshness { get; private set; } = 1f;
         public bool IsRotten => Freshness <= 0f;
-        public bool Dried { get; private set; }
-        // Hours spent drying so far.
-        public float DryingHours { get; private set; }
+        public enum Cure { None, Dried, Smoked, Salted }
+
+        public Cure CuredBy { get; private set; }
+        public bool Cured => CuredBy != Cure.None;
+        public bool Dried => CuredBy == Cure.Dried;
+        // Hours spent curing so far.
+        public float CuringHours { get; private set; }
+
+        float Keeps => CuredBy switch
+        {
+            Cure.Dried => driedKeeps,
+            Cure.Smoked => smokedKeeps,
+            Cure.Salted => saltedKeeps,
+            _ => 1f,
+        };
         public float ShelfLifeDays => shelfLifeDays;
         // Turned off by its owner while it can't spoil (a sealed jar).
         public Func<bool> CanSpoil;
@@ -86,21 +101,21 @@ namespace GrandmasHouse.Food
             {
                 return;
             }
-            Freshness = Spoil(Freshness, hours, Dried ? shelfLifeDays * driedKeeps : shelfLifeDays, ColdStorage.RateAt(transform.position));
+            Freshness = Spoil(Freshness, hours, shelfLifeDays * Keeps, ColdStorage.RateAt(transform.position));
             Show();
         }
 
-        // Warm air through the dehydrator for a while. Dried once it's had enough.
-        public void Dry(float hours, float hoursNeeded)
+        // Warm air, smoke or salt for a while. Cured once it's had enough.
+        public void CureFor(Cure how, float hours, float hoursNeeded)
         {
-            if (Dried || IsRotten)
+            if (Cured || IsRotten)
             {
                 return;
             }
-            DryingHours += hours;
-            if (DryingHours >= hoursNeeded)
+            CuringHours += hours;
+            if (CuringHours >= hoursNeeded)
             {
-                Dried = true;
+                CuredBy = how;
                 Show();
             }
         }
@@ -130,7 +145,9 @@ namespace GrandmasHouse.Food
                 if (renderers[i] == null) continue;
                 renderers[i].GetPropertyBlock(block);
                 Color color = Color.Lerp(baseColors[i], baseColors[i] * RotColor, rot);
-                if (Dried) color *= new Color(0.78f, 0.7f, 0.6f, 1f);
+                if (CuredBy == Cure.Dried) color *= new Color(0.78f, 0.7f, 0.6f, 1f);
+                else if (CuredBy == Cure.Smoked) color *= new Color(0.72f, 0.5f, 0.32f, 1f);
+                else if (CuredBy == Cure.Salted) color = Color.Lerp(color, new Color(0.95f, 0.92f, 0.88f, 1f), 0.35f);
                 block.SetColor(BaseColor, color);
                 renderers[i].SetPropertyBlock(block);
             }
@@ -144,16 +161,17 @@ namespace GrandmasHouse.Food
             public float freshness;
             public bool dried;
             public float drying;
+            public int cure;
         }
 
-        public string Capture() => JsonUtility.ToJson(new State { freshness = Freshness, dried = Dried, drying = Mathf.Round(DryingHours * 100f) / 100f });
+        public string Capture() => JsonUtility.ToJson(new State { freshness = Freshness, dried = Dried, drying = Mathf.Round(CuringHours * 100f) / 100f, cure = (int)CuredBy });
 
         public void Restore(string json)
         {
             var state = JsonUtility.FromJson<State>(json);
             Freshness = state.freshness;
-            Dried = state.dried;
-            DryingHours = state.drying;
+            CuredBy = state.dried ? Cure.Dried : (Cure)state.cure;
+            CuringHours = state.drying;
             Show();
         }
 
