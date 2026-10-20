@@ -6,7 +6,7 @@ namespace GrandmasHouse.Kitchen
 {
     // A knob on the stove front. Look at it and press Interact to turn its
     // burner on or off, without stepping up to the stove.
-    public class BurnerKnob : MonoBehaviour, IInteractable
+    public class BurnerKnob : MonoBehaviour, IInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [SerializeField] Burner burner;
 

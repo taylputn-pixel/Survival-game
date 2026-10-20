@@ -17,7 +17,7 @@ namespace GrandmasHouse.Kitchen
     // time (you can walk away; sleeping finishes it too). Then take the lid
     // off and lift each jar out; it pings as it cools and seals.
     [RequireComponent(typeof(Cookware))]
-    public class Canner : MonoBehaviour, IInteractable, IPickupGuard, IItemState, IAfterLoad, IFillable, IEmptyable
+    public class Canner : MonoBehaviour, IInteractable, IPickupGuard, IItemState, IAfterLoad, IFillable, IEmptyable, GrandmasHouse.Interaction.ISharedUse
     {
         [SerializeField] PlayerSettings settings;
         [SerializeField] RecipeData recipe;
@@ -194,7 +194,7 @@ namespace GrandmasHouse.Kitchen
             NoticeLiftedJars();
 
             boiling = Heating;
-            if (boiling)
+            if (boiling && Net.ItemNet.Runs(this))
             {
                 boilLeft -= Time.deltaTime;
                 if (boilLeft <= 0f)
@@ -222,7 +222,7 @@ namespace GrandmasHouse.Kitchen
             {
                 Pickup jar = rack[slot];
                 rack.Remove(slot);
-                if (done && jar != null)
+                if (done && jar != null && Net.ItemNet.Runs(this))
                 {
                     jar.GetComponent<JarContents>().CoolAndSeal(Random.Range(pingDelay.x, pingDelay.y));
                 }

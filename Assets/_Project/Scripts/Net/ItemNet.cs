@@ -28,7 +28,6 @@ namespace GrandmasHouse.Net
         void Awake()
         {
             pickup = GetComponent<Pickup>();
-            pickup.HeldChanged += OnHeldChanged;
         }
 
         public override void OnNetworkSpawn()
@@ -104,7 +103,10 @@ namespace GrandmasHouse.Net
             }
             else
             {
+                // Lifted off a burner or a shelf: that spot is free again here too.
+                Transform before = transform.parent;
                 pickup.HeldElsewhere();
+                TakeIn(before);
             }
         }
 
@@ -171,6 +173,11 @@ namespace GrandmasHouse.Net
         // Gone for good (eaten): hidden here at once, removed by the host.
         public void Consume()
         {
+            if (IsServer)
+            {
+                NetworkObject.Despawn(true);
+                return;
+            }
             gameObject.SetActive(false);
             ConsumeRpc();
         }
@@ -182,27 +189,85 @@ namespace GrandmasHouse.Net
         }
 
         // ---- State ----
+        //
+        // Whoever last handled an item runs it (a pot you set on the burner
+        // heats on your computer) and sends its state whenever it changes:
+        // what IItemState holds, and where it sits (in a basket, on the board,
+        // on a towel). If someone else changes it (packs the jar, salts the
+        // pot), their version goes through the host to everyone. Where it
+        // sits is applied the way a save is: the station there takes it in.
 
-        // Whoever moved it last tells everyone how it ended up.
-        void OnHeldChanged(bool held)
+        const char Part = '\u001e';
+        const float CheckEvery = 0.3f;
+        string lastKnown;
+        string lastStates;
+        float nextCheck;
+
+        // Runs its own changes over time (heating, boiling, spoiling) here.
+        // Elsewhere it only shows what the one running it sends.
+        public bool Simulates => !IsSpawned || IsOwner;
+
+        public static bool Runs(Component thing) =>
+            !thing.TryGetComponent(out ItemNet net) || net.Simulates;
+
+        // Removes an item for good (chopped up, eaten, thrown away), for everyone.
+        public static void Remove(GameObject item)
         {
-            if (!held && IsSpawned && IsOwner) Share();
+            if (item.TryGetComponent(out ItemNet net) && net.IsSpawned)
+            {
+                net.Consume();
+                return;
+            }
+            Destroy(item);
         }
 
-        // Sends this item's state (and whether it can be touched) to everyone else.
+        void Update()
+        {
+            if (!IsSpawned || Time.time < nextCheck)
+            {
+                return;
+            }
+            nextCheck = Time.time + CheckEvery;
+            Check();
+        }
+
+        // Sends this item's state now if it changed here.
         public void Share()
         {
-            if (!IsSpawned) return;
-            ShareRpc(Capture(), pickup.CollidersOn, Container());
+            if (IsSpawned) Check();
         }
 
-        NetworkObjectReference Container()
+        void Check()
         {
-            var inside = pickup.InContainer != null ? pickup.InContainer.GetComponent<NetworkObject>() : null;
-            return inside != null && inside.IsSpawned ? new NetworkObjectReference(inside) : default;
+            // Someone else has it in their hands: they say how it is.
+            if (holder.Value != NoOne && !IsOwner)
+            {
+                return;
+            }
+            if (IsOwner)
+            {
+                string now = Snapshot(out string pose);
+                if (now == lastKnown)
+                {
+                    return;
+                }
+                lastKnown = now;
+                lastStates = States();
+                SnapshotRpc(now, pose);
+                return;
+            }
+            // Not ours to run: only what's in it can change here (packed,
+            // salted, labeled). Where it sits is the runner's to say.
+            string states = States();
+            if (states == lastStates)
+            {
+                return;
+            }
+            lastStates = states;
+            ProposeRpc(states);
         }
 
-        string Capture()
+        string States()
         {
             var states = GetComponents<IItemState>();
             var parts = new string[states.Length];
@@ -210,40 +275,181 @@ namespace GrandmasHouse.Net
             return string.Join(Separator.ToString(), parts);
         }
 
-        void Apply(string captured)
+        // What it looks like here now, after taking in someone else's news.
+        void Settled()
         {
-            if (string.IsNullOrEmpty(captured)) return;
-            var states = GetComponents<IItemState>();
-            string[] parts = captured.Split(Separator);
-            for (int i = 0; i < states.Length && i < parts.Length; i++) states[i].Restore(parts[i]);
+            lastKnown = Snapshot(out _);
+            lastStates = States();
+        }
+
+        // The states and where it sits, without the exact pose (that comes
+        // through its NetworkTransform once it's in place).
+        string Snapshot(out string pose)
+        {
+            Transform t = transform;
+            pose = Round(t.localPosition) + ";" + Round(t.localEulerAngles);
+            return States() + Part + Place();
+        }
+
+        static string Round(Vector3 v) =>
+            v.x.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + "," +
+            v.y.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + "," +
+            v.z.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+
+        static Vector3 Parse(string text)
+        {
+            string[] n = text.Split(',');
+            var c = System.Globalization.CultureInfo.InvariantCulture;
+            return new Vector3(float.Parse(n[0], c), float.Parse(n[1], c), float.Parse(n[2], c));
+        }
+
+        string Place()
+        {
+            string touch = pickup.CollidersOn ? "1" : "0";
+            if (holder.Value != NoOne) return "h";
+            if (pickup.InContainer != null && pickup.InContainer.TryGetComponent(out NetworkObject box)) return "c:" + box.NetworkObjectId;
+            Transform parent = transform.parent;
+            if (parent == null) return "f:" + touch;
+            // On (or inside) another item: a jar in the canner.
+            var owner = parent.GetComponentInParent<ItemNet>();
+            if (owner != null && owner != this) return "i:" + owner.NetworkObjectId + ":" + PathBetween(owner.transform, parent) + ":" + touch;
+            // On something in the house: the board, a towel, a burner.
+            return "p:" + PathBetween(null, parent) + ":" + touch;
         }
 
         [Rpc(SendTo.NotMe)]
-        void ShareRpc(string captured, bool collidersOn, NetworkObjectReference containerRef) =>
-            ShareRpcBody(captured, collidersOn, containerRef);
+        void SnapshotRpc(string state, string pose)
+        {
+            Apply(state, pose);
+            Settled();
+        }
+
+        // Someone who doesn't run it changed what's in it: the host passes it on.
+        [Rpc(SendTo.Server)]
+        void ProposeRpc(string states)
+        {
+            Apply(states, "");
+            Settled();
+            ContentsRpc(states);
+        }
+
+        [Rpc(SendTo.NotServer)]
+        void ContentsRpc(string states)
+        {
+            Apply(states, "");
+            Settled();
+        }
 
         // Someone who just joined asks how this item is.
         [Rpc(SendTo.Server)]
         void StateRequestRpc(RpcParams rpc = default)
         {
-            ShareToRpc(Capture(), pickup.CollidersOn, Container(), RpcTarget.Single(rpc.Receive.SenderClientId, RpcTargetUse.Temp));
+            string state = Snapshot(out string pose);
+            StateToRpc(state, pose, RpcTarget.Single(rpc.Receive.SenderClientId, RpcTargetUse.Temp));
         }
 
         [Rpc(SendTo.SpecifiedInParams)]
-        void ShareToRpc(string captured, bool collidersOn, NetworkObjectReference containerRef, RpcParams rpc = default) =>
-            ShareRpcBody(captured, collidersOn, containerRef);
-
-        void ShareRpcBody(string captured, bool collidersOn, NetworkObjectReference containerRef)
+        void StateToRpc(string state, string pose, RpcParams rpc = default)
         {
-            Apply(captured);
-            if (containerRef.TryGet(out NetworkObject target) && target.TryGetComponent(out Container container))
+            Apply(state, pose);
+            Settled();
+        }
+
+        void Apply(string state, string pose)
+        {
+            int split = state.LastIndexOf(Part);
+            string states = split >= 0 ? state.Substring(0, split) : state;
+            string place = split >= 0 ? state.Substring(split + 1) : "";
+
+            var mine = GetComponents<IItemState>();
+            string[] parts = states.Split(Separator);
+            for (int i = 0; i < mine.Length && i < parts.Length; i++)
             {
-                if (pickup.InContainer != container) container.Add(pickup, 0f);
+                if (mine[i].Capture() != parts[i]) mine[i].Restore(parts[i]);
             }
-            else if (holder.Value == NoOne)
+            Settle(place, pose);
+        }
+
+        void Settle(string place, string pose)
+        {
+            if (place.Length == 0 || place == "h" || holder.Value != NoOne)
             {
-                pickup.RestingElsewhere(collidersOn);
+                return;
             }
+            if (place.StartsWith("c:"))
+            {
+                if (ulong.TryParse(place.Substring(2), out ulong id) && NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(id, out NetworkObject box)
+                    && box.TryGetComponent(out Container container) && pickup.InContainer != container && container.Accepts(pickup))
+                {
+                    container.Add(pickup, 0f);
+                }
+                return;
+            }
+            string[] bits = place.Split(':');
+            bool touch = bits[bits.Length - 1] == "1";
+            Transform target = null;
+            if (bits[0] == "p")
+            {
+                target = FindInScene(bits[1]);
+            }
+            else if (bits[0] == "i" && ulong.TryParse(bits[1], out ulong id) && NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(id, out NetworkObject on))
+            {
+                target = bits[2].Length == 0 ? on.transform : on.transform.Find(bits[2]);
+            }
+
+            Transform before = transform.parent;
+            if (target != before)
+            {
+                if (pickup.InContainer != null) pickup.InContainer.Remove(pickup);
+                transform.SetParent(target, worldPositionStays: target == null);
+                if (target != null)
+                {
+                    string[] p = pose.Split(';');
+                    transform.SetLocalPositionAndRotation(Parse(p[0]), Quaternion.Euler(Parse(p[1])));
+                }
+                TakeIn(before);
+                TakeIn(target);
+            }
+            if (!Simulates || target != null)
+            {
+                pickup.SetResting(true, touch);
+            }
+            else
+            {
+                pickup.SetCollidersEnabled(touch);
+            }
+        }
+
+        // The station (or burner, or canner) there takes in what's on it now.
+        static void TakeIn(Transform place)
+        {
+            if (place == null) return;
+            foreach (var station in place.GetComponentsInParent<IAfterLoad>())
+            {
+                station.AfterLoad();
+            }
+        }
+
+        static string PathBetween(Transform from, Transform to)
+        {
+            var names = new List<string>();
+            for (Transform t = to; t != null && t != from; t = t.parent) names.Add(t.name);
+            names.Reverse();
+            return string.Join("/", names);
+        }
+
+        static Transform FindInScene(string path)
+        {
+            int slash = path.IndexOf('/');
+            string rootName = slash < 0 ? path : path.Substring(0, slash);
+            foreach (var root in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+            {
+                if (root.name == rootName)
+                {
+                    return slash < 0 ? root.transform : root.transform.Find(path.Substring(slash + 1));
+                }
+            }
+            return null;
         }
     }
 }

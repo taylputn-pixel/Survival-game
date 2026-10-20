@@ -6,7 +6,7 @@ namespace GrandmasHouse.Kitchen
 {
     // A cork hot pad on the counter beside the packing towel. Set a hot pot
     // here and the brine is right at hand while you pack jars.
-    public class HotPad : MonoBehaviour, IInteractable
+    public class HotPad : MonoBehaviour, IInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [Tooltip("Where the pot sits.")]
         [SerializeField] Transform spot;

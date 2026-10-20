@@ -26,7 +26,7 @@ namespace GrandmasHouse.Stations
     // Cut pieces can also be picked up without stepping up to the board:
     // look at a pile and press Pick up for a handful (Handful), then drop
     // it into a jar or the pot, or put it back here.
-    public class CuttingBoardStation : Station, ISaveable, IAfterLoad, IAltInteractable
+    public class CuttingBoardStation : Station, ISaveable, IAfterLoad, IAltInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [System.Serializable]
         struct SliceLook
@@ -886,7 +886,7 @@ namespace GrandmasHouse.Stations
                 }
             }
             halves.Clear();
-            Destroy(item.gameObject);
+            Net.ItemNet.Remove(item.gameObject);
             item = null;
             tomato = null;
             NextUp();
@@ -1027,7 +1027,7 @@ namespace GrandmasHouse.Stations
                 StartCoroutine(Tumble(clove, BrokenSpot(i, count), BrokenRotation(i, count)));
             }
             Sfx.Play(SoundId.SetDown, garlic.transform.position, 1f, 0.1f);
-            Destroy(garlic.gameObject);
+            Net.ItemNet.Remove(garlic.gameObject);
             garlic = null;
             item = null;
         }
@@ -1118,7 +1118,7 @@ namespace GrandmasHouse.Stations
         void FinishItem()
         {
             Destroy(remaining.gameObject);
-            Destroy(item.gameObject);
+            Net.ItemNet.Remove(item.gameObject);
             remaining = null;
             item = null;
             sliceable = null;

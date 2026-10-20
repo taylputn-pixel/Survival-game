@@ -322,6 +322,10 @@ namespace GrandmasHouse.Carrying
                     {
                         continue;
                     }
+                    if (interactable is Stations.Station station && station.InUseByOther)
+                    {
+                        continue;
+                    }
                     if (interactable.CanInteract(this))
                     {
                         lookTarget = interactable;
@@ -374,9 +378,9 @@ namespace GrandmasHouse.Carrying
             }
         }
 
-        // A guest can use what's shared, and pick up things lying loose or in
-        // a basket, but not what a station is holding (a jar on the packing
-        // towel, slices on the board) until stations are shared too.
+        // A guest can use what's shared. Things lying on a station (produce
+        // on the board, a jar on the packing towel) are taken through the
+        // station, so it knows they're gone.
         static bool UsableByGuest(IInteractable interactable)
         {
             if (!(interactable is ISharedUse))
@@ -385,8 +389,7 @@ namespace GrandmasHouse.Carrying
             }
             if (interactable is Pickup item)
             {
-                Transform parent = item.transform.parent;
-                return parent == null || parent.parent == null || item.InContainer != null;
+                return item.GetComponentInParent<Stations.Station>() == null;
             }
             return true;
         }

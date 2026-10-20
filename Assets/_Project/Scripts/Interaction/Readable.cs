@@ -6,7 +6,7 @@ namespace GrandmasHouse.Interaction
 {
     // A note, card, or page of Grandma's lying somewhere in the house. Look
     // at it and press Interact to read it; it stays where it is.
-    public class Readable : MonoBehaviour, IInteractable
+    public class Readable : MonoBehaviour, IInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [SerializeField] NoteData note;
         [SerializeField] NoteReader reader;

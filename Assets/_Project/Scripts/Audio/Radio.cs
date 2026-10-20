@@ -12,7 +12,7 @@ namespace GrandmasHouse.Audio
     // only: no news, no talk. It sounds like an old radio, and you hear it
     // best near the kitchen table.
     [RequireComponent(typeof(AudioSource))]
-    public class Radio : MonoBehaviour, IInteractable, ISaveable
+    public class Radio : MonoBehaviour, IInteractable, ISaveable, GrandmasHouse.Interaction.ISharedUse
     {
         [Serializable]
         public class Station

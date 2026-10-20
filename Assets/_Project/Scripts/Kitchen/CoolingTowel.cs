@@ -6,7 +6,7 @@ namespace GrandmasHouse.Kitchen
 {
     // The towel beside the stove where canned jars cool. Jars set on it line
     // up in its spots.
-    public class CoolingTowel : MonoBehaviour, IInteractable
+    public class CoolingTowel : MonoBehaviour, IInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [SerializeField] Transform[] spots;
         [SerializeField] float glideSeconds = 0.3f;

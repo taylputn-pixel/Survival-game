@@ -7,7 +7,7 @@ namespace GrandmasHouse.Kitchen
     // The canner's lid. Look at it with empty hands to put it on or take it off.
     // The prompt says when the canner needs more water, so one that won't
     // boil tells you why.
-    public class CannerLid : MonoBehaviour, IInteractable
+    public class CannerLid : MonoBehaviour, IInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [SerializeField] Canner canner;
 

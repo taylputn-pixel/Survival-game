@@ -6,7 +6,7 @@ namespace GrandmasHouse.Kitchen
 {
     // A little box of Grandma's jar labels and a pot of paste on the kitchen
     // table. Bring a sealed jar (or two) and put a label on each.
-    public class LabelBox : MonoBehaviour, IInteractable
+    public class LabelBox : MonoBehaviour, IInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         public bool CanInteract(PlayerHands hands) => Unlabeled(hands) != null;
 

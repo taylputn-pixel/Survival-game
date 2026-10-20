@@ -6,7 +6,7 @@ namespace GrandmasHouse.Kitchen
 {
     // Pantry shelves for finished jars. Bring a sealed jar and press Interact:
     // it slides into the next open spot, eye-level shelf first, left to right.
-    public class PantryShelf : MonoBehaviour, IInteractable
+    public class PantryShelf : MonoBehaviour, IInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [Tooltip("Spots for jars, in the order they fill.")]
         [SerializeField] Transform[] slots;

@@ -67,6 +67,11 @@ namespace GrandmasHouse.Food
             float now = clock.TotalHours;
             float hours = now - lastHours;
             lastHours = now;
+            // In a shared game it ages on the computer running it.
+            if (!Net.ItemNet.Runs(this))
+            {
+                return;
+            }
             if (hours <= 0f || !clock.Mode.foodSpoils || (CanSpoil != null && !CanSpoil()))
             {
                 return;

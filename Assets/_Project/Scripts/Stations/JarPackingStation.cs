@@ -21,7 +21,7 @@ namespace GrandmasHouse.Stations
     // them, otherwise on to the next jar that does, so you can pour down the
     // row and then lid them all. Lidded jars pick straight up off the towel.
     // A pot of cooked salsa is ladled into empty jars the same way.
-    public class JarPackingStation : Station, IAfterLoad
+    public class JarPackingStation : Station, IAfterLoad, GrandmasHouse.Interaction.ISharedUse
     {
         enum Carrying { Nothing, Slices, Cloves, Dill, Peppercorns, Wedges }
 

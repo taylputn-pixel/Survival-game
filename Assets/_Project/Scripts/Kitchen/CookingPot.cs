@@ -22,7 +22,7 @@ namespace GrandmasHouse.Kitchen
     // vinegar and a scoop of salt, and bring it to a boil. It's ladled into
     // jars at the towel the same way brine is poured.
     [RequireComponent(typeof(Cookware))]
-    public class CookingPot : MonoBehaviour, IInteractable, IItemState, IEmptyable, IFillable
+    public class CookingPot : MonoBehaviour, IInteractable, IItemState, IEmptyable, IFillable, GrandmasHouse.Interaction.ISharedUse
     {
         [SerializeField] RecipeData recipe;
         [Tooltip("What chopped vegetables cooked in the pot become.")]
@@ -95,7 +95,16 @@ namespace GrandmasHouse.Kitchen
         // knows it didn't come out.
         public bool DoneRight => Vinegar > 0f && Salt > 0 && Heat >= 1f;
         public Transform Lip => lip;
-        bool InHands => player != null && player.IsHolding(cookware.Pickup);
+        // In someone's hands (anyone's, in a shared game).
+        bool InHands
+        {
+            get
+            {
+                if (TryGetComponent(out Net.ItemNet net) && net.IsSpawned) return net.Holder != Net.ItemNet.NoOne;
+                if (player == null) player = FindAnyObjectByType<PlayerHands>();
+                return player != null && player.IsHolding(cookware.Pickup);
+            }
+        }
 
         // A pot with something in it set down somewhere, if there is one.
         public static CookingPot ReadyPot()
@@ -384,7 +393,12 @@ namespace GrandmasHouse.Kitchen
             else if (!pouring && stream.isEmitting) stream.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        void Update() => Warm();
+        // In a shared game only the computer running the pot heats it; the
+        // others show what it sends.
+        void Update()
+        {
+            if (Net.ItemNet.Runs(this)) Warm();
+        }
 
         // On a lit burner the brine heats toward a boil. Off the heat, brine
         // that has boiled stays ready (Cozy); anything short of a boil cools slowly.

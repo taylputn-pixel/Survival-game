@@ -18,7 +18,7 @@ namespace GrandmasHouse.Kitchen
     // head of dill, salsa needs tomato, onion and jalapeño. Anything that
     // isn't one of Grandma's recipes is a "Don't eat!" jar.
     [RequireComponent(typeof(Pickup))]
-    public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard, IInteractable
+    public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard, IInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [Tooltip("The bottom of the inside of the jar.")]
         [SerializeField] Transform inside;

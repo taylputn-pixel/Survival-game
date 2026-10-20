@@ -31,7 +31,7 @@ namespace GrandmasHouse.Kitchen
     // with water (Interact, held), or pour a pot or jar out down the drain
     // (Interact for a jar; the second button for a pot, since Interact fills it).
     // Even a sealed jar can be opened and poured out to use the jar again.
-    public class Sink : MonoBehaviour, IInteractable, IAltInteractable
+    public class Sink : MonoBehaviour, IInteractable, IAltInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [Tooltip("Above the drain, where things are tipped out.")]
         [SerializeField] Transform drain;

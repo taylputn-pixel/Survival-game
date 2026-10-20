@@ -28,6 +28,8 @@ namespace GrandmasHouse.Stations
         public bool Working => IsWorking;
         // Whatever you're working on can be turned round (Previous/Next).
         public virtual bool CanTurn => false;
+        // In a shared game, someone else is working here right now.
+        public bool InUseByOther => shared != null && shared.TakenByOther;
 
         protected bool IsWorking => isActive && !leaving;
         // Where the camera goes; a station can pick a different spot (the stove front).
@@ -44,6 +46,7 @@ namespace GrandmasHouse.Stations
         bool isActive;
         bool leaving;
         float blend;
+        Net.SharedState shared;
 
         protected virtual void Awake()
         {
@@ -53,6 +56,7 @@ namespace GrandmasHouse.Stations
             UseAction = InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
             lookAction = InputSystem.actions.FindAction("Player/Look", throwIfNotFound: true);
             backAction = InputSystem.actions.FindAction("Player/Back", throwIfNotFound: true);
+            shared = GetComponent<Net.SharedState>();
         }
 
         public abstract bool CanInteract(PlayerHands hands);
@@ -78,6 +82,7 @@ namespace GrandmasHouse.Stations
             leaving = false;
             UseHint = null;
             Current = this;
+            if (shared != null) shared.Claim();
             OnEnter();
         }
 
@@ -144,6 +149,7 @@ namespace GrandmasHouse.Stations
                 }
                 clock.PausedForWork = false;
                 controller.InputEnabled = true;
+                if (shared != null) shared.Release();
             }
         }
 

@@ -11522,6 +11522,8 @@ GameObject:
   - component: {fileID: 319974390}
   - component: {fileID: 319974392}
   - component: {fileID: 319974391}
+  - component: {fileID: 319974393}
+  - component: {fileID: 319974394}
   m_Layer: 0
   m_Name: Burner 2
   m_TagString: Untagged
@@ -11585,6 +11587,46 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.2, y: 0.012, z: 0.2}
   m_Center: {x: 0, y: 0.005, z: 0}
+--- !u!114 &319974393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 319974389}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 1516347318
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 0
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 0
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &319974394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 319974389}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2262266e1086514ab92ac6e4ac1b2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.SharedState
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &321464712
 GameObject:
   m_ObjectHideFlags: 0
@@ -11820,6 +11862,8 @@ GameObject:
   - component: {fileID: 326348136}
   - component: {fileID: 326348138}
   - component: {fileID: 326348137}
+  - component: {fileID: 326348139}
+  - component: {fileID: 326348140}
   m_Layer: 0
   m_Name: Burner 4
   m_TagString: Untagged
@@ -11883,6 +11927,46 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.2, y: 0.012, z: 0.2}
   m_Center: {x: 0, y: 0.005, z: 0}
+--- !u!114 &326348139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 326348135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 4186954155
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 0
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 0
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &326348140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 326348135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2262266e1086514ab92ac6e4ac1b2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.SharedState
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &332243329
 GameObject:
   m_ObjectHideFlags: 0
@@ -19218,6 +19302,7 @@ GameObject:
   - component: {fileID: 589195396}
   - component: {fileID: 589195397}
   - component: {fileID: 589195398}
+  - component: {fileID: 589195399}
   m_Layer: 0
   m_Name: GardenBed
   m_TagString: Untagged
@@ -19355,6 +19440,19 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   sendEvery: 0.25
   waterEvery: 0.2
+--- !u!114 &589195399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 589195391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2262266e1086514ab92ac6e4ac1b2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.SharedState
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &590060512
 GameObject:
   m_ObjectHideFlags: 0
@@ -28577,6 +28675,8 @@ GameObject:
   m_Component:
   - component: {fileID: 860916018}
   - component: {fileID: 860916019}
+  - component: {fileID: 860916020}
+  - component: {fileID: 860916021}
   m_Layer: 0
   m_Name: Jar Packing
   m_TagString: Untagged
@@ -28651,6 +28751,46 @@ MonoBehaviour:
   pourTilt: 70
   pourHeight: 0.07
   potFollowSharpness: 10
+--- !u!114 &860916020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860916017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 3580523972
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 0
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 0
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &860916021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860916017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2262266e1086514ab92ac6e4ac1b2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.SharedState
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &861923759
 GameObject:
   m_ObjectHideFlags: 0
@@ -43814,6 +43954,8 @@ GameObject:
   - component: {fileID: 1351609655}
   - component: {fileID: 1351609657}
   - component: {fileID: 1351609656}
+  - component: {fileID: 1351609658}
+  - component: {fileID: 1351609659}
   m_Layer: 0
   m_Name: Burner 1
   m_TagString: Untagged
@@ -43877,6 +44019,46 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.2, y: 0.012, z: 0.2}
   m_Center: {x: 0, y: 0.005, z: 0}
+--- !u!114 &1351609658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1351609654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 1419360372
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 0
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 0
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &1351609659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1351609654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2262266e1086514ab92ac6e4ac1b2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.SharedState
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &1352891956
 GameObject:
   m_ObjectHideFlags: 0
@@ -49395,6 +49577,8 @@ GameObject:
   - component: {fileID: 1496581814}
   - component: {fileID: 1496581816}
   - component: {fileID: 1496581815}
+  - component: {fileID: 1496581817}
+  - component: {fileID: 1496581818}
   m_Layer: 0
   m_Name: Burner 3
   m_TagString: Untagged
@@ -49458,6 +49642,46 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.2, y: 0.012, z: 0.2}
   m_Center: {x: 0, y: 0.005, z: 0}
+--- !u!114 &1496581817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1496581813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 1599716709
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 0
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 0
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &1496581818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1496581813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2262266e1086514ab92ac6e4ac1b2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.SharedState
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &1497517039
 GameObject:
   m_ObjectHideFlags: 0
@@ -49501,6 +49725,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1498811334}
   - component: {fileID: 1498811333}
+  - component: {fileID: 1498811335}
+  - component: {fileID: 1498811336}
   m_Layer: 0
   m_Name: CuttingBoard
   m_TagString: Untagged
@@ -49586,6 +49812,46 @@ Transform:
   - {fileID: 1967076568}
   m_Father: {fileID: 1783469348}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1498811335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1498811332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 3096252853
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 0
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 0
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &1498811336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1498811332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2262266e1086514ab92ac6e4ac1b2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.SharedState
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &1506377441
 GameObject:
   m_ObjectHideFlags: 0
@@ -69021,6 +69287,7 @@ GameObject:
   - component: {fileID: 1948117657}
   - component: {fileID: 1948117660}
   - component: {fileID: 1948117661}
+  - component: {fileID: 1948117662}
   m_Layer: 0
   m_Name: GardenBed 2
   m_TagString: Untagged
@@ -69158,6 +69425,19 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   sendEvery: 0.25
   waterEvery: 0.2
+--- !u!114 &1948117662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1948117655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2262266e1086514ab92ac6e4ac1b2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.SharedState
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &1950788714
 GameObject:
   m_ObjectHideFlags: 0

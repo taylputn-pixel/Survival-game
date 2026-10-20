@@ -10,7 +10,7 @@ namespace GrandmasHouse.Kitchen
     // or a handful of cut pieces and throw out what's in it: a "Don't eat!"
     // jar, a pot of something that went wrong. Jars and the pot come back
     // empty, ready to use again.
-    public class TrashBin : MonoBehaviour, IInteractable
+    public class TrashBin : MonoBehaviour, IInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [Tooltip("The open top of the bin, where things are tipped out.")]
         [SerializeField] Transform opening;

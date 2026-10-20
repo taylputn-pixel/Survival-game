@@ -9,7 +9,7 @@ namespace GrandmasHouse.Kitchen
     // One burner on the stove. Set a pot or the canner on it, and turn its
     // knob to heat. The coil glows while it's on. Lifting the pot off turns
     // the burner off.
-    public class Burner : MonoBehaviour, IInteractable, ISaveable, IAfterLoad
+    public class Burner : MonoBehaviour, IInteractable, ISaveable, IAfterLoad, GrandmasHouse.Interaction.ISharedUse
     {
         [Tooltip("Where cookware sits on this burner.")]
         [SerializeField] Transform spot;
