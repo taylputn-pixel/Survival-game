@@ -72,7 +72,7 @@ namespace GrandmasHouse.Kitchen
         {
             if (hands.IsEmpty) return false;
             if (Handful.Held(hands) is Handful handful) return handful.Kind.StartsWith("Cabbage") && Shreds < capacity;
-            if (hands.Held.TryGetComponent(out Seasoning salt)) return salt.Kind == Seasoning.Type.Salt;
+            if (hands.Held.TryGetComponent(out Seasoning salt)) return salt.Kind == Seasoning.Type.Salt && !salt.IsEmpty;
             if (hands.Held.TryGetComponent(out Bowl bowl)) return bowl.IsEmpty && Shreds > 0;
             return false;
         }
@@ -96,9 +96,10 @@ namespace GrandmasHouse.Kitchen
                 handful.DoneWith(hands);
                 Sfx.Play(SoundId.SliceDrop, transform.position, 0.8f, 0.1f);
             }
-            else if (hands.Held.TryGetComponent(out Seasoning _))
+            else if (hands.Held.TryGetComponent(out Seasoning box))
             {
-                Salt++;
+                if (box.Use(1f) > 0f) Salt++;
+                if (box.TryGetComponent(out Net.ItemNet saltNet)) saltNet.Share();
                 Sfx.Play(SoundId.SaltShake, transform.position);
             }
             else if (hands.Held.TryGetComponent(out Bowl bowl))

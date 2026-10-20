@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 586558a1c1b4fef4fa94b7f58a816fd6, type: 3}
+  m_Name: TradeSettings
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.TradeSettings
+  items:
+  - key: ChickenFeed
+    worth: 8
+    byMonth: []
+  - key: Salt
+    worth: 3
+    byMonth: []
+  - key: Vinegar
+    worth: 3
+    byMonth: []
+  - key: PintJar
+    worth: 1.5
+    byMonth: []
+  - key: LemonJuice
+    worth: 2
+    byMonth: []
+  - key: Peppercorns
+    worth: 2
+    byMonth: []
+  - key: CucumberSeeds
+    worth: 2
+    byMonth: []
+  - key: DillSeeds
+    worth: 2
+    byMonth: []
+  - key: GarlicSeeds
+    worth: 2
+    byMonth: []
+  - key: TomatoSeeds
+    worth: 2
+    byMonth: []
+  - key: MarigoldSeeds
+    worth: 2
+    byMonth: []
+  - key: OnionSeeds
+    worth: 2
+    byMonth: []
+  - key: JalapenoSeeds
+    worth: 2
+    byMonth: []
+  - key: CarrotSeeds
+    worth: 2
+    byMonth: []
+  - key: SquashSeeds
+    worth: 2
+    byMonth: []
+  - key: CabbageSeeds
+    worth: 2
+    byMonth: []
+  - key: SeedPotatoes
+    worth: 3
+    byMonth: []
+  - key: Tomato
+    worth: 0.6
+    byMonth:
+    - 1.5
+    - 0.6
+    - 0.8
+    - 2
+  - key: Cucumber
+    worth: 0.4
+    byMonth:
+    - 1.5
+    - 0.6
+    - 0.8
+    - 2
+  - key: Onion
+    worth: 0.5
+    byMonth:
+    - 1.2
+    - 0.8
+    - 0.8
+    - 1.5
+  - key: Jalapeno
+    worth: 0.2
+    byMonth: []
+  - key: GarlicBulb
+    worth: 0.8
+    byMonth: []
+  - key: Dill
+    worth: 0.3
+    byMonth: []
+  - key: Potato
+    worth: 0.6
+    byMonth:
+    - 1.3
+    - 1
+    - 0.8
+    - 1.5
+  - key: Carrot
+    worth: 0.4
+    byMonth:
+    - 1.3
+    - 1
+    - 0.8
+    - 1.5
+  - key: WinterSquash
+    worth: 1.2
+    byMonth:
+    - 1.3
+    - 1
+    - 0.8
+    - 1.6
+  - key: Cabbage
+    worth: 1
+    byMonth:
+    - 1.3
+    - 1
+    - 0.8
+    - 1.6
+  - key: Egg
+    worth: 0.8
+    byMonth:
+    - 0.8
+    - 0.8
+    - 1
+    - 2
+  - key: Chicken
+    worth: 6
+    byMonth:
+    - 1
+    - 1
+    - 1
+    - 1.5
+  jars:
+  - recipe: Dill Pickle Chips
+    worth: 5
+  - recipe: Pickled Garlic
+    worth: 5
+  - recipe: Canned Tomatoes
+    worth: 4
+  - recipe: Salsa
+    worth: 5
+  sealedJarDefault: 5
+  emptyJar: 0.5
+  curedBonus: 1.5
+  turnedShare: 0.4
+  storeTakes: 0.6
+  neighborAsks: 1.2

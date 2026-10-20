@@ -5204,6 +5204,7 @@ MonoBehaviour:
   kind: 1
   lip: {fileID: 267759778468916410}
   stream: {fileID: 6201243594625895257}
+  capacity: 40
 --- !u!114 &3014280596728292029
 MonoBehaviour:
   m_ObjectHideFlags: 0

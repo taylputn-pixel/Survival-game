@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b8860589b05b4642ab42b24201a782d, type: 3}
+  m_Name: Note_ChickenSoupCard
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.NoteData
+  kind: 1
+  title: Chicken Soup
+  recipe: {fileID: 0}
+  body: 'Chicken Soup
+
+
+    A chicken, cut up on the board
+
+    An onion and a carrot
+    or two, sliced
+
+    Water to cover, and a scoop of salt
+
+
+    Everything into
+    the pot, fill it at the sink, and let it boil a good long while. Ladle it out
+    hot. Throw in an egg or two if the hens are laying.'
+  marginNote: Ada Sorensen's. She says it'll fix anything but a broken heart.
+  pages: []
+  mentions: []

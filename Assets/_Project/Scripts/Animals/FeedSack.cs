@@ -11,6 +11,9 @@ namespace GrandmasHouse.Animals
 
         public int Scoops => scoops;
         public bool HasFeed => scoops > 0;
+        public int Capacity { get; private set; }
+
+        void Awake() => Capacity = scoops;
 
         public void TakeScoop() => scoops = Mathf.Max(0, scoops - 1);
 

@@ -12,6 +12,10 @@ namespace GrandmasHouse.Garden
 
         public CropData Crop => crop;
         public bool HasSeeds => seeds > 0;
+        public int Seeds => seeds;
+        public int Capacity { get; private set; }
+
+        void Awake() => Capacity = seeds;
 
         public string Capture() => seeds.ToString();
 

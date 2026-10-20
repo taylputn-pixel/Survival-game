@@ -177,6 +177,7 @@ namespace GrandmasHouse.Kitchen
                 return false;
             }
             // Salt goes into something already in the pot.
+            if (seasoning.IsEmpty) return false;
             return seasoning.Kind == Seasoning.Type.Salt ? Fill > 0f : !IsFull;
         }
 
@@ -246,14 +247,14 @@ namespace GrandmasHouse.Kitchen
             bool pouring = true;
             while (pouring || tilt > 0f || (t.position - restPosition).sqrMagnitude > 0.000004f)
             {
-                pouring = pouring && interactAction.IsPressed() && !IsFull;
+                pouring = pouring && interactAction.IsPressed() && !IsFull && !bottle.IsEmpty;
                 tilt = Mathf.MoveTowards(tilt, pouring ? pourTilt : 0f, pourTilt / 0.4f * Time.deltaTime);
                 Pouring.Follow(t, bottle.Lip, restPosition, restRotation, bottom.position, tilt, pourTilt, pourHeight + innerHeight, followSharpness);
                 bool tipped = pouring && tilt >= pourTilt * 0.8f;
                 bottle.SetPouring(tipped);
                 if (tipped)
                 {
-                    float amount = Mathf.Min(pourRate * Time.deltaTime, 1f - Fill);
+                    float amount = bottle.Use(Mathf.Min(pourRate * Time.deltaTime, 1f - Fill));
                     Vinegar += amount;
                     Cool(amount);
                     ShowLiquid();
@@ -287,7 +288,7 @@ namespace GrandmasHouse.Kitchen
                 if (!added && phase > 0.45f)
                 {
                     added = true;
-                    Salt++;
+                    if (box.Use(1f) > 0f) Salt++;
                     Sfx.Play(SoundId.SaltShake, t.position);
                 }
                 yield return null;

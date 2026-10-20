@@ -32,7 +32,7 @@ namespace GrandmasHouse.Kitchen
         }
 
         static bool IsSalt(PlayerHands hands) =>
-            !hands.IsEmpty && hands.Held.TryGetComponent(out Seasoning s) && s.Kind == Seasoning.Type.Salt;
+            !hands.IsEmpty && hands.Held.TryGetComponent(out Seasoning s) && s.Kind == Seasoning.Type.Salt && !s.IsEmpty;
 
         public override bool CanInteract(PlayerHands hands) =>
             (IsSalt(hands) && Salt < maxSalt) || base.CanInteract(hands);
@@ -47,7 +47,9 @@ namespace GrandmasHouse.Kitchen
                 base.Interact(hands);
                 return;
             }
-            Salt = Mathf.Min(maxSalt, Salt + 1);
+            var box = hands.Held.GetComponent<Seasoning>();
+            if (box.Use(1f) > 0f) Salt = Mathf.Min(maxSalt, Salt + 1);
+            if (box.TryGetComponent(out Net.ItemNet saltNet)) saltNet.Share();
             Sfx.Play(SoundId.SaltShake, transform.position);
             Show();
         }

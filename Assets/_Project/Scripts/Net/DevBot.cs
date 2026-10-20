@@ -37,6 +37,7 @@ namespace GrandmasHouse.Net
             yield return new WaitForSeconds(3f);
             PlayerHands hands = me.Hands;
             yield return Journal(hands);
+            yield return Store(me);
 
             Pickup tomato = Loose();
             Log(tomato != null ? "found " + tomato.DisplayName + " at " + tomato.transform.position : "no food lying around");
@@ -241,6 +242,28 @@ namespace GrandmasHouse.Net
             yield return new WaitForSeconds(1f);
             var found = FindAnyObjectByType<Interaction.Discoveries>();
             Log("journal: read " + name + ", gone here: " + !card.gameObject.activeSelf + ", cards known " + found.Found.Count);
+        }
+
+        // Walks into the general store and buys a box of salt on Grandma's account
+        // (the host puts something on it first); the host makes the trade.
+        IEnumerator Store(PlayerNet me)
+        {
+            Trade.Trader june = null;
+            foreach (var t in FindObjectsByType<Trade.Trader>(FindObjectsSortMode.None)) if (t.IsStore) june = t;
+            if (june == null) { Log("store: none"); yield break; }
+            Stand(me, june.transform.position + new Vector3(0f, 0f, 3f));
+            for (float wait = 0f; wait < 20f && june.Credit <= 0f; wait += 0.5f) yield return new WaitForSeconds(0.5f);
+            int salt = june.Wares.Count;
+            for (int i = 0; i < june.Wares.Count; i++) if (june.Wares[i].key == "Salt") salt = i;
+            var counts = new int[june.Wares.Count];
+            counts[salt] = 1;
+            float credit = june.Credit;
+            int stock = june.Wares[salt].stock;
+            june.Deal(counts);
+            yield return new WaitForSeconds(2f);
+            int boxes = 0;
+            foreach (var p in FindObjectsByType<Pickup>(FindObjectsSortMode.None)) if (p.DisplayName == "Salt" && Vector3.Distance(p.transform.position, june.transform.position) < 5f) boxes++;
+            Log("store: credit " + credit.ToString("F1") + " -> " + june.Credit.ToString("F1") + ", salt stock " + stock + " -> " + june.Wares[salt].stock + ", salt boxes here: " + boxes);
         }
 
         static Bounds TableTop()
