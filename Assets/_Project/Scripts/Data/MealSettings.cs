@@ -22,6 +22,7 @@ namespace GrandmasHouse.Data
         public List<PieceFood> pieces = new List<PieceFood>
         {
             new PieceFood { kind = "Potato", food = 2f },
+            new PieceFood { kind = "Egg", food = 6f },
             new PieceFood { kind = "Winter", food = 1.5f },
             new PieceFood { kind = "Carrot", food = 1f },
             new PieceFood { kind = "Tomato", food = 2f },
@@ -82,6 +83,7 @@ namespace GrandmasHouse.Data
                 : Has("Tomato") && kinds >= 3 ? "Garden stew"
                 : (Has("Potato") || Has("Carrot")) && !Has("Tomato") ? "Root vegetable soup"
                 : Has("Winter") && kinds == 1 ? "Squash soup"
+                : Has("Egg") && kinds == 1 ? "Boiled eggs"
                 : "Vegetable soup";
             return cooked ? name : "Uncooked " + name.ToLowerInvariant();
         }

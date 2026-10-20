@@ -68,6 +68,7 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Material potatoPiece;
         [SerializeField] Material carrotPiece;
         [SerializeField] Material squashPiece;
+        [SerializeField] Material eggPiece;
         [SerializeField] Color rawSoupColor = new Color(0.82f, 0.78f, 0.62f, 0.45f);
         [SerializeField] Color cookedSoupColor = new Color(0.86f, 0.66f, 0.32f, 0.85f);
 
@@ -166,6 +167,10 @@ namespace GrandmasHouse.Kitchen
             {
                 return bowl.IsEmpty && IsSoup && IsSetDown;
             }
+            if (hands.Held.Category == ItemCategory.Egg)
+            {
+                return IsSetDown && Water > 0f && RoomForPieces > 0;
+            }
             var seasoning = hands.Held.GetComponent<Seasoning>();
             if (seasoning == null)
             {
@@ -185,6 +190,10 @@ namespace GrandmasHouse.Kitchen
             {
                 return "Ladle into bowl";
             }
+            if (hands.Held.Category == ItemCategory.Egg)
+            {
+                return "Put the egg in the pot";
+            }
             return hands.Held.GetComponent<Seasoning>().Kind == Seasoning.Type.Salt ? "Add a scoop of salt" : "Hold to pour vinegar";
         }
 
@@ -199,6 +208,13 @@ namespace GrandmasHouse.Kitchen
             if (hands.Held.TryGetComponent(out Food.Bowl bowl))
             {
                 Serve(bowl);
+                return;
+            }
+            if (hands.Held.Category == ItemCategory.Egg)
+            {
+                Pickup egg = hands.TakeHeld();
+                AddEgg();
+                Net.ItemNet.Remove(egg.gameObject);
                 return;
             }
             var seasoning = hands.Held.GetComponent<Seasoning>();
@@ -289,6 +305,15 @@ namespace GrandmasHouse.Kitchen
         }
 
         bool Cooked => Heat >= 1f;
+
+        // An egg lowered into the water, to cook with whatever else is in.
+        public void AddEgg()
+        {
+            RebuildPieces("Egg", eggPiece, 1, new Vector3(0.042f, 0.055f, 0.042f));
+            Cool(0.02f);
+            Sfx.Play(SoundId.SliceDrop, transform.position, 0.6f, 0.1f);
+            ShowLiquid();
+        }
 
         // What the whole pot would feed, if it were all eaten.
         public float PotFood => meals != null ? meals.PotFood(Counts(), Cooked, Salt > 0) : 0f;
@@ -559,13 +584,14 @@ namespace GrandmasHouse.Kitchen
             public int potato;
             public int carrot;
             public int squash;
+            public int egg;
         }
 
         public string Capture() => JsonUtility.ToJson(new State
         {
             vinegar = Vinegar, water = Water, salt = Salt, heat = Heat,
             tomato = CountOf(pieces, "Tomato"), onion = CountOf(pieces, "Onion"), pepper = CountOf(pieces, "Jalape"), garlic = CountOf(pieces, "Clove"),
-            potato = CountOf(pieces, "Potato"), carrot = CountOf(pieces, "Carrot"), squash = CountOf(pieces, "Winter"),
+            potato = CountOf(pieces, "Potato"), carrot = CountOf(pieces, "Carrot"), squash = CountOf(pieces, "Winter"), egg = CountOf(pieces, "Egg"),
         });
 
         public void Restore(string json)
@@ -583,6 +609,7 @@ namespace GrandmasHouse.Kitchen
             RebuildPieces("Potato Slice", potatoPiece, state.potato, new Vector3(0.05f, 0.006f, 0.04f));
             RebuildPieces("Carrot Slice", carrotPiece, state.carrot, new Vector3(0.026f, 0.005f, 0.026f));
             RebuildPieces("Winter Squash Slice", squashPiece, state.squash, new Vector3(0.06f, 0.01f, 0.06f));
+            RebuildPieces("Egg", eggPiece, state.egg, new Vector3(0.042f, 0.055f, 0.042f));
             ShowLiquid();
         }
 

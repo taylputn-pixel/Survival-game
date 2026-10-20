@@ -73,6 +73,12 @@ MonoBehaviour:
     prefab: {fileID: 1568808308163170717, guid: 73639deeeb8a90e43b80c991c6d316ac, type: 3}
   - key: Bowl
     prefab: {fileID: 5615410797289817445, guid: 458feed5761233244b7f26b55e73bce0, type: 3}
+  - key: Egg
+    prefab: {fileID: 767647525408192853, guid: eb8af675eeae5bb46ae98917b41d5fef, type: 3}
+  - key: ChickenFeed
+    prefab: {fileID: 1568808308163170717, guid: 8e2b44c999fe6f94d92e526fe3c9b161, type: 3}
+  - key: TreatPail
+    prefab: {fileID: 2581721203932975304, guid: 45d7e18eff59ee94e93a6b63e86d5788, type: 3}
   crops:
   - {fileID: 11400000, guid: 5e15d42a32eb7a64e9c79284b28618b4, type: 2}
   - {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}

@@ -6988,6 +6988,7 @@ MonoBehaviour:
   potatoPiece: {fileID: 2100000, guid: ba7888f46c5bfae4e8f33cb4e498ebd5, type: 2}
   carrotPiece: {fileID: 2100000, guid: 77206788d7754294d98878f0ae330527, type: 2}
   squashPiece: {fileID: 2100000, guid: ebd4618fc94cb3a49b45025a848048c7, type: 2}
+  eggPiece: {fileID: 2100000, guid: 002323026c8d02345b46e88c0354a7d3, type: 2}
   rawSoupColor: {r: 0.82, g: 0.78, b: 0.62, a: 0.45}
   cookedSoupColor: {r: 0.86, g: 0.66, b: 0.32, a: 0.85}
 --- !u!114 &8169520936924290089

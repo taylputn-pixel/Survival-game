@@ -169,6 +169,12 @@ namespace GrandmasHouse.Garden
         {
             bool pest = spot.IsPest(thing);
             spot.TakeOff(thing);
+            // Hornworms go in the hens' treat pail, if there's one by the garden.
+            if (pest)
+            {
+                var pail = Animals.TreatPail.Near(spot.transform.position);
+                if (pail != null) pail.AddWorm();
+            }
             if (Guest) Shared.SendTakeOff(System.Array.IndexOf(spots, spot), pest);
         }
 
