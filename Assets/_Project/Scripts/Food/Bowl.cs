@@ -33,12 +33,17 @@ namespace GrandmasHouse.Food
         }
 
         // Ladled full from the pot.
-        public void Fill(string dish, float food, Color soupColor)
+        public void Fill(string dish, float food, Color soupColor, bool spoiled = false)
         {
             Dish = dish;
             Food = food;
             color = soupColor;
-            if (perishable != null) perishable.Refresh();
+            if (perishable != null)
+            {
+                perishable.Refresh();
+                // Scooped from something gone bad: it'll make you sick.
+                if (spoiled) perishable.Restore("{\"freshness\":0}");
+            }
             Show();
         }
 

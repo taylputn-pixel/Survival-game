@@ -79,6 +79,10 @@ MonoBehaviour:
     prefab: {fileID: 1568808308163170717, guid: 8e2b44c999fe6f94d92e526fe3c9b161, type: 3}
   - key: TreatPail
     prefab: {fileID: 2581721203932975304, guid: 45d7e18eff59ee94e93a6b63e86d5788, type: 3}
+  - key: Cabbage
+    prefab: {fileID: 767647525408192853, guid: 6e93e4c42d9414f4ab0f676546b522a6, type: 3}
+  - key: CabbageSeeds
+    prefab: {fileID: 1568808308163170717, guid: 7e0497a450342fc4eb5ab2d0d6e59b4a, type: 3}
   crops:
   - {fileID: 11400000, guid: 5e15d42a32eb7a64e9c79284b28618b4, type: 2}
   - {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}
@@ -90,6 +94,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 33214c5de57361f40894e8b484f09d36, type: 2}
   - {fileID: 11400000, guid: 0a799f0a348d3d64db0df188dfc4a7a9, type: 2}
   - {fileID: 11400000, guid: a4088b03a0c3ac44287c97a3bc608340, type: 2}
+  - {fileID: 11400000, guid: b72fa826b0c6d304a852a6c168ce29c1, type: 2}
   notes:
   - {fileID: 11400000, guid: 149d6410b1a001c4894606af98f6c982, type: 2}
   - {fileID: 11400000, guid: b0a6924016e1b994488c4ad2355a1822, type: 2}
