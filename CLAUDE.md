@@ -2,6 +2,12 @@
 
 A first-person comfort game about living Grandma's homestead life in Star Valley, Wyoming. You grow food, preserve it, store it, and share it through the seasons. Every task is done by hand at a "station". Grandma's story is discovered through the notes, diary, recipe cards, and jars she left behind, never told directly.
 
+## This is the `survival` branch
+
+This folder (`C:\Dev\GrandmasHouse-Survival`, a git worktree of the same repo) explores a new direction: a harder, possibly multiplayer survival game. Modern times, hard economic times (not an apocalypse), and you inherit Grandma's paid-off homestead and live off the land. Hard winters, crop blight and animal disease, food spoils, and players can starve and die. Neighbors are transactional and everything is barter. Grandma's warmth is gone; her notes become a teaching aid. The goal each year is to survive the winter. Nothing is decided yet: the ideas and open questions are in the design doc's **"Direction brainstorm (open)"** tab, and the decision log should record what gets settled. The cozy game stays on `main` in `C:\Dev\GrandmasHouse`; don't change it from here.
+
+Where the cozy rules below conflict with survival (no pressure or danger, meals as bonuses only, no hard times, Cozy mode only), treat them as **under review on this branch**, not as rules.
+
 ## The design doc is the source of truth
 
 **Design doc:** https://claude.ai/code/artifact/e30813e2-ed8f-439c-8954-9add1553c5e3 (a Claude Doc; read and edit it with the Claude Docs tools, never by web fetch).
@@ -14,7 +20,7 @@ Every session working on this project must:
    - Bring any section that changed up to date.
    - Add a row to the **Decision log** (Date · Decision · Why) for every meaningful decision, newest first. When a decision changes, add a new row; don't rewrite old rows.
 3. **No hand-holding.** Don't block steps until earlier ones are done, and don't show reminders like "needs salt" or "add lemon juice first". Let the player do things in any order or skip them; the result shows in what they made (a jar that isn't one of Grandma's recipes is "Don't eat!"). Button prompts for what you can do right now are fine.
-4. **Test every idea** against: *Does this make you feel like you're living Grandma's life, at her pace?* If an idea adds pressure, danger, or optimizing, it goes on the later list or gets dropped.
+4. **Test every idea** against: *Does this make you feel like you're living off the land the way Grandma did, and that it's hard?* Pressure and danger are allowed here; make them telegraphed and survivable through planning, not reflexes.
 
 ## Current phase: Phase 2, Garden depth
 
