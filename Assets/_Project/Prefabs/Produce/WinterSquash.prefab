@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 6861689030415260991}
   - component: {fileID: 5083986953430407118}
   - component: {fileID: 2464668790579839784}
+  - component: {fileID: 5765505683113032134}
   m_Layer: 9
   m_Name: WinterSquash
   m_TagString: Untagged
@@ -208,7 +209,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21669a4355a39744e8115bd2c34a9261, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Food.FreshFood
-  nutrition: 4
+  nutrition: 3
 --- !u!114 &6861689030415260991
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -295,6 +296,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.ItemNet
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &5765505683113032134
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4179608177185108136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dbf124edb3212a40b3fc4132b1d7005, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Stations.Sliceable
+  fleshMaterial: {fileID: 2100000, guid: ebd4618fc94cb3a49b45025a848048c7, type: 2}
 --- !u!1 &9017966404935908941
 GameObject:
   m_ObjectHideFlags: 0

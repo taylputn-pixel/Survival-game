@@ -317,7 +317,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21669a4355a39744e8115bd2c34a9261, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Food.FreshFood
-  nutrition: 10
+  nutrition: 6
 --- !u!114 &5908357777078607713
 MonoBehaviour:
   m_ObjectHideFlags: 0

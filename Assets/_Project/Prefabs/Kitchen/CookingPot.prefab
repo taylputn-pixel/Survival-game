@@ -6984,6 +6984,12 @@ MonoBehaviour:
   onionPiece: {fileID: 2100000, guid: 15d3bbdd7826710498b7a3f5f015bfcd, type: 2}
   pepperPiece: {fileID: 2100000, guid: 7e0dbb2b8bfffd64e9e8d466e104af62, type: 2}
   garlicPiece: {fileID: 2100000, guid: 0d71eb380eaf18041b99b1ebf9bc115f, type: 2}
+  meals: {fileID: 11400000, guid: 5ac8c59ae2dfd5f479135bfcf73ef6ac, type: 2}
+  potatoPiece: {fileID: 2100000, guid: ba7888f46c5bfae4e8f33cb4e498ebd5, type: 2}
+  carrotPiece: {fileID: 2100000, guid: 77206788d7754294d98878f0ae330527, type: 2}
+  squashPiece: {fileID: 2100000, guid: ebd4618fc94cb3a49b45025a848048c7, type: 2}
+  rawSoupColor: {r: 0.82, g: 0.78, b: 0.62, a: 0.45}
+  cookedSoupColor: {r: 0.86, g: 0.66, b: 0.32, a: 0.85}
 --- !u!114 &8169520936924290089
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b8860589b05b4642ab42b24201a782d, type: 3}
+  m_Name: Note_PotatoSoupCard
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.NoteData
+  kind: 1
+  title: Potato Soup
+  recipe: {fileID: 0}
+  body: '(stand-in until Grandma''s own card is added)
+
+
+    Potato Soup
+
+
+    4
+    or 5 potatoes, sliced
+
+    1 onion, sliced
+
+    A carrot if you have one
+
+    Water
+    to cover, and a scoop of salt
+
+
+    Scrape it all into the pot, fill it with
+    water at the sink, and let it boil till the potatoes fall apart on a fork. Ladle
+    it into bowls. Feeds four on a cold night.'
+  marginNote: Thicker than you think. It holds you longer than any of it would raw.
+  pages: []
+  mentions: []

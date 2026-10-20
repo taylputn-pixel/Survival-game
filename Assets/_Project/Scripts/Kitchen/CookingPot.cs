@@ -21,6 +21,11 @@ namespace GrandmasHouse.Kitchen
     // scrape the chopped tomatoes, onion and peppers in, add a splash of
     // vinegar and a scoop of salt, and bring it to a boil. It's ladled into
     // jars at the towel the same way brine is poured.
+    //
+    // Soup and stew are the same with water instead of vinegar: potatoes,
+    // carrots, squash, onions, whatever's chopped. Hold an empty bowl and
+    // look at the pot to ladle some out. Cooked, it feeds far more than the
+    // same vegetables eaten raw (MealSettings).
     [RequireComponent(typeof(Cookware))]
     public class CookingPot : MonoBehaviour, IInteractable, IItemState, IEmptyable, IFillable, GrandmasHouse.Interaction.ISharedUse
     {
@@ -58,6 +63,14 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Material pepperPiece;
         [SerializeField] Material garlicPiece;
 
+        [Header("Soup")]
+        [SerializeField] MealSettings meals;
+        [SerializeField] Material potatoPiece;
+        [SerializeField] Material carrotPiece;
+        [SerializeField] Material squashPiece;
+        [SerializeField] Color rawSoupColor = new Color(0.82f, 0.78f, 0.62f, 0.45f);
+        [SerializeField] Color cookedSoupColor = new Color(0.86f, 0.66f, 0.32f, 0.85f);
+
         static readonly List<CookingPot> all = new List<CookingPot>();
         readonly List<Transform> pieces = new List<Transform>();
 
@@ -85,6 +98,8 @@ namespace GrandmasHouse.Kitchen
         public float Fill => Liquid + Chopped;
         public bool IsFull => Fill >= 1f;
         public bool HasSalsa => pieces.Count > 0;
+        // Chopped vegetables in water, not vinegar: soup, for bowls not jars.
+        public bool IsSoup => pieces.Count > 0 && Water > Vinegar;
         public RecipeData SalsaRecipe => salsaRecipe;
         RecipeData Cooking => HasSalsa ? salsaRecipe : recipe;
         // Something in a pot that's set down somewhere (not in your hands) can
@@ -147,6 +162,10 @@ namespace GrandmasHouse.Kitchen
             {
                 return IsSetDown && RoomForPieces > 0;
             }
+            if (hands.Held.TryGetComponent(out Food.Bowl bowl))
+            {
+                return bowl.IsEmpty && IsSoup && IsSetDown;
+            }
             var seasoning = hands.Held.GetComponent<Seasoning>();
             if (seasoning == null)
             {
@@ -162,6 +181,10 @@ namespace GrandmasHouse.Kitchen
             {
                 return "Drop in pot";
             }
+            if (hands.Held.GetComponent<Food.Bowl>() != null)
+            {
+                return "Ladle into bowl";
+            }
             return hands.Held.GetComponent<Seasoning>().Kind == Seasoning.Type.Salt ? "Add a scoop of salt" : "Hold to pour vinegar";
         }
 
@@ -171,6 +194,11 @@ namespace GrandmasHouse.Kitchen
             {
                 AddPieces(handful.Take(RoomForPieces));
                 handful.DoneWith(hands);
+                return;
+            }
+            if (hands.Held.TryGetComponent(out Food.Bowl bowl))
+            {
+                Serve(bowl);
                 return;
             }
             var seasoning = hands.Held.GetComponent<Seasoning>();
@@ -245,6 +273,41 @@ namespace GrandmasHouse.Kitchen
         }
 
         public void DoneFilling() => LogBrine();
+
+        // Pieces in the pot, by kind (Potato, Carrot, Winter, Onion...).
+        public Dictionary<string, int> Counts()
+        {
+            var counts = new Dictionary<string, int>();
+            foreach (var piece in pieces)
+            {
+                if (piece == null) continue;
+                string kind = RecipeData.KindOf(piece.name);
+                counts.TryGetValue(kind, out int had);
+                counts[kind] = had + 1;
+            }
+            return counts;
+        }
+
+        bool Cooked => Heat >= 1f;
+
+        // What the whole pot would feed, if it were all eaten.
+        public float PotFood => meals != null ? meals.PotFood(Counts(), Cooked, Salt > 0) : 0f;
+
+        // One bowl's worth, ladled out.
+        public void Serve(Food.Bowl bowl)
+        {
+            float fill = Fill;
+            if (fill <= 0f || meals == null)
+            {
+                return;
+            }
+            float share = Mathf.Min(meals.bowlShare, fill) / fill;
+            var counts = Counts();
+            bowl.Fill(MealSettings.DishName(counts, Cooked), PotFood * share, Cooked ? cookedSoupColor : rawSoupColor);
+            Sfx.Play(SoundId.Pour, transform.position, 0.7f, 0.1f);
+            Use(meals.bowlShare);
+            if (TryGetComponent(out Net.ItemNet net)) net.Share();
+        }
 
         // Cold water from the tap, held under the faucet at the sink.
         public void AddWater(float amount)
@@ -450,7 +513,12 @@ namespace GrandmasHouse.Kitchen
             surface.localPosition = SurfacePosition();
             float vinegarShare = Liquid > 0f ? Vinegar / Liquid : 0f;
             Color color = Color.Lerp(waterColor, brineColor, Mathf.Clamp01(vinegarShare * 2f));
-            if (HasSalsa)
+            if (IsSoup)
+            {
+                // Broth turns golden as it cooks.
+                color = Heat >= 0.6f ? cookedSoupColor : rawSoupColor;
+            }
+            else if (HasSalsa)
             {
                 // Chopped vegetables show through at first and cook down red.
                 color = Heat >= 0.6f ? cookedSalsaColor : rawSalsaColor;
@@ -463,6 +531,11 @@ namespace GrandmasHouse.Kitchen
         public void LogBrine()
         {
             // Not shown to the player yet; recorded for tuning quality later.
+            if (IsSoup)
+            {
+                Debug.Log($"Soup: {Fill:P0} full, {pieces.Count} pieces, water {Water:P0}, {Salt} scoops of salt, feeds {PotFood:F0} in all");
+                return;
+            }
             if (HasSalsa)
             {
                 Debug.Log($"Salsa: {Fill:P0} full, {CountOf(pieces, "Tomato")} tomato pieces, {CountOf(pieces, "Onion")} onion, {CountOf(pieces, "Jalape")} jalapeño, {CountOf(pieces, "Clove")} garlic, vinegar {Vinegar:P0}, {Salt} scoops of salt (recipe {salsaRecipe.saltScoops})");
@@ -483,12 +556,16 @@ namespace GrandmasHouse.Kitchen
             public int onion;
             public int pepper;
             public int garlic;
+            public int potato;
+            public int carrot;
+            public int squash;
         }
 
         public string Capture() => JsonUtility.ToJson(new State
         {
             vinegar = Vinegar, water = Water, salt = Salt, heat = Heat,
             tomato = CountOf(pieces, "Tomato"), onion = CountOf(pieces, "Onion"), pepper = CountOf(pieces, "Jalape"), garlic = CountOf(pieces, "Clove"),
+            potato = CountOf(pieces, "Potato"), carrot = CountOf(pieces, "Carrot"), squash = CountOf(pieces, "Winter"),
         });
 
         public void Restore(string json)
@@ -503,6 +580,9 @@ namespace GrandmasHouse.Kitchen
             RebuildPieces("Onion Slice", onionPiece, state.onion, new Vector3(0.05f, 0.004f, 0.05f));
             RebuildPieces("Jalapeño Slice", pepperPiece, state.pepper, new Vector3(0.022f, 0.004f, 0.022f));
             RebuildPieces("Clove", garlicPiece, state.garlic, new Vector3(0.014f, 0.012f, 0.024f));
+            RebuildPieces("Potato Slice", potatoPiece, state.potato, new Vector3(0.05f, 0.006f, 0.04f));
+            RebuildPieces("Carrot Slice", carrotPiece, state.carrot, new Vector3(0.026f, 0.005f, 0.026f));
+            RebuildPieces("Winter Squash Slice", squashPiece, state.squash, new Vector3(0.06f, 0.01f, 0.06f));
             ShowLiquid();
         }
 

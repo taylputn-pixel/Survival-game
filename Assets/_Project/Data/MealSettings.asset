@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a68bdd9c07ae9542833851703e6f503, type: 3}
+  m_Name: MealSettings
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.MealSettings
+  pieces:
+  - kind: Potato
+    food: 2
+  - kind: Winter
+    food: 1.5
+  - kind: Carrot
+    food: 1
+  - kind: Tomato
+    food: 2
+  - kind: Onion
+    food: 0.6
+  - kind: Cucumber
+    food: 0.4
+  - kind: "Jalape\xF1o"
+    food: 0.2
+  - kind: Clove
+    food: 0.1
+  otherPieceFood: 0.3
+  uncookedShare: 0.5
+  varietyBonus: 3
+  saltBonus: 0.1
+  bowlShare: 0.25
