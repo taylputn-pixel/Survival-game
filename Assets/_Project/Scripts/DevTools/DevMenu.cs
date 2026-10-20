@@ -151,10 +151,11 @@ namespace GrandmasHouse.DevTools
             var clock = FindAnyObjectByType<DayClock>();
             RectTransform panel = UIKit.Panel("Survival", transform, 820f);
             UIKit.Label(panel, "Hunger, rest and time", 40, FontStyle.Bold, TextAnchor.MiddleCenter);
-            RectTransform grid = Grid(panel, 8);
+            RectTransform grid = Grid(panel, 9);
             Button first = UIKit.Button(grid, "Full and rested", () => Say(needs, n => n.Set(100f, 100f)), 52f);
             UIKit.Button(grid, "Hungry", () => Say(needs, n => n.Set(15f, n.State.rest)), 52f);
             UIKit.Button(grid, "Starving 2 days", () => Say(needs, n => n.Set(0f, n.State.rest, 48f)), 52f);
+            UIKit.Button(grid, "Collapse", () => Say(needs, n => n.Set(0f, n.State.rest, n.Settings.collapseAfterHours)), 52f);
             UIKit.Button(grid, "Tired", () => Say(needs, n => n.Set(n.State.hunger, 25f)), 52f);
             UIKit.Button(grid, "Exhausted", () => Say(needs, n => n.Set(n.State.hunger, 3f)), 52f);
             UIKit.Button(grid, "Skip 6 hours", () => { clock.Advance(6f); Say(needs, null); }, 52f);

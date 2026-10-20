@@ -83,11 +83,15 @@ namespace GrandmasHouse.UI
         {
             if (needs == null) return;
             needs.Ate -= OnAte;
-            needs.Died -= OnDied;
+            needs.FellDown -= OnFellDown;
+            needs.CameRound -= OnCameRound;
+            needs.GameOver -= OnGameOver;
             if (on)
             {
                 needs.Ate += OnAte;
-                needs.Died += OnDied;
+                needs.FellDown += OnFellDown;
+                needs.CameRound += OnCameRound;
+                needs.GameOver += OnGameOver;
             }
         }
 
@@ -157,7 +161,7 @@ namespace GrandmasHouse.UI
             }
             var settings = needs.Settings;
             Needs state = needs.State;
-            bool on = needs.isActiveAndEnabled && state != null && !needs.IsDead && !needs.Asleep;
+            bool on = needs.isActiveAndEnabled && state != null && !needs.Collapsed && !needs.Asleep;
 
             panel.SetActive(on && statusAction.IsPressed());
             if (panel.activeSelf)
@@ -174,7 +178,7 @@ namespace GrandmasHouse.UI
             if (on)
             {
                 worn = Mathf.Max(worn, Mathf.InverseLerp(settings.tiredBelow, 0f, state.rest) * 0.75f);
-                worn = Mathf.Max(worn, state.hunger <= 0f ? 0.35f + 0.5f * Mathf.InverseLerp(0f, settings.deathAfterHours, state.starvingHours) : 0f);
+                worn = Mathf.Max(worn, state.hunger <= 0f ? 0.35f + 0.5f * Mathf.InverseLerp(0f, settings.collapseAfterHours, state.starvingHours) : 0f);
                 worn = Mathf.Max(worn, state.IsSick ? 0.4f : 0f);
             }
             Color target = new Color(0f, 0f, 0f, worn);
@@ -200,17 +204,60 @@ namespace GrandmasHouse.UI
             }
         }
 
-        void OnDied() => StartCoroutine(Die());
+        // Down on the floor: the world goes dim, and you wait to be fed.
+        void OnFellDown()
+        {
+            panel.SetActive(false);
+            StopAllCoroutines();
+            StartCoroutine(Dim(0.75f, "You collapsed from hunger.\nSomeone has to feed you."));
+        }
+
+        void OnCameRound()
+        {
+            StopAllCoroutines();
+            deathScreen.color = Color.clear;
+            var c = deathText.color;
+            c.a = 0f;
+            deathText.color = c;
+            message.text = "You came round. Eat something soon.";
+            messageUntil = Time.time + messageSeconds;
+        }
+
+        IEnumerator Dim(float darkness, string words)
+        {
+            float from = deathScreen.color.a;
+            for (float t = 0f; t < 2f; t += Time.deltaTime)
+            {
+                deathScreen.color = new Color(0f, 0f, 0f, Mathf.Lerp(from, darkness, t / 2f));
+                yield return null;
+            }
+            deathText.text = words;
+            for (float t = 0f; t < 1.5f; t += Time.deltaTime)
+            {
+                var c = deathText.color;
+                c.a = t / 1.5f;
+                deathText.color = c;
+                yield return null;
+            }
+        }
+
+        void OnGameOver()
+        {
+            StopAllCoroutines();
+            StartCoroutine(Die());
+        }
 
         IEnumerator Die()
         {
             panel.SetActive(false);
+            bool shared = Net.PlayerNet.All.Count > 1;
+            float from = deathScreen.color.a;
             for (float t = 0f; t < 2f; t += Time.deltaTime)
             {
-                deathScreen.color = new Color(0f, 0f, 0f, t / 2f);
+                deathScreen.color = new Color(0f, 0f, 0f, Mathf.Lerp(from, 1f, t / 2f));
                 yield return null;
             }
-            deathText.text = "You starved.";
+            deathText.text = shared ? "Everyone starved." : "You starved.";
             for (float t = 0f; t < 1.5f; t += Time.deltaTime)
             {
                 var c = deathText.color;

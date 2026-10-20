@@ -38,8 +38,8 @@ namespace GrandmasHouse.Data
         [Header("Starving")]
         [Tooltip("Hours with an empty stomach before you're malnourished (slow, no brisk walking).")]
         public float malnourishedAfterHours = 24f;
-        [Tooltip("Hours with an empty stomach before you die.")]
-        public float deathAfterHours = 72f;
+        [Tooltip("Hours with an empty stomach before you collapse. Someone has to feed you; if everyone collapses, the game is over.")]
+        [UnityEngine.Serialization.FormerlySerializedAs("deathAfterHours")] public float collapseAfterHours = 72f;
         [Tooltip("Starving hours that heal per hour once you've eaten.")]
         public float starvingRecoveryPerHour = 0.5f;
         [Range(0.3f, 1f)] public float malnourishedSpeed = 0.75f;

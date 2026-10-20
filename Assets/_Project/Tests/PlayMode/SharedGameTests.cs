@@ -82,6 +82,62 @@ namespace GrandmasHouse.Tests
         }
 
         [UnityTest]
+        public IEnumerator SleepersLieInTheirBedAndGetOutBesideIt()
+        {
+            var hands = Homestead.Find<PlayerHands>();
+            var needs = hands.GetComponent<PlayerNeeds>();
+            var bed = Homestead.Find<Bed>();
+            needs.Set(80f, 20f);
+            bed.Interact(hands);
+            float giveUp = Time.time + 5f;
+            while (!needs.Asleep && Time.time < giveUp) yield return null;
+            Assert.IsTrue(needs.Asleep, "Never fell asleep.");
+            Vector3 flat = hands.transform.position - bed.transform.position;
+            flat.y = 0f;
+            Assert.Less(flat.magnitude, 0.1f, "Not lying in the bed.");
+            Assert.IsTrue(hands.Controller.LyingDown);
+
+            needs.Set(80f, 100f);
+            giveUp = Time.time + 5f;
+            while (!hands.Controller.InputEnabled && Time.time < giveUp) yield return null;
+            Assert.IsFalse(needs.Asleep);
+            Assert.IsFalse(hands.Controller.LyingDown);
+            Assert.IsTrue(hands.GetComponent<CharacterController>().enabled);
+            flat = hands.transform.position - bed.transform.position;
+            flat.y = 0f;
+            Assert.Greater(flat.magnitude, 0.8f, "Got up inside the bed.");
+        }
+
+        [UnityTest]
+        public IEnumerator CollapsingWithNobodyElseStandingIsGameOver()
+        {
+            var needs = Homestead.Find<PlayerNeeds>();
+            bool over = false;
+            needs.GameOver += () => over = true;
+            needs.Set(0f, 80f, needs.Settings.collapseAfterHours);
+            yield return null;
+            yield return null;
+            yield return null;
+            Assert.IsTrue(needs.Collapsed);
+            Assert.IsFalse(needs.GetComponent<FirstPersonController>().InputEnabled);
+            Assert.IsTrue(over, "Alone and collapsed, but the game isn't over.");
+        }
+
+        [UnityTest]
+        public IEnumerator BeingFedBringsYouRound()
+        {
+            var needs = Homestead.Find<PlayerNeeds>();
+            needs.Set(0f, 80f, needs.Settings.collapseAfterHours);
+            yield return null;
+            Assert.IsTrue(needs.Collapsed);
+
+            needs.Fed(10f, 0f);
+            Assert.IsFalse(needs.Collapsed);
+            Assert.IsTrue(needs.GetComponent<FirstPersonController>().InputEnabled);
+            Assert.IsTrue(needs.State.IsMalnourished(needs.Settings), "Came round fully healed; should still be weak.");
+        }
+
+        [UnityTest]
         public IEnumerator EachPlayerIsSavedByTheirKey()
         {
             var needs = Homestead.Find<PlayerNeeds>();

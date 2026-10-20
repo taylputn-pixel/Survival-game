@@ -22,6 +22,8 @@ namespace GrandmasHouse.Player
         public float SpeedMultiplier { get; set; } = 1f;
         public bool BriskAllowed { get; set; } = true;
         public bool IsMoving => horizontalVelocity.sqrMagnitude > 0.01f;
+        // Lying in bed or collapsed on the floor: the view drops low.
+        public bool LyingDown { get; set; }
 
         CharacterController body;
         InputAction moveAction;
@@ -49,7 +51,7 @@ namespace GrandmasHouse.Player
         void Update()
         {
             // Read every frame so eye height and field of view can be tuned live in Play mode.
-            pivotRestPosition = new Vector3(0f, settings.eyeHeight, 0f);
+            pivotRestPosition = new Vector3(0f, LyingDown ? 0.3f : settings.eyeHeight, 0f);
             view.fieldOfView = settings.fieldOfView;
 
             if (InputEnabled)
@@ -89,6 +91,11 @@ namespace GrandmasHouse.Player
 
         void Move(Vector2 input)
         {
+            // Lying in bed, the body is put in place by the bed.
+            if (!body.enabled)
+            {
+                return;
+            }
             float speed = (BriskAllowed && briskAction.IsPressed() ? settings.briskSpeed : settings.walkSpeed) * SpeedMultiplier;
             Vector3 target = (transform.right * input.x + transform.forward * input.y) * speed;
             horizontalVelocity = Vector3.MoveTowards(horizontalVelocity, target, settings.acceleration * Time.deltaTime);

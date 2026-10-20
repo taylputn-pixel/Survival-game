@@ -86,6 +86,14 @@ namespace GrandmasHouse.Net
                 while (me.Needs.Asleep && Time.time < giveUp) yield return null;
                 Log("woke up; rest " + me.Needs.State.rest.ToString("F0") + ", hunger " + me.Needs.State.hunger.ToString("F0"));
             }
+
+            // Collapse from hunger and wait for someone to feed us.
+            me.Needs.Set(0f, 80f, me.Needs.Settings.collapseAfterHours);
+            yield return new WaitForSeconds(1f);
+            Log("collapsed: " + me.Needs.Collapsed);
+            float waitForHelp = Time.time + 90f;
+            while (me.Needs.Collapsed && Time.time < waitForHelp) yield return null;
+            Log("came round: " + !me.Needs.Collapsed + "; hunger " + me.Needs.State.hunger.ToString("F0"));
             Log("done");
         }
 

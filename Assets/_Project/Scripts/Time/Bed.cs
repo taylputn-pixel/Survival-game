@@ -9,7 +9,8 @@ using UnityEngine.InputSystem;
 
 namespace GrandmasHouse.DayCycle
 {
-    // A bed. Lie down any time and the screen fades out. One sleeper per bed.
+    // A bed. Lie down any time and the screen fades out; everyone else sees
+    // you lying in it. One sleeper per bed.
     // The night only passes once everyone in the game is in bed: when the
     // clock stops at night, morning comes; when it runs all night, time
     // hurries until you're rested, and you go on getting hungry. Once the
@@ -85,6 +86,7 @@ namespace GrandmasHouse.DayCycle
             var interact = InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
 
             yield return fade.FadeTo(1f, fadeSeconds);
+            LieDown(hands);
             if (needs != null)
             {
                 needs.Asleep = true;
@@ -93,7 +95,7 @@ namespace GrandmasHouse.DayCycle
             bool restUntilRested = needs != null && clock.Mode.hungerHasPenalties && !clock.Mode.clockStopsAtNight;
             int startDay = clock.Day;
 
-            while (needs == null || !needs.IsDead)
+            while (needs == null || !needs.Collapsed)
             {
                 bool morning = clock.Day != startDay;
                 if (restUntilRested ? needs.State.rest >= 100f : morning)
@@ -116,17 +118,47 @@ namespace GrandmasHouse.DayCycle
                 needs.CanGetUp = false;
                 needs.Asleep = false;
             }
+            GetUp(hands, stillDown: needs != null && needs.Collapsed);
             if (IsSpawned)
             {
                 LeaveRpc();
             }
             yield return fade.FadeTo(0f, fadeSeconds);
 
-            if (needs == null || !needs.IsDead)
+            if (needs == null || !needs.Collapsed)
             {
                 hands.Controller.InputEnabled = true;
             }
             sleeping = false;
+        }
+
+        // Into the bed, head on the pillow.
+        void LieDown(PlayerHands hands)
+        {
+            hands.GetComponent<CharacterController>().enabled = false;
+            hands.transform.SetPositionAndRotation(transform.position + Vector3.up * 0.3f, Quaternion.Euler(0f, transform.eulerAngles.y, 0f));
+            hands.Controller.LyingDown = true;
+        }
+
+        // Out of bed on whichever side is clear, facing away from it.
+        void GetUp(PlayerHands hands, bool stillDown)
+        {
+            Vector3[] sides = { new Vector3(0.95f, 0f, 0f), new Vector3(-0.95f, 0f, 0f), new Vector3(0f, 0f, -1.5f) };
+            Vector3 spot = transform.TransformPoint(sides[0]);
+            foreach (var side in sides)
+            {
+                Vector3 p = transform.TransformPoint(side);
+                if (!Physics.CheckCapsule(p + Vector3.up * 0.35f, p + Vector3.up * 1.4f, 0.3f, ~0, QueryTriggerInteraction.Ignore))
+                {
+                    spot = p;
+                    break;
+                }
+            }
+            Vector3 away = spot - transform.position;
+            away.y = 0f;
+            hands.transform.SetPositionAndRotation(spot + Vector3.up * 0.02f, Quaternion.LookRotation(away.normalized, Vector3.up));
+            hands.GetComponent<CharacterController>().enabled = true;
+            hands.Controller.LyingDown = stillDown;
         }
     }
 }

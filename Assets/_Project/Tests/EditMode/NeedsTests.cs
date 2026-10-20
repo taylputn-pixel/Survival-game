@@ -52,14 +52,15 @@ namespace GrandmasHouse.Tests
         }
 
         [Test]
-        public void StarvingLongEnoughIsMalnourishedThenDeath()
+        public void StarvingLongEnoughIsMalnourishedThenCollapse()
         {
             needs.hunger = 0f;
             needs.Pass(settings.malnourishedAfterHours, asleep: false, settings);
             Assert.AreEqual(Condition.Malnourished, needs.Condition(settings));
             Assert.IsFalse(needs.CanWalkBriskly(settings));
-            needs.Pass(settings.deathAfterHours - settings.malnourishedAfterHours, asleep: false, settings);
-            Assert.IsTrue(needs.IsDead(settings));
+            needs.Pass(settings.collapseAfterHours - settings.malnourishedAfterHours, asleep: false, settings);
+            Assert.IsTrue(needs.Collapsed(settings));
+            Assert.AreEqual(Condition.Collapsed, needs.Condition(settings));
         }
 
         [Test]
@@ -71,6 +72,18 @@ namespace GrandmasHouse.Tests
             Assert.AreEqual(50f, needs.hunger);
             needs.Pass(4f, asleep: false, settings);
             Assert.AreEqual(30f - 4f * settings.starvingRecoveryPerHour, needs.starvingHours, 0.01f);
+        }
+
+        [Test]
+        public void FedWhileCollapsedYouComeRoundStillMalnourished()
+        {
+            needs.hunger = 0f;
+            needs.starvingHours = settings.collapseAfterHours;
+            needs.Eat(10f, 0f, settings);
+            needs.BringRound(settings);
+            Assert.IsFalse(needs.Collapsed(settings));
+            Assert.IsTrue(needs.IsMalnourished(settings));
+            Assert.AreEqual(10f, needs.hunger, 0.01f);
         }
 
         [Test]

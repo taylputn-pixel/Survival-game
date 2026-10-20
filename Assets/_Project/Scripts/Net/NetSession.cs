@@ -95,13 +95,14 @@ namespace GrandmasHouse.Net
 
         // Skip Steam and connect by address: for testing two copies of the
         // game on one computer ("-direct" on the command line, or tests).
-        public static bool Direct { get; set; } = HasArg("-direct");
+        public static bool Direct { get; set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Reset()
         {
             Instance = null;
-            Direct = HasArg("-direct");
+            // In the editor, a Temp/GH_DIRECT file does the same as "-direct".
+            Direct = HasArg("-direct") || (Application.isEditor && System.IO.File.Exists("Temp/GH_DIRECT"));
         }
 
         static bool HasArg(string name) => Array.IndexOf(Environment.GetCommandLineArgs(), name) >= 0;

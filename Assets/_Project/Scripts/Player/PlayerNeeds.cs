@@ -11,8 +11,10 @@ namespace GrandmasHouse.Player
 {
     // One player's hunger and rest, run by the world clock. Tired, starving
     // or sick, you walk slower; exhausted you can't hurry and you fumble
-    // what you carry; starve long enough and you die. You're never made to
-    // sleep. The rules themselves are in Needs.
+    // what you carry; starve long enough and you collapse where you stand.
+    // Another player can feed you and bring you round; when everyone has
+    // collapsed, the game is over. You're never made to sleep. The rules
+    // themselves are in Needs.
     public class PlayerNeeds : MonoBehaviour, IAfterLoad
     {
         [SerializeField] SurvivalSettings settings;
@@ -26,12 +28,16 @@ namespace GrandmasHouse.Player
         public bool Asleep { get; set; }
         // Asleep, and the sun is up, so you can get out of bed.
         public bool CanGetUp { get; set; }
-        public bool IsDead { get; private set; }
+        // Starved until you dropped; waiting for someone to feed you.
+        public bool Collapsed { get; private set; }
         bool On => clock.Mode.hungerHasPenalties;
 
         // Something was eaten: true if it made you sick.
         public event Action<bool> Ate;
-        public event Action Died;
+        public event Action FellDown;
+        public event Action CameRound;
+        // Everyone collapsed (or you, alone): the game is over.
+        public event Action GameOver;
 
         float lastHours;
         float nextFumbleRoll;
@@ -57,7 +63,7 @@ namespace GrandmasHouse.Player
             float now = clock.TotalHours;
             float hours = now - lastHours;
             lastHours = now;
-            if (!On || IsDead)
+            if (!On || Collapsed)
             {
                 return;
             }
@@ -67,13 +73,31 @@ namespace GrandmasHouse.Player
             controller.BriskAllowed = State.CanWalkBriskly(settings);
             Fumble();
 
-            if (clock.Mode.gameOver && State.IsDead(settings))
+            if (clock.Mode.gameOver && State.Collapsed(settings))
             {
-                IsDead = true;
-                controller.InputEnabled = false;
-                Died?.Invoke();
+                Collapse();
             }
         }
+
+        void Collapse()
+        {
+            Collapsed = true;
+            controller.InputEnabled = false;
+            controller.LyingDown = true;
+            // Whatever you held falls with you.
+            while (hands.Held != null)
+            {
+                hands.TakeHeld().Drop();
+            }
+            FellDown?.Invoke();
+            // In a shared game the host decides when everyone is down.
+            if (!(TryGetComponent(out Net.PlayerNet net) && net.IsSpawned))
+            {
+                EndGame();
+            }
+        }
+
+        public void EndGame() => GameOver?.Invoke();
 
         // Exhausted and on the move, now and then what you hold slips out
         // of your hand. Baskets and pots are held with both hands and stay.
@@ -96,15 +120,34 @@ namespace GrandmasHouse.Player
             }
         }
 
-        public bool CanEat(IEdible food) => On && !IsDead && food != null && food.CanEat;
+        public bool CanEat(IEdible food) => On && !Collapsed && food != null && food.CanEat;
 
         public void Eat(IEdible food)
         {
-            float sickFor = food.SickHours(settings);
-            State.Eat(food.Nutrition, sickFor, settings);
-            Sfx.Play(SoundId.Eat, hands.ViewPoint.position);
+            Fed(food.Nutrition, food.SickHours(settings));
             food.Eaten(hands);
+        }
+
+        // Food in your mouth, from your own hands or someone else's. Good
+        // food brings you round if you'd collapsed.
+        public void Fed(float nutrition, float sickFor)
+        {
+            State.Eat(nutrition, sickFor, settings);
+            Sfx.Play(SoundId.Eat, hands.ViewPoint.position);
             Ate?.Invoke(sickFor > 0f);
+            if (Collapsed && sickFor <= 0f && nutrition > 0f)
+            {
+                State.BringRound(settings);
+                StandUp();
+            }
+        }
+
+        void StandUp()
+        {
+            Collapsed = false;
+            controller.LyingDown = false;
+            controller.InputEnabled = true;
+            CameRound?.Invoke();
         }
 
         // For testing from the dev menu.
@@ -114,6 +157,10 @@ namespace GrandmasHouse.Player
             State.rest = rest;
             State.starvingHours = starvingHours;
             State.sickHours = 0f;
+            if (Collapsed && !State.Collapsed(settings))
+            {
+                StandUp();
+            }
         }
 
         // Saved with the player (see PlayerNet and SaveManager).

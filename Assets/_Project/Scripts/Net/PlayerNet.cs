@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using GrandmasHouse.Carrying;
+using GrandmasHouse.Food;
+using GrandmasHouse.Interaction;
 using GrandmasHouse.Player;
 using GrandmasHouse.Saving;
 using Unity.Netcode;
@@ -11,8 +13,10 @@ namespace GrandmasHouse.Net
     // camera, your input, your HUD. Everyone else sees a simple figure that
     // walks where you walk and looks where you look. Hunger and rest are
     // worked out on your own computer and reported to the host, who saves
-    // them with the game.
-    public class PlayerNet : NetworkBehaviour
+    // them with the game. Asleep or collapsed, the figure lies down. Hold
+    // food and look at another player to feed them; that's how someone
+    // who collapsed from hunger is brought round.
+    public class PlayerNet : NetworkBehaviour, IInteractable, ISharedUse
     {
         [SerializeField] FirstPersonController controller;
         [SerializeField] PlayerHands hands;
@@ -37,14 +41,17 @@ namespace GrandmasHouse.Net
         public PlayerHands Hands => hands;
         public PlayerNeeds Needs => needs;
         public bool IsAsleep => asleep.Value;
-        public bool IsDead => dead.Value;
+        // Collapsed from hunger, waiting to be fed.
+        public bool IsDown => down.Value;
         // The host's latest copy of this player's hunger and rest.
         public string NeedsJson { get; private set; }
 
         readonly NetworkVariable<float> pitch = new NetworkVariable<float>(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         readonly NetworkVariable<bool> asleep = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
-        readonly NetworkVariable<bool> dead = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+        readonly NetworkVariable<bool> down = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         float nextReport;
+        Vector3 bodyStanding, pivotStanding;
+        Quaternion bodyStandingTurn;
 
         public static PlayerNet Owning(ulong clientId) => All.Find(p => p.OwnerClientId == clientId);
 
@@ -57,6 +64,9 @@ namespace GrandmasHouse.Net
             foreach (var r in tinted) r.SetPropertyBlock(block);
 
             foreach (var part in figure) part.SetActive(!IsOwner);
+            bodyStanding = figure[0].transform.localPosition;
+            bodyStandingTurn = figure[0].transform.localRotation;
+            pivotStanding = cameraPivot.localPosition;
             if (IsOwner)
             {
                 view.enabled = true;
@@ -104,7 +114,7 @@ namespace GrandmasHouse.Net
                 float x = cameraPivot.localEulerAngles.x;
                 pitch.Value = x > 180f ? x - 360f : x;
                 asleep.Value = needs.Asleep;
-                dead.Value = needs.IsDead;
+                down.Value = needs.Collapsed;
                 if (Time.time >= nextReport)
                 {
                     Report();
@@ -112,9 +122,54 @@ namespace GrandmasHouse.Net
             }
             else
             {
-                cameraPivot.localRotation = Quaternion.Euler(pitch.Value, 0f, 0f);
+                Pose(asleep.Value || down.Value);
             }
         }
+
+        // Standing and looking where they look, or lying on their back.
+        void Pose(bool lying)
+        {
+            // A sleeper in bed is out of everyone's way; someone collapsed
+            // can still be reached to feed them.
+            var solid = GetComponent<CharacterController>();
+            solid.enabled = !lying || down.Value;
+            Transform bodyPart = figure[0].transform;
+            if (lying)
+            {
+                bodyPart.SetLocalPositionAndRotation(new Vector3(0f, 0.25f, -0.1f), Quaternion.Euler(90f, 0f, 0f));
+                cameraPivot.SetLocalPositionAndRotation(new Vector3(0f, 0.3f, 0.72f), Quaternion.Euler(-90f, 0f, 0f));
+            }
+            else
+            {
+                bodyPart.SetLocalPositionAndRotation(bodyStanding, bodyStandingTurn);
+                cameraPivot.SetLocalPositionAndRotation(pivotStanding, Quaternion.Euler(pitch.Value, 0f, 0f));
+            }
+        }
+
+        // ---- Feeding someone else ----
+
+        IEdible FoodIn(PlayerHands feeder) =>
+            feeder.Held != null && feeder.Held.TryGetComponent(out IEdible food) && food.CanEat ? food : null;
+
+        public bool CanInteract(PlayerHands feeder) =>
+            IsSpawned && feeder != hands && FoodIn(feeder) != null && (IsDown || !IsAsleep);
+
+        public string PromptVerb(PlayerHands feeder) => "Feed";
+
+        public void Interact(PlayerHands feeder)
+        {
+            IEdible food = FoodIn(feeder);
+            var settings = feeder.GetComponent<PlayerNeeds>().Settings;
+            FeedRpc(food.Nutrition, food.SickHours(settings));
+            food.Eaten(feeder);
+        }
+
+        [Rpc(SendTo.Owner)]
+        void FeedRpc(float nutrition, float sickFor) => needs.Fed(nutrition, sickFor);
+
+        // Everyone is down: the host tells each player the game is over.
+        [Rpc(SendTo.Owner)]
+        public void EndGameRpc() => needs.EndGame();
 
         // Sends hunger and rest to the host now (it also happens every few seconds).
         public void Report()

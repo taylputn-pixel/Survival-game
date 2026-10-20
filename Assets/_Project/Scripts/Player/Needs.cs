@@ -6,7 +6,7 @@ namespace GrandmasHouse.Player
 {
     public enum HungerLevel { Full, Fed, Peckish, Hungry, Starving }
     public enum RestLevel { Rested, Tired, VeryTired, Exhausted }
-    public enum Condition { Healthy, Sick, Malnourished, Dead }
+    public enum Condition { Healthy, Sick, Malnourished, Collapsed }
 
     // The body's state as plain numbers, so the rules can be tested without
     // a scene: hunger and rest (100 full, 0 empty), hours spent starving, and
@@ -29,7 +29,7 @@ namespace GrandmasHouse.Player
 
         public void Pass(float hours, bool asleep, SurvivalSettings settings)
         {
-            if (hours <= 0f || IsDead(settings))
+            if (hours <= 0f || Collapsed(settings))
             {
                 return;
             }
@@ -63,7 +63,15 @@ namespace GrandmasHouse.Player
             hunger = Mathf.Min(100f, hunger + nutrition);
         }
 
-        public bool IsDead(SurvivalSettings settings) => starvingHours >= settings.deathAfterHours;
+        // Starved long enough to collapse. Nothing changes until someone
+        // feeds you (BringRound); if everyone collapses, the game is over.
+        public bool Collapsed(SurvivalSettings settings) => starvingHours >= settings.collapseAfterHours;
+
+        // Fed while collapsed: back on your feet, still malnourished.
+        public void BringRound(SurvivalSettings settings)
+        {
+            starvingHours = Mathf.Min(starvingHours, settings.malnourishedAfterHours);
+        }
         public bool IsMalnourished(SurvivalSettings settings) => starvingHours >= settings.malnourishedAfterHours;
 
         public HungerLevel Hunger(SurvivalSettings settings) =>
@@ -80,7 +88,7 @@ namespace GrandmasHouse.Player
             : RestLevel.Rested;
 
         public Condition Condition(SurvivalSettings settings) =>
-            IsDead(settings) ? Player.Condition.Dead
+            Collapsed(settings) ? Player.Condition.Collapsed
             : IsMalnourished(settings) ? Player.Condition.Malnourished
             : IsSick ? Player.Condition.Sick
             : Player.Condition.Healthy;

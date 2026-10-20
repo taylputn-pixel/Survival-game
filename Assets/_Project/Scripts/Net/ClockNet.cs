@@ -23,6 +23,7 @@ namespace GrandmasHouse.Net
 
         DayClock clock;
         bool everyoneWasAsleep;
+        bool over;
         int nightOf = -1;
 
         // Everyone in the game is asleep right now.
@@ -67,14 +68,29 @@ namespace GrandmasHouse.Net
         // Whether everyone's in bed, and what that does to the night.
         void Coordinate()
         {
-            int players = 0, sleeping = 0;
+            int players = 0, sleeping = 0, down = 0;
             foreach (var player in PlayerNet.All)
             {
-                if (!player.IsSpawned || player.IsDead) continue;
+                if (!player.IsSpawned) continue;
+                if (player.IsDown)
+                {
+                    down++;
+                    continue;
+                }
                 players++;
                 if (player.IsAsleep) sleeping++;
             }
             EveryoneAsleep = players > 0 && sleeping == players;
+
+            // Nobody left standing to feed anyone: the game is over.
+            if (down > 0 && players == 0 && !over)
+            {
+                over = true;
+                foreach (var player in PlayerNet.All)
+                {
+                    if (player.IsSpawned) player.EndGameRpc();
+                }
+            }
 
             if (clock.Mode.clockStopsAtNight)
             {
