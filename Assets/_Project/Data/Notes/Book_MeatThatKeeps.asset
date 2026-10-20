@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b8860589b05b4642ab42b24201a782d, type: 3}
+  m_Name: Book_MeatThatKeeps
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.NoteData
+  kind: 3
+  title: Meat That Keeps
+  recipe: {fileID: 0}
+  body: 
+  marginNote: 
+  pages:
+  - 'Fresh meat keeps a day or two, and you must never eat it raw. Cook it in the
+    pot, or put it by: smoked or salted, it will see you through to spring.'
+  - 'The smokehouse
+
+
+    Hang the meat on the hooks and light a fire underneath.
+    A fire burns most of a night and then dies down, so light it again if the meat
+    isn''t done. It wants about sixteen hours of smoke in all.
+
+
+    Smoked meat
+    keeps for weeks, and you can eat it as it is.'
+  - 'The salt box
+
+
+    The box down in the cellar is for salting meat. Pour plenty
+    of salt in first, then pack the meat into it. Give it three days. Each piece
+    uses up a scoop of salt, so keep the box topped up.
+
+
+    Salted meat keeps longer
+    than anything.'
+  mentions: []

@@ -36,6 +36,7 @@ namespace GrandmasHouse.Net
             Log("joined as client " + me.OwnerClientId);
             yield return new WaitForSeconds(3f);
             PlayerHands hands = me.Hands;
+            yield return Journal(hands);
 
             Pickup tomato = Loose();
             Log(tomato != null ? "found " + tomato.DisplayName + " at " + tomato.transform.position : "no food lying around");
@@ -46,9 +47,11 @@ namespace GrandmasHouse.Net
                 yield return new WaitForSeconds(1f);
                 Log("holding it: " + hands.IsHolding(tomato));
 
-                Stand(me, new Vector3(2.25f, 0f, 0.9f));
+                // On the kitchen table, wherever it stands now.
+                Bounds table = TableTop();
+                Stand(me, new Vector3(table.center.x, 0f, table.min.z - 0.5f));
                 yield return new WaitForSeconds(0.5f);
-                hands.TakeHeld().PlaceOn(new Vector3(2.0f, 0.86f, 1.45f), 0f, 0.2f);
+                hands.TakeHeld().PlaceOn(new Vector3(table.center.x - 0.3f, table.max.y, table.min.z + 0.15f), 0f, 0.2f);
                 yield return new WaitForSeconds(1f);
                 Log("set it down at " + tomato.transform.position);
             }
@@ -219,6 +222,30 @@ namespace GrandmasHouse.Net
             body.enabled = false;
             me.transform.position = new Vector3(near.x, near.y + 0.05f, near.z) + Vector3.back * 0.6f;
             body.enabled = true;
+        }
+
+        // Reads a recipe card: it goes into the household's journal and is gone for everyone.
+        IEnumerator Journal(PlayerHands hands)
+        {
+            Interaction.Readable card = null;
+            foreach (var r in FindObjectsByType<Interaction.Readable>(FindObjectsSortMode.None))
+            {
+                if (r.PromptVerb(hands) == "Read and keep") { card = r; break; }
+            }
+            if (card == null) { Log("journal: no recipe card lying around"); yield break; }
+            string name = card.name;
+            card.Interact(hands);
+            yield return new WaitForSeconds(1f);
+            var reader = FindAnyObjectByType<Interaction.NoteReader>();
+            typeof(Interaction.NoteReader).GetMethod("Close", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(reader, null);
+            yield return new WaitForSeconds(1f);
+            var found = FindAnyObjectByType<Interaction.Discoveries>();
+            Log("journal: read " + name + ", gone here: " + !card.gameObject.activeSelf + ", cards known " + found.Found.Count);
+        }
+
+        static Bounds TableTop()
+        {
+            return GameObject.Find("House/Kitchen/Table/Top").GetComponent<Renderer>().bounds;
         }
 
         static void Log(string message) => Debug.Log("[bot] " + message);

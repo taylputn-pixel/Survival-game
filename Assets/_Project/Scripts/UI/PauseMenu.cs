@@ -78,6 +78,10 @@ namespace GrandmasHouse.UI
             RectTransform panel = UIKit.Panel("Paused", transform, 560f);
             UIKit.Label(panel, "Paused", 44, FontStyle.Bold, TextAnchor.MiddleCenter);
             var resume = UIKit.Button(panel, "Carry on", menus.Pop);
+            if (TryGetComponent(out JournalView journal))
+            {
+                UIKit.Button(panel, "Journal", () => { menus.Pop(); journal.Open(); });
+            }
             UIKit.Button(panel, "Options", () => OptionsScreen.Open(menus, transform));
             var session = NetSession.Instance;
             if (session != null && session.IsHost && session.UsingSteam)

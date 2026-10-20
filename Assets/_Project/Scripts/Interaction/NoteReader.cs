@@ -23,6 +23,8 @@ namespace GrandmasHouse.Interaction
         [SerializeField] Reticle reticle;
         [SerializeField] DayClock clock;
         [SerializeField] float fadeSeconds = 0.2f;
+        [Tooltip("Each book page read goes in the journal.")]
+        [SerializeField] Discoveries discoveries;
 
         InputAction interactAction;
         InputAction backAction;
@@ -103,6 +105,7 @@ namespace GrandmasHouse.Interaction
         void ShowPage(int index)
         {
             page = index;
+            if (showing.kind == NoteKind.Book && discoveries != null) discoveries.RecordPage(showing, page);
             title.text = showing.title;
             body.text = showing.Page(page);
             string side = showing.PageCount > 1 ? "Page " + (page + 1) + " of " + showing.PageCount : showing.marginNote;

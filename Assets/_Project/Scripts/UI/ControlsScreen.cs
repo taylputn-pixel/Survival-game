@@ -18,6 +18,7 @@ namespace GrandmasHouse.UI
             ("Player/Back", "Step back"),
             ("Player/Sprint", "Walk briskly"),
             ("Player/Status", "Check yourself (hold)"),
+            ("Player/Journal", "Open the journal"),
             ("Player/Pause", "Pause"),
         };
 

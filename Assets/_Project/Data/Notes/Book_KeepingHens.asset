@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b8860589b05b4642ab42b24201a782d, type: 3}
+  m_Name: Book_KeepingHens
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.NoteData
+  kind: 3
+  title: Keeping Hens
+  recipe: {fileID: 0}
+  body: 
+  marginNote: 
+  pages:
+  - Four good hens will give you an egg apiece most mornings, if you keep them fed,
+    watered and shut in at night. That's all a hen asks of you.
+  - 'Feed and water
+
+
+    A scoop from the feed sack goes a good way in the feeder.
+    They''ll eat kitchen scraps too, even ones gone soft, and they go wild for the
+    hornworms picked off the tomatoes, so keep a pail by the garden for those.
+
+
+    Fill
+    the waterer from the watering can. A hen with nothing to eat or drink for three
+    days won''t see a fourth.'
+  - 'Shutting them in
+
+
+    At dusk the hens walk in on their own if the little door
+    is open. Close it behind them. A door left open all night, or a hen left outside
+    it, is how you meet the fox.
+
+
+    Open it again in the morning so they can get
+    out to scratch.'
+  - 'Eggs, and the pot
+
+
+    Look in the nest boxes every morning. Eggs keep about
+    three weeks and go into the soup pot whole.
+
+
+    When times are lean a hen will
+    feed the family one last time. A chicken only keeps a couple of days, so cook
+    it, or smoke it or salt it down.'
+  mentions: []

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b8860589b05b4642ab42b24201a782d, type: 3}
+  m_Name: Note_SauerkrautCard
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.NoteData
+  kind: 1
+  title: Sauerkraut
+  recipe: {fileID: 0}
+  body: 'Sauerkraut
+
+
+    Cabbage, sliced on the board
+
+    Salt, a scoop for every
+    dozen slices
+
+
+    Pack the cabbage into the crock down in the cellar a handful
+    at a time, and shake the salt over it as you go. Then leave it be. In about a
+    week it''s sour and good, and it keeps all winter right there in the crock.
+
+
+    Scoop
+    it into a bowl to eat.'
+  marginNote: Skimp on the salt and you'll be feeding it to the chickens.
+  pages: []
+  mentions: []
