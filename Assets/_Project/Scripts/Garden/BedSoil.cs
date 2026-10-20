@@ -13,7 +13,7 @@ namespace GrandmasHouse.Garden
     // where you look, and you sweep the water across the bed by looking
     // around (you can walk along the bed while you pour).
     [RequireComponent(typeof(GardenBed))]
-    public class BedSoil : MonoBehaviour, IInteractable
+    public class BedSoil : MonoBehaviour, IInteractable, ISharedUse
     {
         [SerializeField] GardenSettings garden;
         [Tooltip("How close to a marked spot you must look to plant there, in meters.")]
@@ -71,7 +71,7 @@ namespace GrandmasHouse.Garden
             var packet = hands.Held.GetComponent<SeedPacket>();
             PlantSpot spot = SpotAt(hands);
             packet.TakeSeed();
-            spot.Plant(packet.Crop, plantSeconds);
+            bed.Plant(spot, packet.Crop, plantSeconds);
         }
 
         // The empty marked spot nearest where you're looking, if it's close.
@@ -172,7 +172,7 @@ namespace GrandmasHouse.Garden
                 Vector3 offset = spot.transform.position - landing;
                 if (Vector3.ProjectOnPlane(offset, transform.up).magnitude < garden.pourRadius)
                 {
-                    spot.AddWater(garden.waterPerSecond * Time.deltaTime);
+                    bed.Water(spot, garden.waterPerSecond * Time.deltaTime);
                 }
             }
         }

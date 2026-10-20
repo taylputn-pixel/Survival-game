@@ -4,6 +4,7 @@ using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.Saving;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace GrandmasHouse.Garden
@@ -29,6 +30,8 @@ namespace GrandmasHouse.Garden
         public int Stage { get; private set; } = -1;
         public bool IsReady => Crop != null && Stage == Crop.stages.Length - 1;
         public int RipeCount => ripe.Count;
+        // On a guest's computer: the host grows this plant (see GardenBed).
+        public bool Following { get; set; }
         public IReadOnlyList<Pickup> Ripe => ripe;
         // The space the plant takes up, for looking closer at it.
         public Bounds PlantBounds
@@ -76,6 +79,10 @@ namespace GrandmasHouse.Garden
 
         void Update()
         {
+            if (Following)
+            {
+                return;
+            }
             // Notice anything picked off the plant, by hand or into a basket.
             for (int i = ripe.Count - 1; i >= 0; i--)
             {
@@ -161,6 +168,34 @@ namespace GrandmasHouse.Garden
                 }
             }
             ShowWater();
+        }
+
+        // The host's plant, on a guest's computer. The plant itself is only
+        // redone if it changed; water and picking just carry over.
+        public void ApplyShared(State state)
+        {
+            string crop = Crop != null ? Crop.name : "";
+            bool changed = crop != (state.crop ?? "") || Stage != state.stage || suckers.Count != state.suckers || pests.Count != state.pests;
+            if (changed)
+            {
+                Restore(state);
+                return;
+            }
+            Water = state.water;
+            harvested = state.harvested;
+            ShowWater();
+        }
+
+        public bool IsPest(Pinchable thing) => pests.Contains(thing);
+
+        // A guest pinched one off; here, any one of that kind goes.
+        public void TakeOffAny(bool pest)
+        {
+            var from = pest ? pests : suckers;
+            if (from.Count > 0)
+            {
+                TakeOff(from[0]);
+            }
         }
 
         public void AfterLoad()
@@ -348,6 +383,12 @@ namespace GrandmasHouse.Garden
                 };
                 ripe.Add(item);
                 count--;
+                // In a shared game everyone can see it and pick it.
+                if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer
+                    && item.TryGetComponent(out NetworkObject shared) && !shared.IsSpawned)
+                {
+                    shared.Spawn();
+                }
             }
         }
 

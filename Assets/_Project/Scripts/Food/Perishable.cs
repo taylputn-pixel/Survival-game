@@ -90,7 +90,7 @@ namespace GrandmasHouse.Food
         // Grays and browns once it's past half fresh.
         void Show()
         {
-            if (renderers == null)
+            if (renderers == null || block == null)
             {
                 return;
             }

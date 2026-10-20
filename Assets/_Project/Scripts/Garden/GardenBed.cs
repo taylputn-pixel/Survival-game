@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GrandmasHouse.Data;
 using GrandmasHouse.DayCycle;
+using GrandmasHouse.Net;
 using GrandmasHouse.Saving;
 using UnityEngine;
 
@@ -8,6 +9,8 @@ namespace GrandmasHouse.Garden
 {
     // The soil of one raised bed: its planting spots and the weeds that come
     // up between them overnight. Suckers and pests come up on the plants.
+    // Every change to the bed goes through it (Plant, Water, PullOut,
+    // TakeOff), so in a shared game a guest's work also goes to the host.
     public class GardenBed : MonoBehaviour, ISaveable
     {
         [SerializeField] GardenSettings settings;
@@ -36,6 +39,22 @@ namespace GrandmasHouse.Garden
             }
         }
         public Plane Soil => new Plane(transform.up, spots[0].transform.position);
+        // Set in a shared game (GardenNet).
+        public GardenNet Shared { get; set; }
+        // On a guest's computer: the host grows this bed, and it only shows
+        // what the host sends.
+        public bool Following
+        {
+            get => following;
+            set
+            {
+                following = value;
+                foreach (var spot in spots) spot.Following = value;
+            }
+        }
+
+        bool following;
+        bool Guest => Shared != null && Shared.IsGuest;
 
         void Start()
         {
@@ -84,22 +103,111 @@ namespace GrandmasHouse.Garden
             {
                 spots[i].Restore(state.spots[i]);
             }
+            RebuildWeeds(state.weeds);
+        }
+
+        void RebuildWeeds(List<WeedState> saved)
+        {
             foreach (var weed in weeds)
             {
                 Destroy(weed.gameObject);
             }
             weeds.Clear();
-            foreach (var saved in state.weeds)
+            foreach (var one in saved)
             {
                 Weed weed = Instantiate(weedPrefab, transform);
-                weed.transform.SetLocalPositionAndRotation(saved.position, Quaternion.Euler(0f, saved.yaw, 0f));
+                weed.transform.SetLocalPositionAndRotation(one.position, Quaternion.Euler(0f, one.yaw, 0f));
                 weed.Bed = this;
-                weed.Sprout(saved.age, settings.weedMaxAge);
+                weed.Sprout(one.age, settings.weedMaxAge);
                 weeds.Add(weed);
             }
         }
 
+        // The host's bed, on a guest's computer: only what changed is redone,
+        // so a seed you just planted or a plant you've turned isn't reset.
+        public void ApplyShared(string json)
+        {
+            var state = JsonUtility.FromJson<State>(json);
+            for (int i = 0; i < spots.Length && i < state.spots.Count; i++)
+            {
+                spots[i].ApplyShared(state.spots[i]);
+            }
+            if (!SameWeeds(state.weeds))
+            {
+                RebuildWeeds(state.weeds);
+            }
+        }
+
+        bool SameWeeds(List<WeedState> other)
+        {
+            if (other.Count != weeds.Count) return false;
+            for (int i = 0; i < weeds.Count; i++)
+            {
+                if (weeds[i].Age != other[i].age || (weeds[i].transform.localPosition - other[i].position).sqrMagnitude > 0.0001f)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // ---- Changes to the bed ----
+
+        public void Plant(PlantSpot spot, CropData crop, float seconds)
+        {
+            spot.Plant(crop, seconds);
+            if (Guest) Shared.SendPlant(System.Array.IndexOf(spots, spot), crop.name);
+        }
+
+        public void Water(PlantSpot spot, float amount)
+        {
+            spot.AddWater(amount);
+            if (Guest) Shared.SendWater(System.Array.IndexOf(spots, spot), amount);
+        }
+
+        public void TakeOff(PlantSpot spot, Pinchable thing)
+        {
+            bool pest = spot.IsPest(thing);
+            spot.TakeOff(thing);
+            if (Guest) Shared.SendTakeOff(System.Array.IndexOf(spots, spot), pest);
+        }
+
+        // The host doing a guest's work.
+        public void PlantFor(int spot, string crop)
+        {
+            if (spot < 0 || spot >= spots.Length || !spots[spot].IsEmpty) return;
+            CropData data = SaveManager.Catalog.Crop(crop);
+            if (data != null) spots[spot].Plant(data, 0.35f);
+        }
+
+        public void WaterFor(int spot, float amount)
+        {
+            if (spot >= 0 && spot < spots.Length) spots[spot].AddWater(amount);
+        }
+
+        public void TakeOffFor(int spot, bool pest)
+        {
+            if (spot >= 0 && spot < spots.Length) spots[spot].TakeOffAny(pest);
+        }
+
+        public void PullFor(Vector3 localPosition)
+        {
+            Weed nearest = null;
+            float best = 0.1f;
+            foreach (var weed in weeds)
+            {
+                float distance = Vector3.Distance(weed.transform.localPosition, localPosition);
+                if (distance < best)
+                {
+                    best = distance;
+                    nearest = weed;
+                }
+            }
+            if (nearest != null) PullOut(nearest);
+        }
+
         void OnEnable() => clock.NewDay += Overnight;
+
         void OnDisable() => clock.NewDay -= Overnight;
 
         void Overnight(int day)
@@ -125,6 +233,7 @@ namespace GrandmasHouse.Garden
 
         public void PullOut(Weed weed)
         {
+            if (Guest) Shared.SendPull(weed.transform.localPosition);
             weeds.Remove(weed);
             Vector3 spot = weedPile.position + new Vector3(Random.Range(-0.08f, 0.08f), 0.01f * pile.Count, Random.Range(-0.08f, 0.08f));
             weed.transform.SetParent(weedPile, worldPositionStays: true);

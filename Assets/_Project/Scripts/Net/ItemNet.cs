@@ -37,7 +37,9 @@ namespace GrandmasHouse.Net
             holder.OnValueChanged += OnHolderChanged;
             if (!IsServer)
             {
+                // Someone else moves it: here it never falls on its own.
                 if (holder.Value != NoOne) pickup.HeldElsewhere();
+                else if (!IsOwner && pickup.InContainer == null) pickup.RestingElsewhere(pickup.CollidersOn);
                 StateRequestRpc();
             }
         }

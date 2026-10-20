@@ -24,6 +24,13 @@ namespace GrandmasHouse.Tests
             gamepad = InputSystem.AddDevice<Gamepad>("Test Gamepad");
             Homestead.UseMemorySaves();
             yield return Homestead.Load();
+            // The first test after a recompile can lose its first key press
+            // while the actions take in the new devices; settle them first.
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F12));
+            yield return null;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            yield return null;
+            yield return null;
         }
 
         [TearDown]
@@ -117,7 +124,12 @@ namespace GrandmasHouse.Tests
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             yield return null;
 
-            Assert.Greater(WalkedForward(player, start, ahead), 0.2f, "W didn't walk the player forward.");
+            var fpc = player.GetComponent<FirstPersonController>();
+            var move = InputSystem.actions.FindAction("Player/Move");
+            Assert.Greater(WalkedForward(player, start, ahead), 0.2f, "W didn't walk the player forward. "
+                + "input " + fpc.InputEnabled + ", enabled " + fpc.enabled + ", body " + player.GetComponent<CharacterController>().enabled
+                + ", lying " + fpc.LyingDown + ", speed x" + fpc.SpeedMultiplier + ", move action " + move.enabled + " map " + move.actionMap.enabled
+                + ", moved " + (player.position - start) + ", time " + Time.time + ", timeScale " + Time.timeScale);
         }
 
         [UnityTest]

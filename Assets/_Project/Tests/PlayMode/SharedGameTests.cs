@@ -138,6 +138,38 @@ namespace GrandmasHouse.Tests
         }
 
         [UnityTest]
+        public IEnumerator AGuestsGardenFollowsTheHostsAndKeepsWhatsTheSame()
+        {
+            var bed = Homestead.Find<GrandmasHouse.Garden.GardenBed>();
+            var spots = new System.Collections.Generic.List<GrandmasHouse.Garden.PlantSpot>(bed.Spots);
+            var crop = SaveManager.Catalog.Crop("Crop_Tomato");
+            Assert.IsNotNull(crop);
+
+            // What the host would send: a tomato in the first spot, half watered.
+            bed.Plant(spots[0], crop, 0f);
+            spots[0].AddWater(0.5f);
+            yield return null;
+            string host = bed.Capture();
+            int hostWeeds = bed.Weeds.Count;
+
+            // The guest's copy differs: nothing planted, a different weed count.
+            bed.Restore("{\"spots\":[],\"weeds\":[]}");
+            spots[0].Restore(new GrandmasHouse.Garden.PlantSpot.State());
+            Assert.IsTrue(spots[0].IsEmpty);
+            bed.ApplyShared(host);
+            Assert.IsFalse(spots[0].IsEmpty, "The host's tomato didn't show up.");
+            Assert.AreEqual(0.5f, spots[0].Water, 0.01f);
+            Assert.AreEqual(hostWeeds, bed.Weeds.Count);
+
+            // Only the water changed: the plant isn't rebuilt.
+            spots[0].AddWater(0.3f);
+            string wetter = bed.Capture();
+            spots[0].AddWater(-0.3f);
+            bed.ApplyShared(wetter);
+            Assert.AreEqual(0.8f, spots[0].Water, 0.01f);
+        }
+
+        [UnityTest]
         public IEnumerator EachPlayerIsSavedByTheirKey()
         {
             var needs = Homestead.Find<PlayerNeeds>();

@@ -9,7 +9,7 @@ namespace GrandmasHouse.Garden
 {
     // The outdoor faucet. Bring the watering can and it's set under the
     // spout, the handle turns, and it fills up.
-    public class WaterSpigot : MonoBehaviour, IInteractable
+    public class WaterSpigot : MonoBehaviour, IInteractable, ISharedUse
     {
         [SerializeField] PlayerSettings playerSettings;
         [SerializeField] GardenSettings settings;

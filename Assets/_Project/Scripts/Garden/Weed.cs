@@ -12,7 +12,7 @@ namespace GrandmasHouse.Garden
     // with empty hands, hold Interact to grab it, then drag the mouse (or
     // the right stick) back toward you: it stretches and stretches, then
     // pops out roots and all. Let go early and it settles back in.
-    public class Weed : MonoBehaviour, IInteractable
+    public class Weed : MonoBehaviour, IInteractable, ISharedUse
     {
         [Tooltip("The leafy part above the soil.")]
         [SerializeField] Transform top;

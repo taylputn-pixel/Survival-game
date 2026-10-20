@@ -11,7 +11,7 @@ namespace GrandmasHouse.Stations
     // hornworms hiding round the back. Point and press to pinch or pick them
     // off, or to pick what's ripe: into a basket you're holding, or into
     // your hands, which steps you back.
-    public class PlantStation : Station
+    public class PlantStation : Station, GrandmasHouse.Interaction.ISharedUse
     {
         [SerializeField] GardenBed bed;
         [Tooltip("How close to a plant's middle you must look to look closer at it, in meters.")]
@@ -143,7 +143,7 @@ namespace GrandmasHouse.Stations
             }
             if (pinchable != null)
             {
-                spot.TakeOff(pinchable);
+                bed.TakeOff(spot, pinchable);
                 return;
             }
             Container basket = Basket(hands);

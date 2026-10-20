@@ -73,6 +73,8 @@ namespace GrandmasHouse.Net
                 Log("fridge open: " + door.IsOpen);
             }
 
+            yield return Garden(me, hands);
+
             var bed = FindAnyObjectByType<Bed>();
             if (bed != null)
             {
@@ -95,6 +97,59 @@ namespace GrandmasHouse.Net
             while (me.Needs.Collapsed && Time.time < waitForHelp) yield return null;
             Log("came round: " + !me.Needs.Collapsed + "; hunger " + me.Needs.State.hunger.ToString("F0"));
             Log("done");
+        }
+
+        // Plant, water and weed a bed, then wait for the host to grow it and
+        // pick what ripens.
+        IEnumerator Garden(PlayerNet me, PlayerHands hands)
+        {
+            var garden = FindAnyObjectByType<Garden.GardenBed>();
+            Garden.SeedPacket packet = null;
+            foreach (var p in FindObjectsByType<Garden.SeedPacket>(FindObjectsSortMode.None))
+            {
+                if (p.HasSeeds && p.Crop.name.Contains("Tomato")) packet = p;
+            }
+            Garden.PlantSpot spot = null;
+            foreach (var s in garden.Spots) if (s.IsEmpty) { spot = s; break; }
+            if (packet == null || spot == null)
+            {
+                Log("garden: nothing to plant");
+                yield break;
+            }
+            int index = System.Array.IndexOf(System.Linq.Enumerable.ToArray(garden.Spots), spot);
+            Stand(me, new Vector3(packet.transform.position.x, 0f, packet.transform.position.z));
+            hands.Handle(packet.GetComponent<Pickup>());
+            yield return new WaitForSeconds(1f);
+            packet.TakeSeed();
+            garden.Plant(spot, packet.Crop, 0.35f);
+            garden.Water(spot, 1f);
+            int weedsBefore = garden.Weeds.Count;
+            if (weedsBefore > 0) garden.PullOut(garden.Weeds[0]);
+            hands.TakeHeld().Drop();
+            Log("garden: planted " + packet.Crop.name + " in spot " + index + ", watered, weeds " + weedsBefore + " -> " + garden.Weeds.Count);
+
+            // The host grows it; pick the first ripe one that shows up.
+            float giveUp = Time.time + 60f;
+            Pickup ripe = null;
+            while (ripe == null && Time.time < giveUp)
+            {
+                foreach (var p in FindObjectsByType<Pickup>(FindObjectsSortMode.None))
+                {
+                    if (p.DisplayName == "Tomato" && Vector3.Distance(p.transform.position, spot.transform.position) < 0.6f && p.CollidersOn)
+                    {
+                        ripe = p;
+                    }
+                }
+                yield return new WaitForSeconds(0.5f);
+            }
+            Log("garden: stage " + spot.Stage + " (host grew it: " + (spot.Stage >= 0) + "), ripe tomato seen: " + (ripe != null));
+            if (ripe != null)
+            {
+                hands.Handle(ripe);
+                yield return new WaitForSeconds(1f);
+                Log("garden: picked a ripe tomato: " + hands.IsHolding(ripe));
+                hands.TakeHeld().Drop();
+            }
         }
 
         // Something to eat lying loose (not on a station or in a basket).
