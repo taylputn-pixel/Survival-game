@@ -106,6 +106,8 @@ GameObject:
   - component: {fileID: 3539542275917530591}
   - component: {fileID: 5023520696590173128}
   - component: {fileID: 1731033781847750173}
+  - component: {fileID: 6616619213116740444}
+  - component: {fileID: 450486791291521542}
   m_Layer: 0
   m_Name: Tomato
   m_TagString: Untagged
@@ -285,6 +287,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Stations.Quarterable
   fleshMaterial: {fileID: 2100000, guid: 3c7bd32fe50be3149986c95ac3164442, type: 2}
+--- !u!114 &6616619213116740444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4159793868779256115}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 009f92494eb6b624589837a276b783e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Food.Perishable
+  shelfLifeDays: 6
+  darken: 1
+  checkSeconds: 1
+--- !u!114 &450486791291521542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4159793868779256115}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21669a4355a39744e8115bd2c34a9261, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Food.FreshFood
+  nutrition: 10
 --- !u!1 &5310577734255922944
 GameObject:
   m_ObjectHideFlags: 0

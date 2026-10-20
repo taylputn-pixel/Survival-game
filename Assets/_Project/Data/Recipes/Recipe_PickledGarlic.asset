@@ -15,6 +15,7 @@ MonoBehaviour:
   displayName: Pickled Garlic
   fill: 1
   label: {fileID: 2100000, guid: cec5c8624231f9a41be25bfdf96d8605, type: 2}
+  nutrition: 15
   needs: []
   mostly: 
   mostlyShare: 0.75

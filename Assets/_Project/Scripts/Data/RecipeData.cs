@@ -17,6 +17,10 @@ namespace GrandmasHouse.Data
         [Tooltip("The label put on a sealed jar of this.")]
         public Material label;
 
+        [Header("Eating")]
+        [Tooltip("Hunger a full pint fills, out of 100. A day's eating is about 100.")]
+        [Range(0f, 100f)] public float nutrition = 25f;
+
         [Header("What makes it this")]
         [Tooltip("Kinds that must be in it (Dill, Onion, Jalapeño); missing one, it's something plainer. A kind is the first word of a piece's name.")]
         public string[] needs = new string[0];

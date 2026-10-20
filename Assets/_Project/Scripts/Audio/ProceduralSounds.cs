@@ -31,7 +31,9 @@ namespace GrandmasHouse.Audio
                 case SoundId.Paper: return Filtered(id, 0.35f, 0.6f, t => Envelope(t, 0.02f, 0.35f) * Jitter(t, 120f) * 0.45f);
                 case SoundId.RadioStatic: return Filtered(id, 0.35f, 0.8f, t => Envelope(t, 0.02f, 0.35f) * (0.6 + 0.4 * Math.Sin(2 * Math.PI * 23 * t)) * 0.5f);
                 case SoundId.MenuClick: return Clip(id, 0.04f, t => Math.Sin(2 * Math.PI * 1800 * t) * Decay(t, 140f) * 0.35f);
-                case SoundId.Pour: return Filtered(id, 2f, 0.45f, t => 0.35f + 0.08f * Math.Sin(2 * Math.PI * 3 * t), loop: true);
+                case SoundId.Eat: return Filtered(id, 0.5f, 0.4f, t => Pulses(t, 3, 0.16f, 0.07f) * Jitter(t, 70f) * 0.7f);
+                case SoundId.StomachGrowl: return Clip(id, 1.1f, Growl);
+                case SoundId.Pour:return Filtered(id, 2f, 0.45f, t => 0.35f + 0.08f * Math.Sin(2 * Math.PI * 3 * t), loop: true);
                 case SoundId.Boil: return BubblesLoop(id, 3f, 14f);
                 case SoundId.Simmer: return BubblesLoop(id, 3f, 5f);
                 default: return Clip(id, 0.05f, t => 0f);
@@ -58,6 +60,14 @@ namespace GrandmasHouse.Audio
             double bend = 1.0 - 0.06 * Math.Min(t / 0.05, 1.0);
             double ring = Math.Sin(2 * Math.PI * 2350 * bend * t) * 0.6 + Math.Sin(2 * Math.PI * 3720 * bend * t) * 0.25;
             return ring * Decay(t, 9) * Math.Min(t / 0.002, 1.0) * 0.5;
+        }
+
+        // A low, wobbling gurgle that rises and falls.
+        static double Growl(double t)
+        {
+            double pitch = 70 + 25 * Math.Sin(2 * Math.PI * 1.3 * t) + 10 * Math.Sin(2 * Math.PI * 7 * t);
+            double body = Math.Sin(2 * Math.PI * pitch * t) + 0.4 * Math.Sin(4 * Math.PI * pitch * t);
+            return body * Envelope(t, 0.25, 1.1) * (0.7 + 0.3 * Jitter(t, 30)) * 0.45;
         }
 
         static double Chop(double t)

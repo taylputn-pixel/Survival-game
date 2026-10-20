@@ -15,6 +15,7 @@ MonoBehaviour:
   displayName: Dill Pickle Chips
   fill: 0
   label: {fileID: 2100000, guid: 6f707c382f6b06c4d8b640717e65cf19, type: 2}
+  nutrition: 25
   needs:
   - Dill
   mostly: Cucumber

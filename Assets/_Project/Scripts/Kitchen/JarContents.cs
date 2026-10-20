@@ -435,6 +435,11 @@ namespace GrandmasHouse.Kitchen
             lid.localPosition = lidSeat;
             lid.localScale = lidSize;
             label.SetActive(false);
+            // Washed out, it's fresh to fill again.
+            if (TryGetComponent(out Food.Perishable perishable))
+            {
+                perishable.Refresh();
+            }
         }
 
         // A jar has no spout to stream from; it just empties. A lid pops off

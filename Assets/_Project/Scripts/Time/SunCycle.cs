@@ -37,9 +37,20 @@ namespace GrandmasHouse.DayCycle
         void LateUpdate()
         {
             var settings = clock.Settings;
-            float progress = clock.IsNight ? 1f : clock.DaylightProgress;
-            // 0 before twilight, rising smoothly to 1 at nightfall.
-            float night = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(settings.twilightStart, 1f, progress));
+            float progress;
+            float night;
+            if (clock.Hour < settings.dawnHour)
+            {
+                // After midnight: night, lifting over the hour before dawn.
+                progress = 0f;
+                night = Mathf.SmoothStep(1f, 0f, Mathf.InverseLerp(settings.dawnHour - 1f, settings.dawnHour, clock.Hour));
+            }
+            else
+            {
+                progress = clock.IsNight ? 1f : clock.DaylightProgress;
+                // 0 before twilight, rising smoothly to 1 at nightfall.
+                night = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(settings.twilightStart, 1f, progress));
+            }
 
             // Rises just above the horizon at dawn, sets at dusk, and keeps sinking
             // through twilight so the afterglow on the horizon fades out too.

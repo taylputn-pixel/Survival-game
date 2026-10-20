@@ -7,8 +7,9 @@ namespace GrandmasHouse.DayCycle
 {
     public enum PartOfDay { Morning, Afternoon, Evening, Night }
 
-    // Keeps the time of day. It runs slowly from dawn to nightfall, then
-    // stops and waits for you to go to bed. There are no deadlines.
+    // Keeps the time of day. It runs slowly from dawn to nightfall; then,
+    // depending on the mode, it either stops and waits for you to go to bed,
+    // or keeps running through the night into a new day at midnight.
     public class DayClock : MonoBehaviour, ISaveable
     {
         [SerializeField] TimeSettings settings;
@@ -19,9 +20,15 @@ namespace GrandmasHouse.DayCycle
         // Set by a station while you're working at it.
         public bool PausedForWork { get; set; }
 
+        // Set by the bed while you sleep: in-game hours per real second.
+        public float FastForward { get; set; }
+
         public float Hour { get; private set; }
         public int Day { get; private set; } = 1;
-        public bool IsNight => Hour >= settings.nightfallHour;
+        // Hours since the game began, for things that age (hunger, food).
+        public float TotalHours => (Day - 1) * 24f + Hour;
+        public ModeProfile Mode => mode;
+        public bool IsNight => Hour >= settings.nightfallHour || (!mode.clockStopsAtNight && Hour < settings.dawnHour);
         // 0 at dawn, 1 at nightfall.
         public float DaylightProgress => Mathf.InverseLerp(settings.dawnHour, settings.nightfallHour, Hour);
         public TimeSettings Settings => settings;
@@ -38,14 +45,38 @@ namespace GrandmasHouse.DayCycle
 
         void Update()
         {
-            if (IsNight || (PausedForWork && mode.pauseClockAtStations))
+            if (FastForward > 0f)
+            {
+                Advance(FastForward * Time.deltaTime);
+                return;
+            }
+            if (PausedForWork && mode.pauseClockAtStations)
             {
                 return;
             }
+            if (mode.clockStopsAtNight)
+            {
+                if (!IsNight)
+                {
+                    Hour = Mathf.Min(Hour + HoursPerSecond * Time.deltaTime, settings.nightfallHour);
+                }
+                return;
+            }
+            Advance(HoursPerSecond * Time.deltaTime);
+        }
 
-            float daylightHours = settings.nightfallHour - settings.dawnHour;
-            float hoursPerSecond = daylightHours / (settings.realMinutesPerDay * 60f);
-            Hour = Mathf.Min(Hour + hoursPerSecond * settings.testSpeedMultiplier * Time.deltaTime, settings.nightfallHour);
+        float HoursPerSecond => (settings.nightfallHour - settings.dawnHour) / (settings.realMinutesPerDay * 60f) * settings.testSpeedMultiplier;
+
+        // Moves time on, into the next day (or several) past midnight.
+        public void Advance(float hours)
+        {
+            Hour += hours;
+            while (Hour >= 24f)
+            {
+                Hour -= 24f;
+                Day++;
+                NewDay?.Invoke(Day);
+            }
         }
 
         [Serializable]

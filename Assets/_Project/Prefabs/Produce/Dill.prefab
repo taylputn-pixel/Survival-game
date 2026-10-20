@@ -283,6 +283,8 @@ GameObject:
   - component: {fileID: 2515077346309309894}
   - component: {fileID: 4686656390913155349}
   - component: {fileID: 3946676156625124332}
+  - component: {fileID: 2892731485546412422}
+  - component: {fileID: 4573069875456174903}
   m_Layer: 9
   m_Name: Dill
   m_TagString: Untagged
@@ -400,6 +402,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Saving.SavedItem
   key: Dill
+--- !u!114 &2892731485546412422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1023861984879337987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 009f92494eb6b624589837a276b783e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Food.Perishable
+  shelfLifeDays: 3
+  darken: 1
+  checkSeconds: 1
+--- !u!114 &4573069875456174903
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1023861984879337987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21669a4355a39744e8115bd2c34a9261, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Food.FreshFood
+  nutrition: 1
 --- !u!1 &1437974844563766279
 GameObject:
   m_ObjectHideFlags: 0

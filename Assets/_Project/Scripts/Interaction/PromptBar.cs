@@ -1,4 +1,5 @@
 using GrandmasHouse.Carrying;
+using GrandmasHouse.Player;
 using GrandmasHouse.Stations;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -34,10 +35,12 @@ namespace GrandmasHouse.Interaction
         // Copies of the use prompt, sitting before it in the row.
         PromptView previousPrompt;
         PromptView nextPrompt;
+        PlayerNeeds needs;
 
         void Awake()
         {
             interactAction = InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
+            needs = hands.GetComponent<PlayerNeeds>();
             pickUpAction = InputSystem.actions.FindAction("Player/PickUp", throwIfNotFound: true);
             backAction = InputSystem.actions.FindAction("Player/Back", throwIfNotFound: true);
             previousAction = InputSystem.actions.FindAction("Player/Previous", throwIfNotFound: true);
@@ -74,7 +77,22 @@ namespace GrandmasHouse.Interaction
                 altPrompt.Hide();
             }
 
-            if (reader.IsOpen)
+            if (needs != null && needs.Asleep)
+            {
+                lookPrompt.Hide();
+                previousPrompt.Hide();
+                nextPrompt.Hide();
+                backPrompt.Hide();
+                if (needs.CanGetUp)
+                {
+                    usePrompt.Show(interactAction, "Get up");
+                }
+                else
+                {
+                    usePrompt.Hide();
+                }
+            }
+            else if (reader.IsOpen)
             {
                 lookPrompt.Hide();
                 if (reader.HasPreviousPage)

@@ -17,6 +17,11 @@ namespace GrandmasHouse.Player
 
         // Stations turn this off while the camera is in a working view.
         public bool InputEnabled { get; set; } = true;
+        // Set by the body's needs: tired, starving or sick, you walk slower,
+        // and exhausted you can't hurry.
+        public float SpeedMultiplier { get; set; } = 1f;
+        public bool BriskAllowed { get; set; } = true;
+        public bool IsMoving => horizontalVelocity.sqrMagnitude > 0.01f;
 
         CharacterController body;
         InputAction moveAction;
@@ -84,7 +89,7 @@ namespace GrandmasHouse.Player
 
         void Move(Vector2 input)
         {
-            float speed = briskAction.IsPressed() ? settings.briskSpeed : settings.walkSpeed;
+            float speed = (BriskAllowed && briskAction.IsPressed() ? settings.briskSpeed : settings.walkSpeed) * SpeedMultiplier;
             Vector3 target = (transform.right * input.x + transform.forward * input.y) * speed;
             horizontalVelocity = Vector3.MoveTowards(horizontalVelocity, target, settings.acceleration * Time.deltaTime);
 

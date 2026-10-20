@@ -13,19 +13,21 @@ namespace GrandmasHouse.Data
         [Header("Time")]
         [Tooltip("The clock stops while you work at a station, so tasks never cost daylight.")]
         public bool pauseClockAtStations = true;
+        [Tooltip("The clock stops at nightfall and the next day starts when you sleep. Off: it runs all night and a new day starts at midnight.")]
+        public bool clockStopsAtNight = true;
 
         [Header("Hardship (Cozy keeps all of these off)")]
-        [Tooltip("Not used yet. Going hungry makes you slower instead of just missing a bonus.")]
+        [Tooltip("You get hungry and tired, and it slows you down.")]
         public bool hungerHasPenalties;
         [Tooltip("Not used yet. A cold house in winter has downsides.")]
         public bool coldHasPenalties;
-        [Tooltip("Not used yet. Fresh food spoils over time.")]
+        [Tooltip("Fresh food and open jars spoil over time.")]
         public bool foodSpoils;
         [Tooltip("Not used yet. Neglected crops can die.")]
         public bool cropsCanDie;
         [Tooltip("Not used yet. Sloppy jars can fail to seal and spoil later.")]
         public bool jarsCanFailToSeal;
-        [Tooltip("Not used yet. Running out of food and heat can end the game.")]
+        [Tooltip("Starving for too long ends the game.")]
         public bool gameOver;
     }
 }

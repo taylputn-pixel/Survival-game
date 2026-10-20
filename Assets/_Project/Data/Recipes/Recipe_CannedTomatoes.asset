@@ -15,6 +15,7 @@ MonoBehaviour:
   displayName: Canned Tomatoes
   fill: 2
   label: {fileID: 2100000, guid: 448d801ac0690b849b1a04a945bb9e4b, type: 2}
+  nutrition: 30
   needs:
   - Lemon
   mostly: 

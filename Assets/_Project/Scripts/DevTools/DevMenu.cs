@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
+using GrandmasHouse.DayCycle;
 using GrandmasHouse.Interaction;
 using GrandmasHouse.Player;
 using GrandmasHouse.Saving;
@@ -103,6 +104,7 @@ namespace GrandmasHouse.DevTools
                 Button button = UIKit.Button(grid, CategoryName(kind), () => OpenCategory(kind), 52f);
                 if (first == null) first = button;
             }
+            UIKit.Button(panel, "Hunger, rest and time", OpenSurvival);
             Button close = UIKit.Button(panel, "Close", menus.Pop);
             menus.Push(panel.gameObject, first != null ? first : close);
         }
@@ -130,6 +132,39 @@ namespace GrandmasHouse.DevTools
             status = UIKit.Label(panel, " ", 22, FontStyle.Italic, TextAnchor.MiddleCenter);
             UIKit.Button(panel, "Back", menus.Pop);
             menus.Push(panel.gameObject, first);
+        }
+
+        // Set hunger and rest, or hurry the clock on (food ages with it).
+        void OpenSurvival()
+        {
+            var needs = hands.GetComponent<PlayerNeeds>();
+            var clock = FindAnyObjectByType<DayClock>();
+            RectTransform panel = UIKit.Panel("Survival", transform, 820f);
+            UIKit.Label(panel, "Hunger, rest and time", 40, FontStyle.Bold, TextAnchor.MiddleCenter);
+            RectTransform grid = Grid(panel, 8);
+            Button first = UIKit.Button(grid, "Full and rested", () => Say(needs, n => n.Set(100f, 100f)), 52f);
+            UIKit.Button(grid, "Hungry", () => Say(needs, n => n.Set(15f, n.State.rest)), 52f);
+            UIKit.Button(grid, "Starving 2 days", () => Say(needs, n => n.Set(0f, n.State.rest, 48f)), 52f);
+            UIKit.Button(grid, "Tired", () => Say(needs, n => n.Set(n.State.hunger, 25f)), 52f);
+            UIKit.Button(grid, "Exhausted", () => Say(needs, n => n.Set(n.State.hunger, 3f)), 52f);
+            UIKit.Button(grid, "Skip 6 hours", () => { clock.Advance(6f); Say(needs, null); }, 52f);
+            UIKit.Button(grid, "Skip a day", () => { clock.Advance(24f); Say(needs, null); }, 52f);
+            UIKit.Button(grid, "Skip a week", () => { clock.Advance(24f * 7f); Say(needs, null); }, 52f);
+            status = UIKit.Label(panel, " ", 22, FontStyle.Italic, TextAnchor.MiddleCenter);
+            UIKit.Button(panel, "Back", menus.Pop);
+            menus.Push(panel.gameObject, first);
+            Say(needs, null);
+
+            void Say(PlayerNeeds n, System.Action<PlayerNeeds> change)
+            {
+                if (n == null)
+                {
+                    status.text = "No PlayerNeeds on the player.";
+                    return;
+                }
+                change?.Invoke(n);
+                status.text = $"Day {clock.Day}, {Mathf.FloorToInt(clock.Hour):00}:{Mathf.FloorToInt(clock.Hour % 1f * 60f):00}  ·  hunger {n.State.hunger:0}  ·  rest {n.State.rest:0}  ·  starving {n.State.starvingHours:0} h";
+            }
         }
 
         void Close()

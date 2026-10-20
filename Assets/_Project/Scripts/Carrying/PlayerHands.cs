@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GrandmasHouse.Data;
+using GrandmasHouse.Food;
 using GrandmasHouse.Interaction;
 using GrandmasHouse.Player;
 using UnityEngine;
@@ -25,6 +26,8 @@ namespace GrandmasHouse.Carrying
         [SerializeField] PlayerSettings settings;
         [SerializeField] Transform viewPoint;
         [SerializeField] FirstPersonController controller;
+        [Tooltip("Hunger and rest. Without it, nothing can be eaten.")]
+        [SerializeField] PlayerNeeds needs;
 
         // The thing you'd use next: the last one picked up.
         public Pickup Held => carried.Count > 0 ? carried[carried.Count - 1] : null;
@@ -144,9 +147,16 @@ namespace GrandmasHouse.Carrying
             {
                 UseHands();
             }
-            else if (pickUpAction.WasPressedThisFrame() && altTarget != null)
+            else if (pickUpAction.WasPressedThisFrame())
             {
-                altTarget.AltInteract(this);
+                if (altTarget != null)
+                {
+                    altTarget.AltInteract(this);
+                }
+                else if (HeldFood != null)
+                {
+                    needs.Eat(HeldFood);
+                }
             }
         }
 
@@ -279,7 +289,7 @@ namespace GrandmasHouse.Carrying
                 hasSurface = hit.normal.y >= settings.minSurfaceUpness && IsFreeSurface(hit.collider);
             }
 
-            AltVerb = altTarget?.AltVerb(this);
+            AltVerb = altTarget != null ? altTarget.AltVerb(this) : HeldFood != null ? "Eat" : null;
             if (lookTarget != null)
             {
                 CurrentFocus = Focus.CanInteract;
@@ -294,6 +304,19 @@ namespace GrandmasHouse.Carrying
             {
                 CurrentFocus = Focus.Nothing;
                 Verb = Held != null && Held.OwnContainer == null && Held.CanSetDown ? "Drop" : null;
+            }
+        }
+
+        // What you hold, if it can be eaten right now.
+        IEdible HeldFood
+        {
+            get
+            {
+                if (Held == null || needs == null || !Held.TryGetComponent(out IEdible food))
+                {
+                    return null;
+                }
+                return needs.CanEat(food) ? food : null;
             }
         }
 

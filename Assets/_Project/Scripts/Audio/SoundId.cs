@@ -27,5 +27,9 @@ namespace GrandmasHouse.Audio
         Pour,
         Boil,
         Simmer,
+
+        // One-shots added for survival, kept last so saved numbers don't shift.
+        Eat,
+        StomachGrowl,
     }
 }

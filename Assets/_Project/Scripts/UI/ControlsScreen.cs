@@ -14,9 +14,10 @@ namespace GrandmasHouse.UI
         static readonly (string action, string label)[] Rebindable =
         {
             ("Player/Interact", "Use / pick up"),
-            ("Player/PickUp", "Second action (pour out at the sink)"),
+            ("Player/PickUp", "Second action (eat, pour out at the sink)"),
             ("Player/Back", "Step back"),
             ("Player/Sprint", "Walk briskly"),
+            ("Player/Status", "Check yourself (hold)"),
             ("Player/Pause", "Pause"),
         };
 

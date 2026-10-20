@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9b967c9e20b60e4ca713f1d59e831c6, type: 3}
+  m_Name: SurvivalSettings
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.SurvivalSettings
+  startHunger: 80
+  startRest: 90
+  hungerPerHour: 4.1666665
+  hungerAsleep: 0.5
+  hungryBelow: 25
+  restPerHour: 5.5555553
+  restAsleepPerHour: 12.5
+  tiredBelow: 30
+  exhaustedBelow: 10
+  exhaustedSpeed: 0.7
+  clumsyBelow: 20
+  dropChancePerSecond: 0.033333335
+  malnourishedAfterHours: 24
+  deathAfterHours: 72
+  starvingRecoveryPerHour: 0.5
+  malnourishedSpeed: 0.75
+  spoiledSickHours: 12
+  unsafeJarSickHours: 24
+  sickHungerLoss: 15
+  sickHungerMultiplier: 1.5
+  sickSpeed: 0.85
+  sleepHoursPerSecond: 1.5
