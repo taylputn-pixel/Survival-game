@@ -42,6 +42,7 @@ namespace GrandmasHouse.Food
         {
             clock = FindAnyObjectByType<DayClock>();
             lastHours = clock != null ? clock.TotalHours : 0f;
+            if (clock != null) clock.Jumped += AfterLoad;
             if (darken)
             {
                 renderers = GetComponentsInChildren<Renderer>();
@@ -72,6 +73,11 @@ namespace GrandmasHouse.Food
             }
             Freshness = Spoil(Freshness, hours, shelfLifeDays, ColdStorage.RateAt(transform.position));
             Show();
+        }
+
+        void OnDestroy()
+        {
+            if (clock != null) clock.Jumped -= AfterLoad;
         }
 
         // As good as new (a jar that's been emptied and washed).

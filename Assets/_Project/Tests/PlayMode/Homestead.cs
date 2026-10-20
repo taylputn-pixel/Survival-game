@@ -31,6 +31,8 @@ namespace GrandmasHouse.Tests
             SaveSlot.LoadOnStart = false;
             // Play mode stalls when the editor isn't focused.
             Application.runInBackground = true;
+            // Host without Steam, so tests never open a Steam lobby.
+            GrandmasHouse.Net.NetSession.Direct = true;
             return store;
         }
 
@@ -48,7 +50,9 @@ namespace GrandmasHouse.Tests
             yield return null;
             yield return null;
             float giveUp = Time.realtimeSinceStartup + 10f;
-            while (SaveManager.Instance == null || SaveManager.Instance.IsLoading || SaveSlot.LoadOnStart)
+            // Ready once the game is hosted and this computer's player has arrived.
+            while (SaveManager.Instance == null || SaveManager.Instance.IsLoading || SaveSlot.LoadOnStart
+                || Object.FindAnyObjectByType<GrandmasHouse.Carrying.PlayerHands>() == null)
             {
                 Assert.Less(Time.realtimeSinceStartup, giveUp, "The Homestead never finished loading.");
                 yield return null;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using GrandmasHouse.Data;
 using GrandmasHouse.Food;
 using GrandmasHouse.Interaction;
+using GrandmasHouse.Net;
 using GrandmasHouse.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -63,8 +64,19 @@ namespace GrandmasHouse.Carrying
                 return null;
             }
             handOf.Remove(item);
+            if (Shared(item, out ItemNet net))
+            {
+                net.Released();
+            }
             return item;
         }
+
+        // In a shared game, items go through the host so two players never
+        // hold the same thing.
+        static bool Shared(Pickup item, out ItemNet net) => item.TryGetComponent(out net) && net.Live;
+
+        // Joined someone else's game (not hosting it).
+        static bool IsGuest => NetSession.Instance != null && NetSession.Instance.IsGuest;
 
         // Room in your hands for this as well as what you already carry.
         public bool CanCarryMore(Pickup target) => !IsEmpty && !carried.Contains(target) && HandFor(target) != NoRoom;
@@ -217,7 +229,7 @@ namespace GrandmasHouse.Carrying
             else if (Held.OwnContainer != null && Held.OwnContainer.Accepts(target))
             {
                 // Carrying a basket: gather what you look at straight into it.
-                Held.OwnContainer.Add(target, settings.placeGlideSeconds);
+                PutInto(Held.OwnContainer, target);
             }
             else if (target.OwnContainer != null && target.OwnContainer.Accepts(Held))
             {
@@ -226,7 +238,7 @@ namespace GrandmasHouse.Carrying
                 {
                     if (target.OwnContainer.Accepts(item))
                     {
-                        target.OwnContainer.Add(Take(item), settings.placeGlideSeconds);
+                        PutInto(target.OwnContainer, item);
                     }
                 }
             }
@@ -236,9 +248,42 @@ namespace GrandmasHouse.Carrying
             }
         }
 
+        void PutInto(Container container, Pickup item)
+        {
+            if (Shared(item, out ItemNet net) && container.TryGetComponent(out ItemNet _))
+            {
+                net.RequestInto(container);
+                return;
+            }
+            container.Add(IsHolding(item) ? Take(item) : item, settings.placeGlideSeconds);
+        }
+
         void Hold(Pickup item)
         {
+            if (Shared(item, out ItemNet net))
+            {
+                // The host answers with AcceptHold, or not at all if someone beat us to it.
+                net.RequestHold();
+                return;
+            }
+            AcceptHold(item);
+        }
+
+        // Takes something into your hands, once it's yours to take.
+        public void AcceptHold(Pickup item)
+        {
+            if (carried.Contains(item))
+            {
+                return;
+            }
             int hand = HandFor(item);
+            if (hand == NoRoom)
+            {
+                // Hands filled up while the host was answering: let it fall.
+                if (Shared(item, out ItemNet net)) net.Released();
+                item.Drop();
+                return;
+            }
             Lift(item);
             carried.Add(item);
             handOf[item] = hand;
@@ -270,8 +315,13 @@ namespace GrandmasHouse.Carrying
                 HasLookPoint = true;
                 // The nearest thing up the hierarchy that can be used right now:
                 // a jar on a shelf, or the shelf itself if you're holding a jar.
+                bool guest = IsGuest;
                 foreach (var interactable in hit.collider.GetComponentsInParent<IInteractable>())
                 {
+                    if (guest && !UsableByGuest(interactable))
+                    {
+                        continue;
+                    }
                     if (interactable.CanInteract(this))
                     {
                         lookTarget = interactable;
@@ -280,6 +330,10 @@ namespace GrandmasHouse.Carrying
                 }
                 foreach (var alt in hit.collider.GetComponentsInParent<IAltInteractable>())
                 {
+                    if (guest && !(alt is ISharedUse))
+                    {
+                        continue;
+                    }
                     if (alt.CanAltInteract(this))
                     {
                         altTarget = alt;
@@ -318,6 +372,23 @@ namespace GrandmasHouse.Carrying
                 }
                 return needs.CanEat(food) ? food : null;
             }
+        }
+
+        // A guest can use what's shared, and pick up things lying loose or in
+        // a basket, but not what a station is holding (a jar on the packing
+        // towel, slices on the board) until stations are shared too.
+        static bool UsableByGuest(IInteractable interactable)
+        {
+            if (!(interactable is ISharedUse))
+            {
+                return false;
+            }
+            if (interactable is Pickup item)
+            {
+                Transform parent = item.transform.parent;
+                return parent == null || parent.parent == null || item.InContainer != null;
+            }
+            return true;
         }
 
         // Things can't be stacked on top of a basket or on what's inside one.

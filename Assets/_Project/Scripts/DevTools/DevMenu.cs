@@ -18,7 +18,7 @@ namespace GrandmasHouse.DevTools
     // see its items, pick how many and click one to drop them in front of you. New items show up here as
     // soon as they're added to the catalog.
     [RequireComponent(typeof(MenuStack))]
-    public class DevMenu : MonoBehaviour
+    public class DevMenu : MonoBehaviour, GrandmasHouse.Net.IPlayerBound
     {
         [SerializeField] PlayerHands hands;
         [SerializeField] NoteReader reader;
@@ -53,11 +53,21 @@ namespace GrandmasHouse.DevTools
             menus = GetComponent<MenuStack>();
             menus.DimBehind = true;
             menus.Emptied += Close;
+            if (hands != null) Bind(hands);
+        }
+
+        public void Bind(PlayerHands player)
+        {
+            hands = player;
             cursorLock = hands.GetComponent<CursorLock>();
         }
 
         void Update()
         {
+            if (hands == null)
+            {
+                return;
+            }
             // Walking comes back a frame after closing, so the Esc that closed
             // this doesn't also open the pause menu.
             if (closedFrame >= 0 && Time.frameCount > closedFrame)
@@ -245,6 +255,11 @@ namespace GrandmasHouse.DevTools
                 Vector3 at = eye.position + ahead * (distance + along) + side * across + Vector3.down * 0.3f;
                 SavedItem made = Instantiate(prefab, at, facing * prefab.transform.rotation);
                 made.name = prefab.name;
+                if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsServer
+                    && made.TryGetComponent(out Unity.Netcode.NetworkObject shared))
+                {
+                    shared.Spawn();
+                }
                 var pickup = made.GetComponent<Pickup>();
                 if (pickup != null)
                 {

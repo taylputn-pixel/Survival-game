@@ -1,4 +1,5 @@
 using GrandmasHouse.Carrying;
+using GrandmasHouse.Net;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,7 +8,7 @@ namespace GrandmasHouse.Interaction
     // A small dot in the middle of the screen. It grows and brightens when
     // you can pick something up or set something down, and fades otherwise.
     // Stations can move it around as their cursor, hide it, or highlight it.
-    public class Reticle : MonoBehaviour
+    public class Reticle : MonoBehaviour, IPlayerBound
     {
         [SerializeField] PlayerHands hands;
         [SerializeField] Image dot;
@@ -26,9 +27,11 @@ namespace GrandmasHouse.Interaction
 
         void Awake() => canvasRect = (RectTransform)transform;
 
+        public void Bind(PlayerHands player) => hands = player;
+
         void Update()
         {
-            bool active = Highlight ?? hands.CurrentFocus != PlayerHands.Focus.Nothing;
+            bool active = Highlight ?? (hands != null && hands.CurrentFocus != PlayerHands.Focus.Nothing);
             float size = active ? activeSize : idleSize;
             float alpha = Hidden ? 0f : active ? activeAlpha : idleAlpha;
             float t = 1f - Mathf.Exp(-14f * Time.deltaTime);

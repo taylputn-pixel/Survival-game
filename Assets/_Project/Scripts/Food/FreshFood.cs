@@ -1,5 +1,6 @@
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
+using GrandmasHouse.Net;
 using UnityEngine;
 
 namespace GrandmasHouse.Food
@@ -27,6 +28,11 @@ namespace GrandmasHouse.Food
             if (pickup != null)
             {
                 hands.Take(pickup);
+            }
+            if (TryGetComponent(out ItemNet net) && net.Live)
+            {
+                net.Consume();
+                return;
             }
             Destroy(gameObject);
         }

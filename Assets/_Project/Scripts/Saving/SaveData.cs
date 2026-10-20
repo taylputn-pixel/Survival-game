@@ -11,6 +11,19 @@ namespace GrandmasHouse.Saving
         public int version = 1;
         public List<SystemEntry> systems = new List<SystemEntry>();
         public List<ItemRecord> items = new List<ItemRecord>();
+        public List<PlayerRecord> players = new List<PlayerRecord>();
+    }
+
+    // One player: where they stood and how they were doing. Kept by the
+    // player's key (their Steam ID, or "host"), so friends pick up where
+    // they left off when they join again.
+    [Serializable]
+    public class PlayerRecord
+    {
+        public string key;
+        public Vector3 position;
+        public float yaw;
+        public string needs;
     }
 
     // The saved state of one system (the clock, a garden bed, a station).

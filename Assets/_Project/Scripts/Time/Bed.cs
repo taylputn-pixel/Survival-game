@@ -1,54 +1,124 @@
 using System.Collections;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Interaction;
+using GrandmasHouse.Net;
 using GrandmasHouse.Player;
-using GrandmasHouse.Saving;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace GrandmasHouse.DayCycle
 {
-    // Grandma's bed. Lie down any time you like and the screen fades out.
-    // When the clock stops at night, you wake the next morning. When it runs
-    // all night, time hurries by while you sleep until you're rested, and
-    // you go on getting hungry. Once the sun is up you can press Interact
-    // to get up early.
-    // The game is saved as you wake.
-    public class Bed : MonoBehaviour, IInteractable
+    // A bed. Lie down any time and the screen fades out. One sleeper per bed.
+    // The night only passes once everyone in the game is in bed: when the
+    // clock stops at night, morning comes; when it runs all night, time
+    // hurries until you're rested, and you go on getting hungry. Once the
+    // sun is up, or while others are still awake, you can get up early.
+    // The host saves the game when the night ends (see ClockNet).
+    public class Bed : NetworkBehaviour, IInteractable, ISharedUse
     {
+        const ulong NoOne = ulong.MaxValue;
+
         [SerializeField] DayClock clock;
         [SerializeField] ScreenFade fade;
         [SerializeField] float fadeSeconds = 1.2f;
+        [Tooltip("Real seconds of dark before you can get up again.")]
         [SerializeField] float sleepSeconds = 1.5f;
 
+        readonly NetworkVariable<ulong> sleeper = new NetworkVariable<ulong>(NoOne);
         bool sleeping;
 
-        public bool CanInteract(PlayerHands hands) => hands.IsEmpty && !sleeping;
+        bool Taken => IsSpawned && sleeper.Value != NoOne;
 
-        public void Interact(PlayerHands hands) => StartCoroutine(Sleep(hands));
+        public bool CanInteract(PlayerHands hands) => hands.IsEmpty && !sleeping && !Taken;
 
         public string PromptVerb(PlayerHands hands) => "Sleep";
+
+        public void Interact(PlayerHands hands)
+        {
+            if (IsSpawned)
+            {
+                ClaimRpc();
+            }
+            else
+            {
+                StartCoroutine(Sleep(hands));
+            }
+        }
+
+        [Rpc(SendTo.Server)]
+        void ClaimRpc(RpcParams rpc = default)
+        {
+            ulong who = rpc.Receive.SenderClientId;
+            if (sleeper.Value != NoOne)
+            {
+                return;
+            }
+            sleeper.Value = who;
+            GrantRpc(RpcTarget.Single(who, RpcTargetUse.Temp));
+        }
+
+        [Rpc(SendTo.SpecifiedInParams)]
+        void GrantRpc(RpcParams rpc = default)
+        {
+            PlayerNet me = PlayerNet.Owning(NetworkManager.LocalClientId);
+            if (me != null)
+            {
+                StartCoroutine(Sleep(me.Hands));
+            }
+        }
+
+        [Rpc(SendTo.Server)]
+        void LeaveRpc(RpcParams rpc = default)
+        {
+            if (sleeper.Value == rpc.Receive.SenderClientId)
+            {
+                sleeper.Value = NoOne;
+            }
+        }
 
         IEnumerator Sleep(PlayerHands hands)
         {
             sleeping = true;
             hands.Controller.InputEnabled = false;
+            var needs = hands.GetComponent<PlayerNeeds>();
+            var interact = InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
 
             yield return fade.FadeTo(1f, fadeSeconds);
-            var needs = hands.GetComponent<PlayerNeeds>();
-            if (clock.Mode.clockStopsAtNight || needs == null || !clock.Mode.hungerHasPenalties)
+            if (needs != null)
             {
-                clock.SleepUntilMorning();
-                yield return new WaitForSeconds(sleepSeconds);
+                needs.Asleep = true;
             }
-            else
+            float earliestWake = Time.time + sleepSeconds;
+            bool restUntilRested = needs != null && clock.Mode.hungerHasPenalties && !clock.Mode.clockStopsAtNight;
+            int startDay = clock.Day;
+
+            while (needs == null || !needs.IsDead)
             {
-                yield return SleepUntilRested(needs);
+                bool morning = clock.Day != startDay;
+                if (restUntilRested ? needs.State.rest >= 100f : morning)
+                {
+                    break;
+                }
+                // Up once the sun's up, or whenever someone else is still
+                // awake (the night isn't hurrying by for you alone).
+                bool canGetUp = Time.time >= earliestWake && (!clock.IsNight || clock.FastForward <= 0f);
+                if (needs != null) needs.CanGetUp = canGetUp;
+                if (canGetUp && interact.WasPressedThisFrame())
+                {
+                    break;
+                }
+                yield return null;
             }
-            // Saved while the screen is dark.
-            if (SaveManager.Instance != null && !(needs != null && needs.IsDead))
+
+            if (needs != null)
             {
-                SaveManager.Instance.Save();
+                needs.CanGetUp = false;
+                needs.Asleep = false;
+            }
+            if (IsSpawned)
+            {
+                LeaveRpc();
             }
             yield return fade.FadeTo(0f, fadeSeconds);
 
@@ -57,27 +127,6 @@ namespace GrandmasHouse.DayCycle
                 hands.Controller.InputEnabled = true;
             }
             sleeping = false;
-        }
-
-        IEnumerator SleepUntilRested(PlayerNeeds needs)
-        {
-            var interact = InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
-            needs.Asleep = true;
-            clock.FastForward = needs.Settings.sleepHoursPerSecond;
-            // A moment of dark before you can get up again.
-            float earliestWake = Time.time + sleepSeconds;
-            while (needs.State.rest < 100f && !needs.IsDead)
-            {
-                needs.CanGetUp = Time.time >= earliestWake && !clock.IsNight;
-                if (needs.CanGetUp && interact.WasPressedThisFrame())
-                {
-                    break;
-                }
-                yield return null;
-            }
-            clock.FastForward = 0f;
-            needs.CanGetUp = false;
-            needs.Asleep = false;
         }
     }
 }

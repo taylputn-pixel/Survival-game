@@ -1,4 +1,5 @@
 using GrandmasHouse.Carrying;
+using GrandmasHouse.Net;
 using GrandmasHouse.Player;
 using GrandmasHouse.Stations;
 using UnityEngine;
@@ -13,7 +14,7 @@ namespace GrandmasHouse.Interaction
     // down, and in a book, Previous to turn back. At a station whose work can
     // be turned (a plant), Previous and Next to turn it. Every prompt asks ButtonGlyphs for its icon, so rebinding or a
     // new style shows up everywhere at once.
-    public class PromptBar : MonoBehaviour
+    public class PromptBar : MonoBehaviour, IPlayerBound
     {
         [SerializeField] PlayerHands hands;
         [SerializeField] NoteReader reader;
@@ -40,7 +41,7 @@ namespace GrandmasHouse.Interaction
         void Awake()
         {
             interactAction = InputSystem.actions.FindAction("Player/Interact", throwIfNotFound: true);
-            needs = hands.GetComponent<PlayerNeeds>();
+            if (hands != null) Bind(hands);
             pickUpAction = InputSystem.actions.FindAction("Player/PickUp", throwIfNotFound: true);
             backAction = InputSystem.actions.FindAction("Player/Back", throwIfNotFound: true);
             previousAction = InputSystem.actions.FindAction("Player/Previous", throwIfNotFound: true);
@@ -64,8 +65,18 @@ namespace GrandmasHouse.Interaction
             }
         }
 
+        public void Bind(PlayerHands player)
+        {
+            hands = player;
+            needs = hands.GetComponent<PlayerNeeds>();
+        }
+
         void LateUpdate()
         {
+            if (hands == null)
+            {
+                return;
+            }
             Station station = Station.Current;
             bool walking = !reader.IsOpen && !(station != null && station.Working) && hands.Controller.InputEnabled;
             if (walking && hands.AltVerb != null)

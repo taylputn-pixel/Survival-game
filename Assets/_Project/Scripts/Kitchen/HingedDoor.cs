@@ -2,6 +2,7 @@ using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Interaction;
 using GrandmasHouse.Saving;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace GrandmasHouse.Kitchen
@@ -9,7 +10,7 @@ namespace GrandmasHouse.Kitchen
     // A door or lid that swings on a hinge: the refrigerator door, the chest
     // freezer lid. Press Interact to open or close it. This sits on the hinge;
     // the door's colliders are its children.
-    public class HingedDoor : MonoBehaviour, IInteractable, ISaveable
+    public class HingedDoor : NetworkBehaviour, IInteractable, ISaveable, ISharedUse
     {
         [Tooltip("Unique save key for this door, like \"fridge-door\".")]
         [SerializeField] string saveKey = "door";
@@ -18,6 +19,7 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Vector3 openAngles = new Vector3(0f, -100f, 0f);
         [SerializeField] float swingSeconds = 0.35f;
 
+        readonly NetworkVariable<bool> shared = new NetworkVariable<bool>(false);
         Quaternion closed;
         Quaternion open;
         bool isOpen;
@@ -35,10 +37,47 @@ namespace GrandmasHouse.Kitchen
 
         public string PromptVerb(PlayerHands hands) => (isOpen ? "Close " : "Open ") + noun;
 
-        public void Interact(PlayerHands hands) => Set(!isOpen);
+        public void Interact(PlayerHands hands)
+        {
+            if (IsSpawned)
+            {
+                ToggleRpc();
+            }
+            else
+            {
+                Set(!isOpen);
+            }
+        }
+
+        // In a shared game the host keeps whether it's open.
+        [Rpc(SendTo.Server)]
+        void ToggleRpc() => Set(!isOpen);
+
+        public override void OnNetworkSpawn()
+        {
+            shared.OnValueChanged += (_, now) => Swing(now);
+            if (!IsServer)
+            {
+                Swing(shared.Value);
+            }
+            else
+            {
+                shared.Value = isOpen;
+            }
+        }
 
         public void Set(bool opened)
         {
+            Swing(opened);
+            if (IsSpawned && IsServer)
+            {
+                shared.Value = opened;
+            }
+        }
+
+        void Swing(bool opened)
+        {
+            if (opened == isOpen) return;
             isOpen = opened;
             Sfx.Play(SoundId.KnobClick, transform.position);
         }
@@ -62,6 +101,10 @@ namespace GrandmasHouse.Kitchen
             isOpen = json == "1";
             t = isOpen ? 1f : 0f;
             transform.localRotation = isOpen ? open : closed;
+            if (IsSpawned && IsServer)
+            {
+                shared.Value = isOpen;
+            }
         }
     }
 }

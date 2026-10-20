@@ -1,6 +1,7 @@
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.Kitchen;
+using GrandmasHouse.Net;
 using UnityEngine;
 
 namespace GrandmasHouse.Food
@@ -41,6 +42,13 @@ namespace GrandmasHouse.Food
             return perishable != null && perishable.IsRotten ? settings.spoiledSickHours : 0f;
         }
 
-        public void Eaten(PlayerHands hands) => jar.Empty();
+        public void Eaten(PlayerHands hands)
+        {
+            jar.Empty();
+            if (TryGetComponent(out ItemNet net) && net.Live)
+            {
+                net.Share();
+            }
+        }
     }
 }

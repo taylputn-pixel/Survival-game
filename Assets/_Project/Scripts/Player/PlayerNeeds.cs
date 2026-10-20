@@ -13,7 +13,7 @@ namespace GrandmasHouse.Player
     // or sick, you walk slower; exhausted you can't hurry and you fumble
     // what you carry; starve long enough and you die. You're never made to
     // sleep. The rules themselves are in Needs.
-    public class PlayerNeeds : MonoBehaviour, ISaveable, IAfterLoad
+    public class PlayerNeeds : MonoBehaviour, IAfterLoad
     {
         [SerializeField] SurvivalSettings settings;
         [SerializeField] DayClock clock;
@@ -36,10 +36,21 @@ namespace GrandmasHouse.Player
         float lastHours;
         float nextFumbleRoll;
 
-        void Awake() => State = new Needs(settings);
+        void Awake()
+        {
+            State = new Needs(settings);
+            // The player is spawned into the world, so it finds the world's clock.
+            if (clock == null) clock = FindAnyObjectByType<DayClock>();
+        }
 
         // After every Awake, so the clock has set its starting hour.
-        void Start() => lastHours = clock.TotalHours;
+        void Start()
+        {
+            lastHours = clock.TotalHours;
+            clock.Jumped += AfterLoad;
+        }
+
+        void OnDestroy() => clock.Jumped -= AfterLoad;
 
         void Update()
         {
@@ -105,7 +116,7 @@ namespace GrandmasHouse.Player
             State.sickHours = 0f;
         }
 
-        public string SaveKey => "needs";
+        // Saved with the player (see PlayerNet and SaveManager).
         public string Capture() => JsonUtility.ToJson(State);
 
         public void Restore(string json) => JsonUtility.FromJsonOverwrite(json, State);

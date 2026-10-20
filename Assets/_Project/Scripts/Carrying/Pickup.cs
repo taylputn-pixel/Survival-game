@@ -10,7 +10,7 @@ namespace GrandmasHouse.Carrying
     // Something small enough to carry in your hands: produce, jars, tools,
     // or a container like a basket.
     [RequireComponent(typeof(Rigidbody))]
-    public class Pickup : MonoBehaviour, IInteractable
+    public class Pickup : MonoBehaviour, IInteractable, ISharedUse
     {
         [SerializeField] string displayName = "Item";
         [SerializeField] ItemCategory category = ItemCategory.Other;
@@ -145,6 +145,34 @@ namespace GrandmasHouse.Carrying
 
             StopAllCoroutines();
             StartCoroutine(Glide(endPosition, endRotation, glideSeconds, local: false, collidersOn: true));
+        }
+
+        // Another player picked this up. Their computer moves it now; here it
+        // just stops being something you can touch or bump.
+        public void HeldElsewhere()
+        {
+            StopAllCoroutines();
+            if (InContainer != null)
+            {
+                InContainer.Remove(this);
+            }
+            transform.SetParent(null, worldPositionStays: true);
+            body.isKinematic = true;
+            body.interpolation = RigidbodyInterpolation.None;
+            SetCollidersEnabled(false);
+        }
+
+        // Another player let go of this. It lands where their computer says;
+        // here it only needs to be solid again.
+        public void RestingElsewhere(bool collidersOn)
+        {
+            if (InContainer != null)
+            {
+                return;
+            }
+            StopAllCoroutines();
+            body.isKinematic = true;
+            SetCollidersEnabled(collidersOn);
         }
 
         // Lets go in mid-air, so the item falls and settles on its own.

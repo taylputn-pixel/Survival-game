@@ -1,5 +1,6 @@
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Interaction;
+using GrandmasHouse.Net;
 using GrandmasHouse.Player;
 using GrandmasHouse.Saving;
 using GrandmasHouse.Stations;
@@ -13,7 +14,7 @@ namespace GrandmasHouse.UI
     // menu: carry on, change options, or go back to the title. At a station
     // or reading a note, the same key steps back instead.
     [RequireComponent(typeof(MenuStack))]
-    public class PauseMenu : MonoBehaviour
+    public class PauseMenu : MonoBehaviour, IPlayerBound
     {
         [SerializeField] PlayerHands hands;
         [SerializeField] NoteReader reader;
@@ -24,6 +25,8 @@ namespace GrandmasHouse.UI
         InputAction pauseAction;
         CursorLock cursorLock;
         bool paused;
+        // Paused alone, so the world stopped too.
+        bool stopped;
         int closedFrame = -1;
 
         void Awake()
@@ -32,12 +35,21 @@ namespace GrandmasHouse.UI
             menus.DimBehind = true;
             menus.Emptied += Resume;
             pauseAction = InputSystem.actions.FindAction("Player/Pause", throwIfNotFound: true);
+            if (hands != null) Bind(hands);
+        }
+
+        public void Bind(PlayerHands player)
+        {
+            hands = player;
             cursorLock = hands.GetComponent<CursorLock>();
         }
 
+        // The world only stops when nobody else is playing in it.
+        static bool Alone => NetSession.Instance == null || (NetSession.Instance.IsHost && !NetSession.Instance.HasGuests);
+
         void Update()
         {
-            if (paused || !pauseAction.WasPressedThisFrame() || Time.frameCount == closedFrame)
+            if (hands == null || paused || !pauseAction.WasPressedThisFrame() || Time.frameCount == closedFrame)
             {
                 return;
             }
@@ -52,9 +64,13 @@ namespace GrandmasHouse.UI
         void Pause()
         {
             paused = true;
-            Time.timeScale = 0f;
-            // Simmering pots and pouring hush while paused.
-            AudioListener.pause = true;
+            stopped = Alone;
+            if (stopped)
+            {
+                Time.timeScale = 0f;
+                // Simmering pots and pouring hush while paused.
+                AudioListener.pause = true;
+            }
             hands.Controller.InputEnabled = false;
             cursorLock.Free = true;
             reticle.Hidden = true;
@@ -63,7 +79,12 @@ namespace GrandmasHouse.UI
             UIKit.Label(panel, "Paused", 44, FontStyle.Bold, TextAnchor.MiddleCenter);
             var resume = UIKit.Button(panel, "Carry on", menus.Pop);
             UIKit.Button(panel, "Options", () => OptionsScreen.Open(menus, transform));
-            UIKit.Button(panel, "Back to the title", QuitToTitle);
+            var session = NetSession.Instance;
+            if (session != null && session.IsHost && session.UsingSteam)
+            {
+                UIKit.Button(panel, "Invite friends", session.InviteFriends);
+            }
+            UIKit.Button(panel, session != null && session.IsGuest ? "Leave the game" : "Back to the title", QuitToTitle);
             menus.Push(panel.gameObject, resume);
         }
 
@@ -86,6 +107,11 @@ namespace GrandmasHouse.UI
                 SaveManager.Instance.Save();
             }
             Time.timeScale = 1f;
+            if (NetSession.Instance != null)
+            {
+                NetSession.Instance.Leave();
+                return;
+            }
             SceneManager.LoadScene(titleScene);
         }
     }

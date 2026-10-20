@@ -41,6 +41,10 @@ namespace GrandmasHouse.DayCycle
 
         public event Action<int> NewDay;
 
+        // On a guest's computer the host keeps time: this clock only fills
+        // in between the host's updates, and leaves new-day work to the host.
+        public bool Following { get; set; }
+
         void Awake() => Hour = startHour;
 
         void Update()
@@ -75,9 +79,27 @@ namespace GrandmasHouse.DayCycle
             {
                 Hour -= 24f;
                 Day++;
-                NewDay?.Invoke(Day);
+                if (!Following) NewDay?.Invoke(Day);
             }
         }
+
+        // The host's time, on a guest's computer.
+        public void Follow(int day, float hour, float fastForward)
+        {
+            float before = TotalHours;
+            FastForward = fastForward;
+            Day = day;
+            Hour = hour;
+            // Catching up to the host (on joining) isn't time lived through.
+            if (Mathf.Abs(TotalHours - before) > 0.5f)
+            {
+                Jumped?.Invoke();
+            }
+        }
+
+        // The clock was set to another time without it passing (a guest
+        // catching up to the host).
+        public event Action Jumped;
 
         [Serializable]
         class State

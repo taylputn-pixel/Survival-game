@@ -1,5 +1,7 @@
 using System.Collections;
 using GrandmasHouse.Audio;
+using GrandmasHouse.Carrying;
+using GrandmasHouse.Net;
 using GrandmasHouse.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -12,7 +14,7 @@ namespace GrandmasHouse.UI
     // your view darken as you wear down, your stomach growls when you're
     // hungry, and food that's off tastes wrong. Hold Status to check
     // yourself: hunger, rest and how you're doing, in words and bars.
-    public class NeedsView : MonoBehaviour
+    public class NeedsView : MonoBehaviour, IPlayerBound
     {
         [SerializeField] PlayerNeeds needs;
         [Tooltip("Seconds between stomach growls while hungry, at random in this range.")]
@@ -66,16 +68,27 @@ namespace GrandmasHouse.UI
             nextGrowl = Time.time + Random.Range(growlSeconds.x, growlSeconds.y);
         }
 
-        void OnEnable()
+        void OnEnable() => Listen(true);
+
+        void OnDisable() => Listen(false);
+
+        public void Bind(PlayerHands player)
         {
-            needs.Ate += OnAte;
-            needs.Died += OnDied;
+            Listen(false);
+            needs = player.GetComponent<PlayerNeeds>();
+            Listen(isActiveAndEnabled);
         }
 
-        void OnDisable()
+        void Listen(bool on)
         {
+            if (needs == null) return;
             needs.Ate -= OnAte;
             needs.Died -= OnDied;
+            if (on)
+            {
+                needs.Ate += OnAte;
+                needs.Died += OnDied;
+            }
         }
 
         void BuildPanel()
@@ -138,6 +151,10 @@ namespace GrandmasHouse.UI
 
         void Update()
         {
+            if (needs == null)
+            {
+                return;
+            }
             var settings = needs.Settings;
             Needs state = needs.State;
             bool on = needs.isActiveAndEnabled && state != null && !needs.IsDead && !needs.Asleep;
@@ -202,6 +219,11 @@ namespace GrandmasHouse.UI
                 yield return null;
             }
             yield return new WaitForSeconds(deathSeconds);
+            if (NetSession.Instance != null)
+            {
+                NetSession.Instance.Leave();
+                yield break;
+            }
             SceneManager.LoadScene(titleScene);
         }
 
