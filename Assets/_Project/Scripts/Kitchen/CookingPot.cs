@@ -167,7 +167,7 @@ namespace GrandmasHouse.Kitchen
             {
                 return bowl.IsEmpty && IsSoup && IsSetDown;
             }
-            if (hands.Held.Category == ItemCategory.Egg)
+            if (hands.Held.Category == ItemCategory.Egg || IsDried(hands.Held))
             {
                 return IsSetDown && Water > 0f && RoomForPieces > 0;
             }
@@ -194,6 +194,10 @@ namespace GrandmasHouse.Kitchen
             {
                 return "Put the egg in the pot";
             }
+            if (IsDried(hands.Held))
+            {
+                return "Add to the pot";
+            }
             return hands.Held.GetComponent<Seasoning>().Kind == Seasoning.Type.Salt ? "Add a scoop of salt" : "Hold to pour vinegar";
         }
 
@@ -215,6 +219,13 @@ namespace GrandmasHouse.Kitchen
                 Pickup egg = hands.TakeHeld();
                 AddEgg();
                 Net.ItemNet.Remove(egg.gameObject);
+                return;
+            }
+            if (IsDried(hands.Held))
+            {
+                Pickup dried = hands.TakeHeld();
+                AddDried(dried);
+                Net.ItemNet.Remove(dried.gameObject);
                 return;
             }
             var seasoning = hands.Held.GetComponent<Seasoning>();
@@ -305,6 +316,23 @@ namespace GrandmasHouse.Kitchen
         }
 
         bool Cooked => Heat >= 1f;
+
+        static bool IsDried(Pickup item) => item.TryGetComponent(out Food.Perishable food) && food.Dried;
+
+        // Dried produce goes in whole, no chopping: it plumps up in the pot as
+        // the pieces it would have been cut into.
+        public void AddDried(Pickup dried)
+        {
+            int count = dried.DisplayName switch
+            {
+                "Potato" => 8, "Winter Squash" => 12, "Carrot" => 6, "Onion" => 6, "Tomato" => 4,
+                "Cucumber" => 8, "Jalapeño" => 3, _ => 2,
+            };
+            var look = dried.GetComponent<Renderer>();
+            RebuildPieces(dried.DisplayName + " Piece", look != null ? look.sharedMaterial : potatoPiece, Mathf.Min(count, RoomForPieces), new Vector3(0.03f, 0.008f, 0.03f));
+            Sfx.Play(SoundId.SliceDrop, transform.position, 1f, 0.1f);
+            ShowLiquid();
+        }
 
         // An egg lowered into the water, to cook with whatever else is in.
         public void AddEgg()

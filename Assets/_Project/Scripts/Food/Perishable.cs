@@ -8,12 +8,16 @@ namespace GrandmasHouse.Food
     // Food that goes bad with time: fresh at 1, rotten at 0. It keeps longer
     // somewhere cold (ColdStorage) and darkens as it turns. Something else on
     // the item can keep it from spoiling for now (a sealed jar, an empty one).
+    // Dried (in the dehydrator) it shrinks, darkens a little, and keeps many
+    // times longer.
     public class Perishable : MonoBehaviour, IItemState, IAfterLoad
     {
         [Tooltip("Days it keeps at room temperature, from fresh to rotten.")]
         [Min(0.1f)] [SerializeField] float shelfLifeDays = 5f;
         [Tooltip("Darken the item as it spoils. Off for jars, whose glass shouldn't change.")]
         [SerializeField] bool darken = true;
+        [Tooltip("Dried food keeps this many times longer.")]
+        [SerializeField] float driedKeeps = 30f;
         [Tooltip("How often it checks the clock and where it sits, in real seconds.")]
         [SerializeField] float checkSeconds = 1f;
 
@@ -22,6 +26,9 @@ namespace GrandmasHouse.Food
 
         public float Freshness { get; private set; } = 1f;
         public bool IsRotten => Freshness <= 0f;
+        public bool Dried { get; private set; }
+        // Hours spent drying so far.
+        public float DryingHours { get; private set; }
         public float ShelfLifeDays => shelfLifeDays;
         // Turned off by its owner while it can't spoil (a sealed jar).
         public Func<bool> CanSpoil;
@@ -32,11 +39,14 @@ namespace GrandmasHouse.Food
         Renderer[] renderers;
         Color[] baseColors;
         MaterialPropertyBlock block;
+        Vector3 baseScale;
 
         // The freshness left after some hours at a given rate (1 at room
         // temperature, less somewhere cold, 0 frozen).
         public static float Spoil(float freshness, float hours, float shelfLifeDays, float rate) =>
             Mathf.Max(0f, freshness - hours * rate / (shelfLifeDays * 24f));
+
+        void Awake() => baseScale = transform.localScale;
 
         void Start()
         {
@@ -76,8 +86,23 @@ namespace GrandmasHouse.Food
             {
                 return;
             }
-            Freshness = Spoil(Freshness, hours, shelfLifeDays, ColdStorage.RateAt(transform.position));
+            Freshness = Spoil(Freshness, hours, Dried ? shelfLifeDays * driedKeeps : shelfLifeDays, ColdStorage.RateAt(transform.position));
             Show();
+        }
+
+        // Warm air through the dehydrator for a while. Dried once it's had enough.
+        public void Dry(float hours, float hoursNeeded)
+        {
+            if (Dried || IsRotten)
+            {
+                return;
+            }
+            DryingHours += hours;
+            if (DryingHours >= hoursNeeded)
+            {
+                Dried = true;
+                Show();
+            }
         }
 
         void OnDestroy()
@@ -104,22 +129,31 @@ namespace GrandmasHouse.Food
             {
                 if (renderers[i] == null) continue;
                 renderers[i].GetPropertyBlock(block);
-                block.SetColor(BaseColor, Color.Lerp(baseColors[i], baseColors[i] * RotColor, rot));
+                Color color = Color.Lerp(baseColors[i], baseColors[i] * RotColor, rot);
+                if (Dried) color *= new Color(0.78f, 0.7f, 0.6f, 1f);
+                block.SetColor(BaseColor, color);
                 renderers[i].SetPropertyBlock(block);
             }
+            // Dried, it shrinks and wrinkles up.
+            transform.localScale = Dried ? baseScale * 0.72f : baseScale;
         }
 
         [Serializable]
         class State
         {
             public float freshness;
+            public bool dried;
+            public float drying;
         }
 
-        public string Capture() => JsonUtility.ToJson(new State { freshness = Freshness });
+        public string Capture() => JsonUtility.ToJson(new State { freshness = Freshness, dried = Dried, drying = Mathf.Round(DryingHours * 100f) / 100f });
 
         public void Restore(string json)
         {
-            Freshness = JsonUtility.FromJson<State>(json).freshness;
+            var state = JsonUtility.FromJson<State>(json);
+            Freshness = state.freshness;
+            Dried = state.dried;
+            DryingHours = state.drying;
             Show();
         }
 
