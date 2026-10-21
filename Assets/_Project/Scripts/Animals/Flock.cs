@@ -49,12 +49,14 @@ namespace GrandmasHouse.Animals
         public event Action<string> Overnight;
 
         int feathersDay = -1;
+        float nextLostCheck;
 
         void OnEnable() => clock.NewDay += Night;
         void OnDisable() => clock.NewDay -= Night;
 
         void Update()
         {
+            FreeLostHens();
             if (feedLevel != null) feedLevel.localScale = new Vector3(1f, Mathf.Max(0.02f, Feed), 1f);
             if (waterLevel != null) waterLevel.localScale = new Vector3(1f, Mathf.Max(0.02f, Water), 1f);
             if (feathers != null) feathers.SetActive(feathersDay == clock.Day);
@@ -79,6 +81,35 @@ namespace GrandmasHouse.Animals
         public void AddWater(float amount) => Water = Mathf.Clamp01(Water + amount);
 
         // ---- Overnight (the host) ----
+
+        // This computer's player in a shared game (0 playing alone, as the host is).
+        static ulong LocalId => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening ? NetworkManager.Singleton.LocalClientId : 0;
+
+        // A hen no one is really holding any more (a game loaded with her in
+        // someone's arms, or a friend who left with her) goes back to the run.
+        void FreeLostHens()
+        {
+            if (Time.time < nextLostCheck) return;
+            nextLostCheck = Time.time + 1f;
+            LiveHen[] held = null;
+            foreach (var hen in hens)
+            {
+                if (!hen.Alive || !hen.Carried) continue;
+                bool lost;
+                if (hen.Carrier == LocalId)
+                {
+                    held ??= FindObjectsByType<LiveHen>(FindObjectsSortMode.None);
+                    lost = Array.Find(held, l => l.Hen == hen) == null;
+                }
+                else
+                {
+                    // Only the host decides about a friend's hen; playing alone, no friend has her.
+                    bool shared = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
+                    lost = Hosting && (!shared || !NetworkManager.Singleton.ConnectedClients.ContainsKey(hen.Carrier));
+                }
+                if (lost) LetGo(hen);
+            }
+        }
 
         static bool Hosting => NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
 
@@ -137,7 +168,7 @@ namespace GrandmasHouse.Animals
         {
             if (!hen.Alive || hen.Carried) return;
             var live = LiveHen.Make(hen, this);
-            hen.SetCarried(true, hen.transform.position);
+            hen.SetCarried(true, hen.transform.position, LocalId);
             hands.Give(live.Pickup);
             Sfx.Play(SoundId.Cluck, hen.transform.position, 1f, 0.2f);
         }
@@ -207,6 +238,9 @@ namespace GrandmasHouse.Animals
             public float water;
             public List<bool> alive = new List<bool>();
             public List<int> hungry = new List<int>();
+            // Out of the run in someone's arms, and whose (a client id).
+            public List<bool> carried = new List<bool>();
+            public List<long> carrier = new List<long>();
             public int feathersDay = -1;
         }
 
@@ -219,6 +253,8 @@ namespace GrandmasHouse.Animals
             {
                 state.alive.Add(hen.Alive);
                 state.hungry.Add(hen.DaysHungry);
+                state.carried.Add(hen.Carried);
+                state.carrier.Add((long)hen.Carrier);
             }
             return JsonUtility.ToJson(state);
         }
@@ -233,6 +269,13 @@ namespace GrandmasHouse.Animals
             {
                 hens[i].Alive = state.alive[i];
                 hens[i].DaysHungry = state.hungry[i];
+                // Picked up or let go on another computer.
+                bool carried = i < state.carried.Count && state.carried[i];
+                ulong carrier = i < state.carrier.Count ? (ulong)state.carrier[i] : 0;
+                if (carried != hens[i].Carried || (carried && carrier != hens[i].Carrier))
+                {
+                    hens[i].SetCarried(carried, carried ? hens[i].transform.position : SpotInRun(), carrier);
+                }
             }
         }
     }

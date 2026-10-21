@@ -41,6 +41,22 @@ namespace GrandmasHouse.Tests
             got(bird);
         }
 
+        IEnumerator WoodIn(Smokehouse smokehouse, int pieces)
+        {
+            for (int i = 0; i < pieces; i++)
+            {
+                var wood = Homestead.Make<Pickup>("Firewood");
+                wood.transform.position = hands.ViewPoint.position + hands.ViewPoint.forward * 0.4f;
+                yield return null;
+                hands.Give(wood);
+                yield return null;
+                Assert.AreEqual("Put wood in the fire", smokehouse.PromptVerb(hands));
+                smokehouse.Interact(hands);
+                yield return null;
+            }
+            Assert.IsTrue(hands.IsEmpty);
+        }
+
         static int Chickens()
         {
             int n = 0;
@@ -113,6 +129,34 @@ namespace GrandmasHouse.Tests
             Assert.AreEqual(4, flock.Alive);
         }
 
+        // In a shared game the flock's state says who is carrying which hen,
+        // so everyone sees her gone from the run; a hen no one really holds
+        // (a game saved with her in someone's arms) goes back.
+        [UnityTest]
+        public IEnumerator ACarriedHenIsSharedAndNeverLost()
+        {
+            var flock = Homestead.Find<Flock>();
+            Hen hen = HenInTheRun();
+            hen.Interact(hands);
+            yield return null;
+            string carrying = flock.Capture();
+            StringAssert.Contains("\"carried\":[", carrying);
+
+            // Another computer hears of it.
+            hands.TakeHeld().Drop();
+            yield return null;
+            yield return null;
+            Assert.IsFalse(hen.Carried);
+            flock.Restore(carrying);
+            Assert.IsTrue(hen.Carried, "A friend has her: she's out of the run here too.");
+            Assert.IsFalse(hen.GetComponentInChildren<Renderer>().enabled);
+
+            // But no one here holds her (this is the host, carrier 0): back she goes.
+            yield return new WaitForSeconds(1.2f);
+            Assert.IsFalse(hen.Carried, "A hen no one holds goes back to the run.");
+            Assert.IsTrue(hen.GetComponentInChildren<Renderer>().enabled);
+        }
+
         [UnityTest]
         public IEnumerator RawChickenMakesYouSickButSmokedDoesNot()
         {
@@ -128,22 +172,28 @@ namespace GrandmasHouse.Tests
             smokehouse.Interact(hands);
             yield return new WaitForSeconds(0.4f);
             Assert.IsTrue(hands.IsEmpty);
+            Assert.IsFalse(smokehouse.CanInteract(hands), "No fire without wood.");
+
+            // Two pieces of firewood aren't quite enough; it burns down and needs more.
+            yield return WoodIn(smokehouse, 2);
+            Assert.AreEqual(2, smokehouse.Wood);
             Assert.AreEqual("Light the fire", smokehouse.PromptVerb(hands));
             smokehouse.Interact(hands);
             Assert.IsTrue(smokehouse.On);
             yield return null;
-
-            // One fire isn't quite enough; it burns down and needs lighting again.
-            clock.Advance(11f);
+            clock.Advance(smokehouse.HoursPerLog * 2f + 1f);
             yield return null;
             Assert.IsFalse(smokehouse.On, "The fire should have burned down.");
+            Assert.AreEqual(0, smokehouse.Wood);
             Assert.IsFalse(bird.GetComponent<Perishable>().Cured);
+
+            yield return WoodIn(smokehouse, 3);
             smokehouse.Interact(hands);
             yield return null;
-            clock.Advance(8f);
+            clock.Advance(smokehouse.HoursPerLog * 3f + 1f);
             yield return null;
             var meat = bird.GetComponent<Perishable>();
-            Assert.AreEqual(Perishable.Cure.Smoked, meat.CuredBy);
+            Assert.AreEqual(Perishable.Cure.Smoked, meat.CuredBy, $"cured {meat.CuringHours}h of {smokehouse.CureHours}, fresh {meat.Freshness}, on {smokehouse.On}, wood {smokehouse.Wood}, left {smokehouse.FireLeft}");
             Assert.AreEqual(0f, food.SickHours(settings));
 
             // Saved and loaded, it's still smoked.

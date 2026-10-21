@@ -106,6 +106,7 @@ namespace GrandmasHouse.Kitchen
             public bool on;
             public float left;
             public int salt;
+            public int wood;
         }
 
         public string SaveKey => saveKey;

@@ -215,6 +215,33 @@ namespace GrandmasHouse.Tests
             truck.Leave(hands);
         }
 
+        // Firewood stacked on the rack by the house, and taken off again.
+        [UnityTest]
+        public IEnumerator FirewoodStacksOnTheWoodpile()
+        {
+            var pile = Homestead.Find<Woodpile>();
+            Assert.AreEqual(0, pile.Count);
+            for (int i = 0; i < 3; i++)
+            {
+                yield return InHand("Firewood");
+                Assert.IsTrue(pile.CanInteract(hands));
+                Assert.AreEqual("Stack it on the woodpile", pile.PromptVerb(hands));
+                Assert.IsTrue(pile.CanAltInteract(hands), "Stacking works looking anywhere on the pile.");
+                pile.Interact(hands);
+                yield return new WaitForSeconds(0.35f);
+            }
+            Assert.IsTrue(hands.IsEmpty);
+            Assert.AreEqual(3, pile.Count);
+
+            // Take one off like anything else.
+            var piece = pile.GetComponentInChildren<Firewood>().GetComponent<Pickup>();
+            Assert.IsTrue(piece.CanInteract(hands));
+            piece.Interact(hands);
+            yield return null;
+            Assert.AreEqual(2, pile.Count);
+            Assert.IsNotNull(hands.Held.GetComponent<Firewood>());
+        }
+
         [UnityTest]
         public IEnumerator TheTruckIsParkedWhereItWasLeft()
         {

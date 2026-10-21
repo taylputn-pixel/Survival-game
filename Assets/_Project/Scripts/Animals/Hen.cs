@@ -32,6 +32,8 @@ namespace GrandmasHouse.Animals
         }
         // In someone's arms (or on the block): out of the run for now.
         public bool Carried { get; private set; }
+        // Who has her (their client id; 0 playing alone).
+        public ulong Carrier { get; private set; }
         public int DaysHungry { get; set; }
         // Roosting in the coop for the night.
         public bool Inside { get; private set; }
@@ -60,9 +62,10 @@ namespace GrandmasHouse.Animals
         }
 
         // Picked up, or back in the run at this spot.
-        public void SetCarried(bool carried, Vector3 at)
+        public void SetCarried(bool carried, Vector3 at, ulong carrier = 0)
         {
             Carried = carried;
+            Carrier = carried ? carrier : 0;
             Show();
             if (carried) return;
             Inside = false;
