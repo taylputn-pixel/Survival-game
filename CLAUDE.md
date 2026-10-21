@@ -85,3 +85,4 @@ Assets/_Project/
   Art/          models, materials, textures
   Audio/
 ```
+- Never mark anything that moves Static (door and gate leaves under a `HingedDoor`, the truck, hens): Unity bakes static meshes in place, so the hinge turns but the door stays drawn shut. `DoorTests` checks the doors.
