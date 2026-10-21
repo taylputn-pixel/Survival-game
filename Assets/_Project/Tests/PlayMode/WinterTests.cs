@@ -161,8 +161,8 @@ namespace GrandmasHouse.Tests
             foreach (var t in Object.FindObjectsByType<Trader>())
             {
                 bool wood = false;
-                foreach (var w in t.Wares) if (w.key == "Firewood") wood = true;
-                Assert.AreEqual(t.Name == "Walt", wood, t.Name + (wood ? " shouldn't" : " should") + " have firewood.");
+                foreach (var w in t.Wares) if (w.key == "Log" || w.key == "Firewood") wood = true;
+                Assert.AreEqual(t.Name == "Walt", wood, t.Name + (wood ? " shouldn't" : " should") + " have wood.");
             }
         }
 

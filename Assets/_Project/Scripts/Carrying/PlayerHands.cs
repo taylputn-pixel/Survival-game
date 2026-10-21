@@ -143,8 +143,19 @@ namespace GrandmasHouse.Carrying
             pickUpAction = InputSystem.actions.FindAction("Player/PickUp", throwIfNotFound: true);
         }
 
+        // The seat you're in (the truck), or null on your feet.
+        public Interaction.ISeat Seat { get; set; }
+
         void Update()
         {
+            if (Seat != null && controller.InputEnabled)
+            {
+                CurrentFocus = Focus.Nothing;
+                Verb = Seat.LeaveVerb;
+                AltVerb = null;
+                if (interactAction.WasPressedThisFrame()) Seat.Leave(this);
+                return;
+            }
             if (!controller.InputEnabled)
             {
                 CurrentFocus = Focus.Nothing;

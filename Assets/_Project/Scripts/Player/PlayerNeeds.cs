@@ -71,8 +71,11 @@ namespace GrandmasHouse.Player
             }
 
             State.Pass(hours, Asleep, settings, Felt);
-            controller.SpeedMultiplier = State.SpeedMultiplier(settings);
-            controller.BriskAllowed = State.CanWalkBriskly(settings);
+            // A log in your arms slows you to a shuffle.
+            float load = 1f;
+            foreach (var item in hands.Carried) if (item != null && item.TryGetComponent(out Kitchen.Log log)) load = Mathf.Min(load, log.CarrySpeed);
+            controller.SpeedMultiplier = State.SpeedMultiplier(settings) * load;
+            controller.BriskAllowed = State.CanWalkBriskly(settings) && load >= 1f;
             Fumble();
 
             if (clock.Mode.gameOver && State.Collapsed(settings))

@@ -24,6 +24,8 @@ namespace GrandmasHouse.Player
         public bool IsMoving => horizontalVelocity.sqrMagnitude > 0.01f;
         // Lying in bed or collapsed on the floor: the view drops low.
         public bool LyingDown { get; set; }
+        // Sitting in the truck: you can look around, but the seat moves you.
+        public bool Seated { get; set; }
 
         CharacterController body;
         InputAction moveAction;

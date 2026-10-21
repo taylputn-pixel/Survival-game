@@ -40,6 +40,7 @@ namespace GrandmasHouse.Net
             var weather = DayCycle.Weather.Instance;
             var stove = FindAnyObjectByType<Kitchen.WoodStove>();
             if (weather != null) Log("weather: seed " + weather.Model.Seed + ", outside " + weather.Outside.ToString("F1") + ", stove burning " + (stove != null && stove.Burning) + " logs " + (stove != null ? stove.Logs : -1));
+            yield return DriveTruck(me, hands);
             yield return Store(me);
 
             Pickup tomato = Loose();
@@ -267,6 +268,31 @@ namespace GrandmasHouse.Net
             int boxes = 0;
             foreach (var p in FindObjectsByType<Pickup>(FindObjectsSortMode.None)) if (p.DisplayName == "Salt" && Vector3.Distance(p.transform.position, june.transform.position) < 5f) boxes++;
             Log("store: credit " + credit.ToString("F1") + " -> " + june.Credit.ToString("F1") + ", salt stock " + stock + " -> " + june.Wares[salt].stock + ", salt boxes here: " + boxes);
+        }
+
+        // Gets in the truck, drives it a little way down the lane, and gets out.
+        IEnumerator DriveTruck(PlayerNet me, PlayerHands hands)
+        {
+            var truck = FindAnyObjectByType<Vehicles.Truck>();
+            if (truck == null) { Log("truck: none"); yield break; }
+            Stand(me, truck.transform.position + truck.transform.right * -1.8f);
+            yield return new WaitForSeconds(0.5f);
+            Vector3 start = truck.transform.position;
+            truck.Interact(hands);
+            for (float wait = 0f; wait < 5f && truck.Driver != hands; wait += 0.1f) yield return new WaitForSeconds(0.1f);
+            if (truck.Driver != hands) { Log("truck: wasn't let drive"); yield break; }
+            for (float t = 0f; t < 2f; t += Time.deltaTime)
+            {
+                truck.Drive(new Vector2(0f, 1f), Time.deltaTime);
+                yield return null;
+            }
+            for (float t = 0f; t < 2f && Mathf.Abs(truck.Speed) > 0.1f; t += Time.deltaTime)
+            {
+                truck.Drive(new Vector2(0f, -1f), Time.deltaTime);
+                yield return null;
+            }
+            truck.Leave(hands);
+            Log("truck: drove from " + start.ToString("F1") + " to " + truck.transform.position.ToString("F1") + ", seated " + hands.Controller.Seated);
         }
 
         static Bounds TableTop()

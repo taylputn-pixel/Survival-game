@@ -33,6 +33,8 @@ namespace GrandmasHouse.Trade
             public float restockPerDay = 0.5f;
             [Tooltip("Their own price; 0 uses the trade settings.")]
             public float worth;
+            [Tooltip("Where they set these out, if not the usual spots (logs on the log pile).")]
+            public Transform[] setOutAt;
         }
 
         [SerializeField] string traderName = "June";
@@ -210,7 +212,8 @@ namespace GrandmasHouse.Trade
                         learned.Add(w.recipe.title);
                         continue;
                     }
-                    HandOver(w.key, spot++);
+                    if (w.setOutAt != null && w.setOutAt.Length > 0) HandOver(w.key, n, w.setOutAt);
+                    else HandOver(w.key, spot++, handOver);
                 }
                 w.stock -= counts[i];
             }
@@ -219,12 +222,12 @@ namespace GrandmasHouse.Trade
             return learned.Count > 0 ? "Copied into the journal: " + string.Join(", ", learned) : "Done.";
         }
 
-        void HandOver(string key, int index)
+        void HandOver(string key, int index, Transform[] spots)
         {
             var prefab = SaveManager.Catalog.Item(key);
-            if (prefab == null || handOver.Length == 0) return;
-            Transform at = handOver[index % handOver.Length];
-            Vector3 position = at.position + Vector3.up * (0.05f + 0.12f * (index / handOver.Length));
+            if (prefab == null || spots.Length == 0) return;
+            Transform at = spots[index % spots.Length];
+            Vector3 position = at.position + Vector3.up * (0.05f + 0.4f * (index / spots.Length));
             var item = Instantiate(prefab, position, at.rotation);
             item.name = prefab.name;
             if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer && item.TryGetComponent(out NetworkObject shared))

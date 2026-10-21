@@ -143,6 +143,13 @@ MonoBehaviour:
     - 0.8
     - 1.2
     - 1.6
+  - key: Log
+    worth: 1.6
+    byMonth:
+    - 1
+    - 0.9
+    - 1.2
+    - 1.5
   jars:
   - recipe: Dill Pickle Chips
     worth: 5
