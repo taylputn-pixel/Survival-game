@@ -112,22 +112,65 @@ namespace GrandmasHouse.Tests
             StringAssert.Contains("false", flock.Capture());
         }
 
-        // Set her down anywhere but the block and she's back in the run.
+        void Stand(Vector3 at)
+        {
+            var body = hands.GetComponent<CharacterController>();
+            body.enabled = false;
+            hands.transform.position = at;
+            body.enabled = true;
+        }
+
+        // Set down out in the yard she stays loose there, pecking about;
+        // carried back and set down in the run, she's home.
         [UnityTest]
-        public IEnumerator AHenLetGoGoesBackToTheRun()
+        public IEnumerator AHenSetDownOutsideStaysLooseUntilPutBack()
         {
             var flock = Homestead.Find<Flock>();
+            clock.Restore("{\"day\":1,\"hour\":10}");
             Hen hen = HenInTheRun();
             hen.Interact(hands);
             yield return null;
+            Stand(new Vector3(2f, 0.1f, -5f));
+            // Your arms catch up with you.
+            yield return new WaitForSeconds(1f);
+            string where = "player " + hands.transform.position + " held " + hands.Held.transform.position;
             hands.TakeHeld().Drop();
             yield return null;
             yield return null;
             Assert.IsFalse(hen.Carried);
-            Assert.IsTrue(hen.GetComponentInChildren<Renderer>().enabled, "She should be back to see.");
+            Assert.IsTrue(hen.Loose, "Out in the yard she's loose.");
+            where += " hen " + hen.transform.position;
+            Assert.IsTrue(hen.GetComponentInChildren<Renderer>().enabled);
+            Assert.Less(Vector3.Distance(Flat(hen.transform.position), new Vector3(2f, 0f, -5f)), 1.2f, "She lands where she was let go, not back in the coop. " + where);
             Assert.AreEqual(0, Object.FindObjectsByType<LiveHen>().Length, "No hen left in your arms.");
-            Assert.AreEqual(4, flock.Alive);
+
+            // She wanders about there, not home.
+            yield return new WaitForSeconds(4f);
+            Assert.IsTrue(hen.Loose);
+            Assert.IsFalse(flock.RunContains(hen.transform.position));
+            Assert.Less(Vector3.Distance(Flat(hen.transform.position), Flat(hen.Settled)), flock.Settings.looseRange + 0.3f);
+
+            // Saved and loaded, she's still out there.
+            string saved = flock.Capture();
+            StringAssert.Contains("\"loose\":[", saved);
+
+            // Back in the run.
+            hen.Interact(hands);
+            yield return null;
+            Stand(new Vector3(-5.6f, 0.1f, 0f));
+            yield return new WaitForSeconds(1f);
+            hands.TakeHeld().Drop();
+            yield return null;
+            yield return null;
+            Assert.IsFalse(hen.Loose, "Set down in the run, she's home.");
+            Assert.IsTrue(flock.RunContains(hen.transform.position));
+
+            flock.Restore(saved);
+            Assert.IsTrue(hen.Loose, "A loaded game puts her back out where she was.");
+            Assert.IsFalse(flock.RunContains(hen.transform.position));
         }
+
+        static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
 
         // In a shared game the flock's state says who is carrying which hen,
         // so everyone sees her gone from the run; a hen no one really holds

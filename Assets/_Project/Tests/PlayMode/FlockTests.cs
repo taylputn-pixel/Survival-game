@@ -89,6 +89,44 @@ namespace GrandmasHouse.Tests
             Assert.AreEqual(0, flock.Alive);
         }
 
+        HingedDoor Gate()
+        {
+            foreach (var d in Object.FindObjectsByType<HingedDoor>()) if (d.name == "Gate Hinge") return d;
+            Assert.Fail("No run gate.");
+            return null;
+        }
+
+        // Leave the gate open and a hen can wander out through it; out there
+        // she's loose, and nobody's laying or eating from the feeder.
+        [UnityTest]
+        public IEnumerator AHenWandersOutAnOpenGate()
+        {
+            flock.Clock.Restore("{\"day\":1,\"hour\":10}");
+            Hen hen = null;
+            foreach (var h in Object.FindObjectsByType<Hen>()) if (h.Alive && !h.Inside) hen = h;
+            Assert.IsNotNull(hen);
+
+            Gate().Set(false);
+            hen.HeadOut();
+            Assert.IsFalse(hen.HeadingOut, "Not with the gate shut.");
+
+            Gate().Set(true);
+            yield return new WaitForSeconds(0.5f);
+            hen.HeadOut();
+            Assert.IsTrue(hen.HeadingOut);
+            for (float t = 0f; t < 15f && !hen.Loose; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(hen.Loose, "She should have got out.");
+            Assert.IsFalse(flock.RunContains(hen.transform.position));
+
+            // Out all night, she's the fox's first.
+            flock.Clock.Restore("{\"day\":1,\"hour\":23}");
+            yield return null;
+            flock.AddFeed(1f);
+            flock.AddWater(1f);
+            flock.Live(foxRoll: 0.4f);
+            Assert.IsFalse(hen.Alive, "The fox takes a hen left out.");
+        }
+
         [Test]
         public void TheFoxComesThroughADoorLeftOpen()
         {

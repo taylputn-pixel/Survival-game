@@ -39,6 +39,10 @@ namespace GrandmasHouse.Data
 
         [Header("Moving about")]
         public float walkSpeed = 0.35f;
+        [Tooltip("Chance, each time a hen picks somewhere new, that she heads out through the run gate if it's open.")]
+        [Range(0f, 1f)] public float wanderOutChance = 0.2f;
+        [Tooltip("How far (m) a loose hen strays from where she was set down or got out.")]
+        public float looseRange = 3f;
         [Tooltip("Seconds a hen stands pecking before she wanders on, at random in this range.")]
         public Vector2 peckSeconds = new Vector2(1.5f, 5f);
 

@@ -7,8 +7,9 @@ namespace GrandmasHouse.Animals
     // A hen held in your arms: a copy of her to carry, while the hen herself
     // is out of the run. Lay her on the chopping block and take the axe to
     // her (ChoppingBlock). Set her down or drop her anywhere else and she
-    // flaps off back to the run. She isn't saved: a game saved with her in
-    // your arms loads with her back in the run.
+    // lands there: back in the run if that's where, loose if not. She isn't
+    // saved: a game saved with her in your arms loads with her where you
+    // picked her up.
     public class LiveHen : MonoBehaviour
     {
         public Hen Hen { get; private set; }
@@ -59,9 +60,23 @@ namespace GrandmasHouse.Animals
         {
             if (carrier == null) carrier = FindCarrier();
             if ((carrier != null && carrier.IsHolding(Pickup)) || OnBlock) return;
-            // Let go of: off she goes.
-            flock.LetGo(Hen);
+            // Let go of: she lands on the ground under where she was and stays there.
+            flock.LetGo(Hen, Ground());
             Destroy(gameObject);
+        }
+
+        Vector3 Ground()
+        {
+            Vector3 from = transform.position + Vector3.up * 0.1f;
+            float best = float.MaxValue;
+            Vector3 at = transform.position;
+            foreach (var hit in Physics.RaycastAll(from, Vector3.down, 6f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                if (hit.collider.transform.IsChildOf(transform) || hit.collider.GetComponentInParent<Hen>() != null) continue;
+                if (hit.collider.GetComponentInParent<Pickup>() != null || hit.normal.y < 0.7f) continue;
+                if (hit.distance < best) { best = hit.distance; at = hit.point; }
+            }
+            return at;
         }
 
         // The axe falls.

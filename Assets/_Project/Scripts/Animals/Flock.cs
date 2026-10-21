@@ -13,10 +13,14 @@ namespace GrandmasHouse.Animals
 {
     // The hens and their coop. Each night every hen eats and drinks from the
     // feeder and waterer; a fed and watered hen lays an egg in a nest box
-    // by morning (less often in fall and winter), and one that goes without for a few days dies. Hens go in
-    // at dusk; leave the coop door open at night, or shut a hen out, and the
-    // fox may take one (it leaves feathers). In a shared game the host keeps
-    // the flock; anyone can feed and water it (SharedState).
+    // by morning (less often in fall and winter), and one that goes without
+    // for a few days dies. Hens go in at dusk; leave the coop door open at
+    // night, or shut a hen out, and the fox may take one (it leaves
+    // feathers). Leave the run gate open and hens wander out; a hen out of
+    // the run is loose (she fends for herself, lays nothing you'll find and
+    // is the fox's first pick) until someone carries her back. In a shared
+    // game the host keeps the flock; anyone can feed and water it
+    // (SharedState).
     public class Flock : MonoBehaviour, ISaveable
     {
         [SerializeField] FlockSettings settings;
@@ -25,6 +29,11 @@ namespace GrandmasHouse.Animals
         [SerializeField] CalendarSettings calendar;
         [SerializeField] Hen[] hens;
         [SerializeField] HingedDoor coopDoor;
+        [Tooltip("The run's gate; left open, hens may wander out.")]
+        [SerializeField] HingedDoor gate;
+        [Tooltip("Just inside the gate, then just outside it: the way out.")]
+        [SerializeField] Transform gateInside;
+        [SerializeField] Transform gateOutside;
         [Tooltip("Where a hen goes in and out.")]
         [SerializeField] Transform doorway;
         [Tooltip("The run's floor, inside the fence (a box: its center and size).")]
@@ -43,6 +52,7 @@ namespace GrandmasHouse.Animals
         public FlockSettings Settings => settings;
         public DayClock Clock => clock;
         public bool DoorOpen => coopDoor != null && coopDoor.IsOpen;
+        public bool GateOpen => gate != null && gate.IsOpen && gateInside != null && gateOutside != null;
         public Transform Doorway => doorway;
         public int Alive { get { int n = 0; foreach (var h in hens) if (h.Alive) n++; return n; } }
         // Something happened overnight, for the player to find (and tests).
@@ -60,6 +70,60 @@ namespace GrandmasHouse.Animals
             if (feedLevel != null) feedLevel.localScale = new Vector3(1f, Mathf.Max(0.02f, Feed), 1f);
             if (waterLevel != null) waterLevel.localScale = new Vector3(1f, Mathf.Max(0.02f, Water), 1f);
             if (feathers != null) feathers.SetActive(feathersDay == clock.Day);
+        }
+
+        // Inside the run's fence (from above).
+        public bool RunContains(Vector3 point)
+        {
+            Vector3 local = run.transform.InverseTransformPoint(point) - run.center;
+            Vector3 half = run.size / 2f;
+            return Mathf.Abs(local.x) <= half.x && Mathf.Abs(local.z) <= half.z;
+        }
+
+        // Through the gate: just inside it, then just outside.
+        public Vector3[] WayOut()
+        {
+            float y = run.transform.position.y;
+            Vector3 a = gateInside.position, b = gateOutside.position;
+            return new[] { new Vector3(a.x, y, a.z), new Vector3(b.x, y, b.z) };
+        }
+
+        // Through the gate and loose.
+        public void GotOut(Hen hen) => hen.GotOut();
+
+        // Somewhere near where a loose hen settled that she can walk to
+        // without going through a fence or a wall, and not back into the run.
+        public Vector3 SpotNear(Hen hen)
+        {
+            Vector3 from = hen.transform.position;
+            for (int tries = 0; tries < 8; tries++)
+            {
+                Vector2 step = UnityEngine.Random.insideUnitCircle * settings.looseRange;
+                Vector3 to = hen.Settled + new Vector3(step.x, 0f, step.y);
+                if (RunContains(to) || !OnGround(ref to, hen.Settled.y)) continue;
+                if (Blocked(from, to)) continue;
+                return to;
+            }
+            return from;
+        }
+
+        static bool OnGround(ref Vector3 point, float level)
+        {
+            if (!Physics.Raycast(point + Vector3.up * 0.6f, Vector3.down, out RaycastHit hit, 1.2f, ~0, QueryTriggerInteraction.Ignore)) return false;
+            if (hit.normal.y < 0.7f || Mathf.Abs(hit.point.y - level) > 0.3f) return false;
+            point.y = hit.point.y;
+            return true;
+        }
+
+        static bool Blocked(Vector3 from, Vector3 to)
+        {
+            Vector3 up = Vector3.up * 0.15f;
+            foreach (var hit in Physics.RaycastAll(from + up, to - from, Vector3.Distance(from, to) + 0.15f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                if (hit.collider.GetComponentInParent<Hen>() != null || hit.collider.GetComponentInParent<Pickup>() != null) continue;
+                return true;
+            }
+            return false;
         }
 
         // A random spot on the run's floor for a hen to wander to.
@@ -107,7 +171,7 @@ namespace GrandmasHouse.Animals
                     bool shared = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
                     lost = Hosting && (!shared || !NetworkManager.Singleton.ConnectedClients.ContainsKey(hen.Carrier));
                 }
-                if (lost) LetGo(hen);
+                if (lost) LetGo(hen, hen.transform.position);
             }
         }
 
@@ -126,7 +190,8 @@ namespace GrandmasHouse.Animals
             float layChance = calendar != null ? settings.LayChance(calendar.DateOf(clock.Day).month) : 1f;
             foreach (var hen in hens)
             {
-                if (!hen.Alive) continue;
+                // A hen out of the run forages for herself and lays where no one finds it.
+                if (!hen.Alive || hen.Loose || hen.Carried) continue;
                 bool fed = Feed >= settings.feedPerHen && Water >= settings.waterPerHen;
                 if (fed)
                 {
@@ -150,7 +215,8 @@ namespace GrandmasHouse.Animals
             if (foxRoll < chance)
             {
                 Hen victim = null;
-                foreach (var hen in hens) if (hen.Alive && (victim == null || (shutOut && !hen.Inside))) victim = hen;
+                // Loose in the yard first, then one left out by the coop.
+                foreach (var hen in hens) if (hen.Alive && (victim == null || Exposed(hen) > Exposed(victim))) victim = hen;
                 if (victim != null)
                 {
                     victim.Alive = false;
@@ -160,6 +226,8 @@ namespace GrandmasHouse.Animals
             }
             Overnight?.Invoke($"laid {laid}, starved {starved}" + (taken != null ? ", the fox took " + taken : ""));
         }
+
+        static int Exposed(Hen hen) => hen.Loose ? 2 : hen.Inside ? 0 : 1;
 
         // ---- Taking a hen for the pot ----
 
@@ -173,11 +241,12 @@ namespace GrandmasHouse.Animals
             Sfx.Play(SoundId.Cluck, hen.transform.position, 1f, 0.2f);
         }
 
-        // Set down anywhere but the block, she flaps off back to the run.
-        public void LetGo(Hen hen)
+        // Set down anywhere but the block, she stays where she's put: back
+        // in the run if that's where, loose if not.
+        public void LetGo(Hen hen, Vector3 at)
         {
             if (!hen.Alive) return;
-            hen.SetCarried(false, SpotInRun());
+            hen.SetCarried(false, at);
             Sfx.Play(SoundId.Cluck, hen.transform.position, 1f, 0.2f);
         }
 
@@ -241,6 +310,9 @@ namespace GrandmasHouse.Animals
             // Out of the run in someone's arms, and whose (a client id).
             public List<bool> carried = new List<bool>();
             public List<long> carrier = new List<long>();
+            // Out of the run, and where she was set down or got out to.
+            public List<bool> loose = new List<bool>();
+            public List<Vector3> settled = new List<Vector3>();
             public int feathersDay = -1;
         }
 
@@ -255,6 +327,9 @@ namespace GrandmasHouse.Animals
                 state.hungry.Add(hen.DaysHungry);
                 state.carried.Add(hen.Carried);
                 state.carrier.Add((long)hen.Carrier);
+                state.loose.Add(hen.Loose);
+                Vector3 at = hen.Settled;
+                state.settled.Add(new Vector3(Mathf.Round(at.x * 100f) / 100f, Mathf.Round(at.y * 100f) / 100f, Mathf.Round(at.z * 100f) / 100f));
             }
             return JsonUtility.ToJson(state);
         }
@@ -272,9 +347,16 @@ namespace GrandmasHouse.Animals
                 // Picked up or let go on another computer.
                 bool carried = i < state.carried.Count && state.carried[i];
                 ulong carrier = i < state.carrier.Count ? (ulong)state.carrier[i] : 0;
+                bool loose = i < state.loose.Count && state.loose[i];
+                Vector3 settled = i < state.settled.Count ? state.settled[i] : hens[i].Settled;
                 if (carried != hens[i].Carried || (carried && carrier != hens[i].Carrier))
                 {
-                    hens[i].SetCarried(carried, carried ? hens[i].transform.position : SpotInRun(), carrier);
+                    hens[i].SetCarried(carried, carried ? hens[i].transform.position : settled, carrier);
+                }
+                else if (!carried && (loose != hens[i].Loose || (settled - hens[i].Settled).sqrMagnitude > 0.0004f))
+                {
+                    // Set down or got out on another computer, or a loaded game.
+                    hens[i].PlaceAt(settled, loose);
                 }
             }
         }
