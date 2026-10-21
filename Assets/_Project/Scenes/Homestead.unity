@@ -51977,6 +51977,7 @@ GameObject:
   - component: {fileID: 860916019}
   - component: {fileID: 860916020}
   - component: {fileID: 860916021}
+  - component: {fileID: 860916022}
   m_Layer: 0
   m_Name: Jar Packing
   m_TagString: Untagged
@@ -52091,6 +52092,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.SharedState
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &860916022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860916017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 086ecbf9213c9c04594cd2fcda21397a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Kitchen.CanningPutAway
 --- !u!1 &861283442
 GameObject:
   m_ObjectHideFlags: 0
@@ -65715,6 +65728,105 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1101268312}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1102943955
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1102943956}
+  - component: {fileID: 1102943958}
+  - component: {fileID: 1102943957}
+  - component: {fileID: 1102943959}
+  m_Layer: 0
+  m_Name: Canning Kit
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1102943956
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1102943955}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1783469348}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1102943957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1102943955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 3650077990
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &1102943958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1102943955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11df32ecd6ac54a45b3ba222c238e9ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Kitchen.CanningKit
+  parts:
+  - {fileID: 860916017}
+  - {fileID: 1485490239}
+  - {fileID: 58225701}
+  - {fileID: 1984086334}
+  - {fileID: 1912020427}
+  - {fileID: 1551109649}
+  - {fileID: 1284434791}
+  - {fileID: 989309115}
+  - {fileID: 1679374066}
+  - {fileID: 2082316017}
+  - {fileID: 1534152448}
+  boxPrefab: {fileID: 6650523580441735279, guid: e529b635cbd9f8340812a64c89d2d4a1, type: 3}
+--- !u!114 &1102943959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1102943955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2262266e1086514ab92ac6e4ac1b2f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Net.SharedState
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &1106409078
 GameObject:
   m_ObjectHideFlags: 0
@@ -101313,6 +101425,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1555677737}
+  - component: {fileID: 1555677738}
   m_Layer: 0
   m_Name: Counter
   m_TagString: Untagged
@@ -101344,6 +101457,18 @@ Transform:
   - {fileID: 1748604332}
   m_Father: {fileID: 1783469348}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1555677738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555677736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b8a0a38dbdfc2644b0cd6ffcdc25279, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Kitchen.CanningCounter
 --- !u!1 &1555779633
 GameObject:
   m_ObjectHideFlags: 0
@@ -117576,6 +117701,7 @@ Transform:
   - {fileID: 1715956560}
   - {fileID: 1542866457}
   - {fileID: 225416933}
+  - {fileID: 1102943956}
   m_Father: {fileID: 403413571}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1783728196
