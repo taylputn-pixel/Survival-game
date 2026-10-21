@@ -157,7 +157,7 @@ namespace GrandmasHouse.Tests
             // Back in the run.
             hen.Interact(hands);
             yield return null;
-            Stand(new Vector3(-5.6f, 0.1f, 0f));
+            Stand(flock.SpotInRun() + Vector3.up * 0.1f);
             yield return new WaitForSeconds(1f);
             hands.TakeHeld().Drop();
             yield return null;

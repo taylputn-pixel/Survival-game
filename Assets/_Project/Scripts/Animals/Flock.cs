@@ -355,7 +355,10 @@ namespace GrandmasHouse.Animals
                 }
                 else if (!carried && (loose != hens[i].Loose || (settled - hens[i].Settled).sqrMagnitude > 0.0004f))
                 {
-                    // Set down or got out on another computer, or a loaded game.
+                    // Set down or got out on another computer, or a loaded game. A
+                    // hen in the run saved where the run no longer is (it was
+                    // moved) starts on its floor.
+                    if (!loose && !RunContains(settled)) settled = SpotInRun();
                     hens[i].PlaceAt(settled, loose);
                 }
             }
