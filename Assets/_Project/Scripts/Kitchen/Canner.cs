@@ -50,6 +50,7 @@ namespace GrandmasHouse.Kitchen
         bool boiling;
         bool done;
         float boilLeft;
+        float processTotal;
         bool lidMoving;
         Cookware cookware;
         SoundLoop boilSound;
@@ -67,6 +68,13 @@ namespace GrandmasHouse.Kitchen
         // Not enough water yet to cover the jars, so it won't come to a boil.
         public bool NeedsWater => water < waterNeeded;
         public bool CanMoveLid => !lidMoving;
+        // For the kitchen timer: processing under way (lid on, jars in), how
+        // long is left of how long, and whether it's at a boil now.
+        public bool Processing => lidOn && HasJars && !done && processTotal > 0f;
+        public float ProcessLeft => Mathf.Max(0f, boilLeft);
+        public float ProcessTotal => processTotal;
+        public bool Boiling => boiling;
+        public bool Done => done;
 
         void Awake()
         {
@@ -120,10 +128,11 @@ namespace GrandmasHouse.Kitchen
             public bool boiling;
             public bool done;
             public float boilLeft;
+            public float processTotal;
             public float water;
         }
 
-        public string Capture() => JsonUtility.ToJson(new State { lidOn = lidOn, boiling = boiling, done = done, boilLeft = boilLeft, water = water });
+        public string Capture() => JsonUtility.ToJson(new State { lidOn = lidOn, boiling = boiling, done = done, boilLeft = boilLeft, processTotal = processTotal, water = water });
 
         public void Restore(string json)
         {
@@ -132,6 +141,7 @@ namespace GrandmasHouse.Kitchen
             boiling = state.boiling;
             done = state.done;
             boilLeft = state.boilLeft;
+            processTotal = state.processTotal > 0f ? state.processTotal : state.boilLeft;
             water = state.water;
             ShowWater();
             Transform pose = lidOn ? lidOnPose : lidOffPose;
@@ -259,6 +269,7 @@ namespace GrandmasHouse.Kitchen
             if (putOn && !done)
             {
                 boilLeft = ProcessMinutes() * secondsPerRecipeMinute;
+                processTotal = boilLeft;
             }
         }
 
@@ -292,6 +303,7 @@ namespace GrandmasHouse.Kitchen
         {
             boiling = false;
             done = true;
+            boilLeft = 0f;
         }
 
         // Left with the lid on overnight, the jars are simply done by morning.

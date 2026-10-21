@@ -74,12 +74,28 @@ namespace GrandmasHouse.Data
         [Tooltip("Minutes in the boiling water bath.")]
         public float processMinutes = 10f;
 
+        [Header("Judging (JarQuality): how close counts as right")]
+        [Tooltip("Packed at least this full counts as full.")]
+        [Range(0f, 1f)] public float packedEnough = 0.9f;
+        [Tooltip("Brine (or salsa) within this of the line is right.")]
+        [Range(0f, 0.3f)] public float lineTolerance = 0.07f;
+        [Tooltip("Vinegar's share of the brine within this of the recipe is right.")]
+        [Range(0f, 0.5f)] public float vinegarTolerance = 0.12f;
+        [Tooltip("Scoops of salt per full pot within this of the recipe are right.")]
+        public float saltTolerance = 0.75f;
+
         [Header("Recipe card")]
         [TextArea(6, 20)] public string cardText;
 
         // Card or book text with this recipe's numbers filled in, so the
         // words always match how the game plays.
-        public string FillIn(string text) => text?.Replace("{cloves}", clovesPerJar.ToString());
+        public string FillIn(string text) => text?
+            .Replace("{cloves}", clovesPerJar.ToString())
+            .Replace("{slices}", slicesPerJar.ToString())
+            .Replace("{wedges}", wedgesPerJar.ToString())
+            .Replace("{garlic}", garlicPerJar.ToString())
+            .Replace("{salt}", saltScoops.ToString())
+            .Replace("{minutes}", processMinutes.ToString("0"));
 
         // What kind a piece is, from its name: "Onion Slice" is Onion.
         public static string KindOf(string pieceName)

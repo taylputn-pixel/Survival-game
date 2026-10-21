@@ -40,20 +40,4 @@ MonoBehaviour:
   onionsPerPot: 1
   peppersPerPot: 2
   processMinutes: 85
-  cardText: '(stand-in until Grandma''s own card is added)
-
-
-    Canned Tomatoes
-
-
-    Core
-    the tomatoes and cut them in quarters. Pack them into the jars raw, pressing
-    down until their own juice fills in around them. Leave half an inch at the top.
-
-
-    A
-    spoonful of lemon juice in every pint. Don''t skip it.
-
-
-    Lids on and into
-    the water bath. Pints take 85 minutes.'
+  cardText: "(stand-in until Grandma's own card is added)\n\nCanned Tomatoes\n\nFor each pint:\nAbout three ripe tomatoes, cut in quarters ({wedges} wedges)\nA spoonful of lemon juice. Don't skip it.\n\nPress the wedges in until the jar is full; their own juice comes up to the line on the jar.\n\nLids on and into the water bath. Pints take {minutes} minutes."

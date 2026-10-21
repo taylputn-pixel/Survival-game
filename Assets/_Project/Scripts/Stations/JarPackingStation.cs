@@ -722,12 +722,12 @@ namespace GrandmasHouse.Stations
                         StopPouring();
                         return;
                     }
-                    jar.AddSalsa(pourRate * Time.deltaTime, pot.Composition(), pot.DoneRight);
+                    jar.AddSalsa(pourRate * Time.deltaTime, pot.Composition(), pot.DoneRight, pot.SaltPerFullPot);
                     pot.Use((jar.BrineLevel - before) * pot.SalsaRecipe.potPerJar);
                 }
                 else
                 {
-                    jar.AddBrine(pourRate * Time.deltaTime, pot.DoneRight);
+                    jar.AddBrine(pourRate * Time.deltaTime, pot.DoneRight, pot.VinegarShare, pot.SaltPerFullPot);
                     pot.Use((jar.BrineLevel - before) * recipe.potPerJar);
                 }
             }

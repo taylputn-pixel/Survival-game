@@ -35,6 +35,7 @@ namespace GrandmasHouse.Audio
                 case SoundId.StomachGrowl: return Clip(id, 1.1f, Growl);
                 case SoundId.Birdsong: return Clip(id, 0.7f, Birdsong);
                 case SoundId.Cluck: return Clip(id, 0.42f, Cluck);
+                case SoundId.TimerBell: return Clip(id, 0.5f, t => Bell(t, new[] { 2480f, 3610f, 5230f }, 7f) * 0.7f);
                 case SoundId.Engine: return EngineLoop(id);
                 case SoundId.Wind: return Filtered(id, 8f, 0.05f, t => 0.55 + 0.3 * Math.Sin(2 * Math.PI * 0.25 * t) + 0.15 * Math.Sin(2 * Math.PI * 0.625 * t + 1.3), loop: true);
                 case SoundId.Crickets: return CricketsLoop(id);

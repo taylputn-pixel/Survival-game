@@ -85,6 +85,31 @@ namespace GrandmasHouse.Kitchen
         public int RoomForWedges => Mathf.Max(0, Mathf.FloorToInt((1f - Fullness) * WedgeCapacity + 0.001f));
         // Poured from a pot that wasn't salted, vinegared and boiled.
         public bool BadBatch { get; private set; }
+        // The brine (or salsa) that went in: vinegar's share and scoops of
+        // salt per full pot, averaged over what was poured; how much was poured.
+        public float BrineVinegar { get; private set; }
+        public float BrineSalt { get; private set; }
+        float poured;
+
+        // How it was made, for the judging.
+        public JarMakings Makings => new JarMakings
+        {
+            fullness = Fullness, level = BrineLevel, cloves = CloveCount, peppercorns = PeppercornCount,
+            vinegarShare = poured > 0f && !HasSalsa ? BrineVinegar : -1f,
+            saltPerPot = poured > 0f ? BrineSalt : -1f,
+        };
+
+        // Its fair ribbon: how close it came to Grandma's card. A jar that
+        // isn't one of her recipes, or went bad, gets none.
+        public Ribbon Quality
+        {
+            get
+            {
+                RecipeData recipe = Recipe;
+                if (recipe == null || IsInedible || BadBatch) return Ribbon.None;
+                return JarQuality.Grade(recipe, Makings);
+            }
+        }
         int WedgeCapacity => RecipeFor(RecipeData.Fill.Wedges) is RecipeData r ? Mathf.Max(1, r.wedgesPerJar) : 12;
 
         RecipeData RecipeFor(RecipeData.Fill fill)
@@ -151,6 +176,10 @@ namespace GrandmasHouse.Kitchen
             ShowBrine();
             lid.gameObject.SetActive(false);
             label.SetActive(false);
+            // The fill line on the glass: brine comes up to here.
+            float line = 0.88f;
+            foreach (var recipe in recipes) if (recipe != null && recipe.usesBrine) { line = recipe.brineLine; break; }
+            Marks.Ring(inside, "Fill Line", Vector3.up * line * innerHeight, innerRadius + 0.0072f, 0.0015f, 0.001f, new Color(0.85f, 0.88f, 0.9f), 24);
         }
 
         // The lid drops on in one motion.
@@ -246,6 +275,9 @@ namespace GrandmasHouse.Kitchen
             public bool processed;
             public bool sealedUp;
             public bool labeled;
+            public float brineVinegar;
+            public float brineSalt;
+            public float poured;
         }
 
         public string Capture()
@@ -253,6 +285,7 @@ namespace GrandmasHouse.Kitchen
             var state = new State
             {
                 slices = SliceCount, cloves = CloveCount, wedges = WedgeCount, lemon = HasLemon, salsa = HasSalsa, badBatch = BadBatch, peppercorns = PeppercornCount, dill = HasDill, brine = BrineLevel, lid = HasLid, processed = IsProcessed, sealedUp = IsSealed, labeled = IsLabeled,
+                brineVinegar = Mathf.Round(BrineVinegar * 1000f) / 1000f, brineSalt = Mathf.Round(BrineSalt * 1000f) / 1000f, poured = Mathf.Round(poured * 1000f) / 1000f,
             };
             foreach (var kind in amounts)
             {
@@ -347,6 +380,9 @@ namespace GrandmasHouse.Kitchen
             IsProcessed = state.processed;
             IsSealed = state.sealedUp;
             IsLabeled = state.labeled;
+            BrineVinegar = state.brineVinegar;
+            BrineSalt = state.brineSalt;
+            poured = state.poured;
             lid.gameObject.SetActive(HasLid);
             label.SetActive(IsLabeled);
             ShowLabel();
@@ -421,6 +457,7 @@ namespace GrandmasHouse.Kitchen
             HasLemon = false;
             HasSalsa = false;
             BadBatch = false;
+            BrineVinegar = BrineSalt = poured = 0f;
             amounts.Clear();
             PeppercornCount = 0;
             HasDill = false;
@@ -436,6 +473,7 @@ namespace GrandmasHouse.Kitchen
             lid.localPosition = lidSeat;
             lid.localScale = lidSize;
             label.SetActive(false);
+            ShowRibbon();
             // Washed out, it's fresh to fill again.
             if (TryGetComponent(out Food.Perishable perishable))
             {
@@ -579,7 +617,7 @@ namespace GrandmasHouse.Kitchen
             return corn.transform;
         }
 
-        // The label shows what's inside.
+        // The label shows what's inside, and a labeled jar wears its ribbon.
         void ShowLabel()
         {
             RecipeData recipe = Recipe;
@@ -587,6 +625,24 @@ namespace GrandmasHouse.Kitchen
             {
                 label.GetComponent<Renderer>().sharedMaterial = recipe.label;
             }
+            ShowRibbon();
+        }
+
+        GameObject rosette;
+
+        // A little fair rosette on the lid: blue, red or white. Judged when
+        // the label goes on, once the jar is done.
+        void ShowRibbon()
+        {
+            Ribbon ribbon = IsLabeled && HasLid ? Quality : Ribbon.None;
+            if (ribbon == Ribbon.None)
+            {
+                if (rosette != null) rosette.SetActive(false);
+                return;
+            }
+            if (rosette == null) rosette = Marks.Rosette(transform, lid.GetComponentInChildren<Renderer>(true));
+            rosette.SetActive(true);
+            Marks.Tint(rosette, JarQuality.Color(ribbon));
         }
 
         // The dill goes in standing up along the side of the jar.
@@ -600,13 +656,14 @@ namespace GrandmasHouse.Kitchen
         }
 
         // Ladled in from the pot: what's in it comes along in the pot's proportions.
-        public void AddSalsa(float amount, IDictionary<string, float> shares, bool doneRight)
+        public void AddSalsa(float amount, IDictionary<string, float> shares, bool doneRight, float saltPerPot = -1f)
         {
             HasSalsa = true;
             BadBatch |= !doneRight;
             float before = BrineLevel;
             AddBrine(amount);
             float added = BrineLevel - before;
+            Remember(added, 0f, saltPerPot);
             foreach (var share in shares)
             {
                 Count(share.Key, added * share.Value);
@@ -614,11 +671,23 @@ namespace GrandmasHouse.Kitchen
             ShowBrine();
         }
 
-        // Brine from the pot; brine that wasn't made right spoils the jar.
-        public void AddBrine(float amount, bool doneRight)
+        // Brine from the pot; brine that wasn't made right spoils the jar. How
+        // strong it was is remembered for the judging.
+        public void AddBrine(float amount, bool doneRight, float vinegarShare = -1f, float saltPerPot = -1f)
         {
             BadBatch |= !doneRight;
+            float before = BrineLevel;
             AddBrine(amount);
+            Remember(BrineLevel - before, vinegarShare, saltPerPot);
+        }
+
+        void Remember(float added, float vinegarShare, float saltPerPot)
+        {
+            if (added <= 0f || saltPerPot < 0f) return;
+            float total = poured + added;
+            BrineVinegar = (BrineVinegar * poured + Mathf.Max(0f, vinegarShare) * added) / total;
+            BrineSalt = (BrineSalt * poured + saltPerPot * added) / total;
+            poured = total;
         }
 
         public void AddBrine(float amount)

@@ -42,8 +42,4 @@ MonoBehaviour:
   onionsPerPot: 1
   peppersPerPot: 2
   processMinutes: 15
-  cardText: "(stand-in until Grandma's own card is added)\n\nSalsa\n\n5 good tomatoes,
-    quartered\n1 onion, sliced\n2 jalape\xF1os, sliced\nA clove of garlic if you
-    have one\n\nScrape it all into the pot with a splash of vinegar and a scoop of
-    salt. Bring it to a good boil.\n\nLadle into pints, half an inch from the top.
-    Lids on, 15 minutes in the water bath.\n\nMakes about 4 pints."
+  cardText: "(stand-in until Grandma's own card is added)\n\nSalsa\n\nFor a pot (four pints):\n5 good tomatoes, quartered\n1 onion, sliced\n2 jalape\xF1os, sliced\nA clove of garlic if you have one\n\nScrape it all into the pot with a splash of vinegar and {salt} scoop of salt. Bring it to a good boil.\n\nLadle into pints up to the line on the jar. Lids on, {minutes} minutes in the water bath."

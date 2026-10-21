@@ -34,6 +34,31 @@ namespace GrandmasHouse.Tests
         [TearDown]
         public void PutSavesBack() => Homestead.RestoreRealSaves();
 
+        // Judged against the card when the label goes on: a blue rosette on
+        // the lid for a jar made just right, red with one thing off.
+        [UnityTest]
+        public IEnumerator ALabeledJarWearsItsRibbon()
+        {
+            string done = Pickles.Replace("\"lid\":false,\"processed\":false,\"sealedUp\":false,\"labeled\":false}",
+                "\"lid\":true,\"processed\":true,\"sealedUp\":true,\"labeled\":true,\"brineVinegar\":0.5,\"brineSalt\":2.0,\"poured\":0.88}");
+            jar.Restore(done);
+            yield return null;
+            Assert.AreEqual(Data.Ribbon.Blue, jar.Quality);
+            var rosette = jar.transform.Find("Ribbon Rosette");
+            Assert.IsNotNull(rosette, "A blue-ribbon jar wears a rosette.");
+            Assert.IsTrue(rosette.gameObject.activeSelf);
+            Assert.Greater(rosette.position.y, jar.transform.position.y + 0.12f, "It sits on the lid.");
+
+            jar.Restore(done.Replace("\"brineSalt\":2.0", "\"brineSalt\":5.0"));
+            yield return null;
+            Assert.AreEqual(Data.Ribbon.Red, jar.Quality, "Too salty: red.");
+            Assert.AreEqual(5f, jar.BrineSalt, 0.01f, "The brine's saltiness comes back with the jar.");
+
+            jar.Empty();
+            yield return null;
+            Assert.IsFalse(rosette.gameObject.activeSelf, "Washed out, the ribbon comes off.");
+        }
+
         static string RoundTrip(string state)
         {
             var copy = Homestead.Make<JarContents>("PintJar");

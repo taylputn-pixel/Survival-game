@@ -110,6 +110,13 @@ namespace GrandmasHouse.Kitchen
         // Brine or salsa that isn't goes into the jar anyway, and the jar
         // knows it didn't come out.
         public bool DoneRight => Vinegar > 0f && Salt > 0 && Heat >= 1f;
+        // How strong it is, for judging the jars it goes into: the share of
+        // the liquid that's vinegar, and scoops of salt for a full pot's worth
+        // (salt pours out with the brine, so this holds as the pot empties).
+        public float VinegarShare => Liquid > 0f ? Vinegar / Liquid : 0f;
+        public float SaltPerFullPot => Fill > 0.01f ? saltLeft / Fill : 0f;
+        // Salt still in the pot, as an amount (Salt counts the scoops that went in).
+        float saltLeft;
         public Transform Lip => lip;
         // In someone's hands (anyone's, in a shared game).
         bool InHands
@@ -288,7 +295,11 @@ namespace GrandmasHouse.Kitchen
                 if (!added && phase > 0.45f)
                 {
                     added = true;
-                    if (box.Use(1f) > 0f) Salt++;
+                    if (box.Use(1f) > 0f)
+                    {
+                        Salt++;
+                        saltLeft += 1f;
+                    }
                     Sfx.Play(SoundId.SaltShake, t.position);
                 }
                 yield return null;
@@ -382,6 +393,7 @@ namespace GrandmasHouse.Kitchen
         {
             Vinegar = Water = 0f;
             Salt = 0;
+            saltLeft = 0f;
             Heat = 0f;
             ClearPieces();
             ShowLiquid();
@@ -398,6 +410,7 @@ namespace GrandmasHouse.Kitchen
             float keep = Mathf.Max(fill - share, 0f) / fill;
             Vinegar *= keep;
             Water *= keep;
+            saltLeft *= keep;
             int keepPieces = Mathf.CeilToInt(pieces.Count * keep - 0.001f);
             while (pieces.Count > keepPieces)
             {
@@ -408,6 +421,7 @@ namespace GrandmasHouse.Kitchen
             {
                 Vinegar = Water = 0f;
                 Salt = 0;
+                saltLeft = 0f;
                 ClearPieces();
             }
             ShowLiquid();
@@ -605,6 +619,7 @@ namespace GrandmasHouse.Kitchen
             public float vinegar;
             public float water;
             public int salt;
+            public float saltLeft = -1f;
             public float heat;
             public int tomato;
             public int onion;
@@ -618,7 +633,7 @@ namespace GrandmasHouse.Kitchen
 
         public string Capture() => JsonUtility.ToJson(new State
         {
-            vinegar = Vinegar, water = Water, salt = Salt, heat = Heat,
+            vinegar = Vinegar, water = Water, salt = Salt, saltLeft = Mathf.Round(saltLeft * 1000f) / 1000f, heat = Heat,
             tomato = CountOf(pieces, "Tomato"), onion = CountOf(pieces, "Onion"), pepper = CountOf(pieces, "Jalape"), garlic = CountOf(pieces, "Clove"),
             potato = CountOf(pieces, "Potato"), carrot = CountOf(pieces, "Carrot"), squash = CountOf(pieces, "Winter"), egg = CountOf(pieces, "Egg"),
         });
@@ -629,6 +644,7 @@ namespace GrandmasHouse.Kitchen
             Vinegar = state.vinegar;
             Water = state.water;
             Salt = state.salt;
+            saltLeft = state.saltLeft >= 0f ? state.saltLeft : state.salt;
             Heat = state.heat;
             ClearPieces();
             RebuildPieces("Tomato Wedge", tomatoPiece, state.tomato, new Vector3(0.034f, 0.026f, 0.036f));

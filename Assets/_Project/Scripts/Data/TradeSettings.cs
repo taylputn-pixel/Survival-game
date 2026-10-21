@@ -38,6 +38,8 @@ namespace GrandmasHouse.Data
         [Tooltip("A sealed jar of one of Grandma's recipes.")]
         public List<JarWorth> jars = new List<JarWorth>();
         public float sealedJarDefault = 5f;
+        [Tooltip("A sealed jar's worth is multiplied by its ribbon: none, white, red, blue.")]
+        public float[] ribbonWorth = { 0.8f, 1f, 1.25f, 1.5f };
         [Tooltip("An empty, clean jar.")]
         public float emptyJar = 0.5f;
         [Tooltip("Dried, smoked or salted food is worth this many times as much.")]
@@ -60,6 +62,12 @@ namespace GrandmasHouse.Data
             return 0f;
         }
 
+        public float RibbonWorth(Ribbon ribbon)
+        {
+            int i = (int)ribbon;
+            return ribbonWorth != null && i < ribbonWorth.Length ? ribbonWorth[i] : 1f;
+        }
+
         // One item as it is now: how full, how fresh, whether it's a good jar.
         public float WorthOf(Pickup item, int month)
         {
@@ -68,8 +76,9 @@ namespace GrandmasHouse.Data
             {
                 if (jar.IsSealed && jar.Recipe != null && !jar.IsInedible)
                 {
-                    foreach (var j in jars) if (j.recipe == jar.Recipe.displayName) return j.worth;
-                    return sealedJarDefault;
+                    float ribbon = RibbonWorth(jar.Quality);
+                    foreach (var j in jars) if (j.recipe == jar.Recipe.displayName) return j.worth * ribbon;
+                    return sealedJarDefault * ribbon;
                 }
                 return jar.Contents == null && !jar.HasLid ? emptyJar : 0f;
             }

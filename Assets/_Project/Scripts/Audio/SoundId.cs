@@ -38,5 +38,6 @@ namespace GrandmasHouse.Audio
         Crickets,
         Birdsong,
         Cluck,
+        TimerBell,
     }
 }

@@ -40,25 +40,4 @@ MonoBehaviour:
   onionsPerPot: 1
   peppersPerPot: 2
   processMinutes: 10
-  cardText: '(stand-in until Grandma''s own card is added)
-
-
-    Makes about 6 pints.
-
-    4
-    lbs small pickling cucumbers, sliced 1/4 inch
-
-    6 heads fresh dill
-
-    6
-    cloves garlic
-
-
-    Brine: 3 cups white vinegar, 3 cups water, 1/4 cup pickling
-    salt. Bring to a boil.
-
-
-    Put a head of dill and a clove of garlic in each
-    hot jar. Pack the cucumbers in snug. Pour the hot brine over, leaving 1/2 inch
-    at the top. Wipe the rims, put on lids and rings, and process pints 10 minutes
-    in a boiling water bath.'
+  cardText: "(stand-in until Grandma's own card is added)\n\nDill Pickle Chips\n\nFor each pint:\nA head of dill and {garlic} cloves of garlic\nChips packed in snug, right to the shoulder (about {slices})\n\nBrine: water to the first line in the pot, vinegar to the top line, {salt} scoops of salt. Bring it to a rolling boil.\n\nPour the hot brine up to the line on the jar. Lids on, {minutes} minutes in the water bath.\n\nThe canner takes four pints at a time."

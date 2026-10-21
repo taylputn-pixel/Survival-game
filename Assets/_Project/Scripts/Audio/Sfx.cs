@@ -10,6 +10,7 @@ namespace GrandmasHouse.Audio
     public static class Sfx
     {
         const int Voices = 16;
+        const float Reach = 12f;
 
         static Transform root;
         static AudioSource[] voices;
@@ -26,7 +27,7 @@ namespace GrandmasHouse.Audio
             { SoundId.PickUp, 0.25f }, { SoundId.WeedPull, 0.5f }, { SoundId.SoilPat, 0.4f },
             { SoundId.StepWood, 0.3f }, { SoundId.StepGrass, 0.25f }, { SoundId.Paper, 0.45f },
             { SoundId.MenuClick, 0.35f }, { SoundId.RadioStatic, 0.3f }, { SoundId.Pour, 0.45f }, { SoundId.Boil, 0.4f }, { SoundId.Simmer, 0.25f },
-            { SoundId.Engine, 0.5f }, { SoundId.Wind, 0.35f }, { SoundId.Crickets, 0.18f }, { SoundId.Birdsong, 0.9f }, { SoundId.Cluck, 0.4f },
+            { SoundId.Engine, 0.5f }, { SoundId.Wind, 0.35f }, { SoundId.Crickets, 0.18f }, { SoundId.Birdsong, 0.9f }, { SoundId.Cluck, 0.4f }, { SoundId.TimerBell, 0.8f },
         };
 
         // Domain reload may be off in the editor, so start fresh each time Play begins.
@@ -40,11 +41,13 @@ namespace GrandmasHouse.Audio
             placeholders.Clear();
         }
 
-        public static void Play(SoundId id, Vector3 at, float volume = 1f, float pitchSpread = 0.06f)
+        // Reach is how far off it can still be heard (a timer's bell carries).
+        public static void Play(SoundId id, Vector3 at, float volume = 1f, float pitchSpread = 0.06f, float reach = Reach)
         {
             Ensure();
             AudioSource voice = voices[nextVoice];
             nextVoice = (nextVoice + 1) % voices.Length;
+            voice.maxDistance = reach;
             voice.transform.position = at;
             voice.spatialBlend = 1f;
             voice.ignoreListenerPause = false;

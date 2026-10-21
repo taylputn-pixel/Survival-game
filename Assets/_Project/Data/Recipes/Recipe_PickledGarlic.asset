@@ -39,19 +39,4 @@ MonoBehaviour:
   onionsPerPot: 1
   peppersPerPot: 2
   processMinutes: 10
-  cardText: '(stand-in until Grandma''s own card is added)
-
-
-    Pickled Garlic
-
-
-    About
-    {cloves} peeled cloves for each pint.
-
-    A head of dill and a pinch of peppercorns
-    in each jar.
-
-    Hot brine to the line: equal parts water and vinegar, two scoops
-    of salt.
-
-    Water bath, 10 minutes.'
+  cardText: "(stand-in until Grandma's own card is added)\n\nPickled Garlic\n\nFor each pint:\nA head of dill and a pinch of peppercorns\nPeeled cloves to fill it (about {cloves})\n\nThe same brine as pickles: water to the first line, vinegar to the top line, {salt} scoops of salt, brought to a boil.\n\nBrine up to the line on the jar. Lids on, {minutes} minutes in the water bath."
