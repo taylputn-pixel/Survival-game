@@ -114,6 +114,7 @@ namespace GrandmasHouse.DevTools
                 Button button = UIKit.Button(grid, CategoryName(kind), () => OpenCategory(kind), 52f);
                 if (first == null) first = button;
             }
+            UIKit.Button(panel, "Filled jars", OpenFilledJars);
             UIKit.Button(panel, "Hunger, rest and time", OpenSurvival);
             Button close = UIKit.Button(panel, "Close", menus.Pop);
             menus.Push(panel.gameObject, first != null ? first : close);
@@ -143,6 +144,64 @@ namespace GrandmasHouse.DevTools
             UIKit.Button(panel, "Back", menus.Pop);
             menus.Push(panel.gameObject, first);
         }
+
+        // Jars already made, at each stage and each ribbon, for testing what
+        // comes after packing (the canner, cooling, labels, the shelf, eating).
+        void OpenFilledJars()
+        {
+            RectTransform panel = UIKit.Panel("Filled jars", transform, 820f);
+            UIKit.Label(panel, "Filled jars", 40, FontStyle.Bold, TextAnchor.MiddleCenter);
+            var labels = new string[Amounts.Length];
+            for (int i = 0; i < Amounts.Length; i++) labels[i] = Amounts[i].ToString();
+            UIKit.ChooserRow(panel, "How many", labels, System.Array.IndexOf(Amounts, amount), i => amount = Amounts[i]);
+            var jars = new List<(string name, string state)>
+            {
+                ("Pickles, open (packed, brined)", Pickles(Stage.Open, 2f)),
+                ("Pickles, lid on (for the canner)", Pickles(Stage.Lidded, 2f)),
+                ("Pickles, sealed (to label)", Pickles(Stage.Sealed, 2f)),
+                ("Pickles: blue ribbon", Pickles(Stage.Labeled, 2f)),
+                ("Pickles: red ribbon (salty)", Pickles(Stage.Labeled, 5f)),
+                ("Pickles: white (salty, half full)", Pickles(Stage.Labeled, 5f, 10)),
+                ("Pickled garlic: blue ribbon", JarState(Stage.Labeled, cloves: 20, kinds: "\"Clove\"", amounts: "20.0", dill: true, peppercorns: 6, vinegar: 0.5f, salt: 2f)),
+                ("Canned tomatoes: blue ribbon", JarState(Stage.Labeled, wedges: 12, kinds: "\"Tomato\"", amounts: "12.0", lemon: true)),
+                ("Salsa: blue ribbon", JarState(Stage.Labeled, salsa: true, kinds: "\"Tomato\",\"Onion\",\"Jalape\\u00f1o\"", amounts: "0.6,0.2,0.2", salt: 1f)),
+                ("Don't eat! (bad batch)", JarState(Stage.Labeled, slices: 20, kinds: "\"Cucumber\"", amounts: "20.0", dill: true, vinegar: 0.5f, salt: 2f, bad: true)),
+            };
+            UIKit.Label(panel, "Spawn in front of you", 24);
+            RectTransform grid = Grid(panel, jars.Count);
+            Button first = null;
+            var jar = catalog.Item("PintJar");
+            foreach (var (name, state) in jars)
+            {
+                string label = name, json = state;
+                Button button = UIKit.Button(grid, label, () => Spawn(jar, json, label), 52f);
+                if (first == null) first = button;
+            }
+            status = UIKit.Label(panel, " ", 22, FontStyle.Italic, TextAnchor.MiddleCenter);
+            UIKit.Button(panel, "Back", menus.Pop);
+            menus.Push(panel.gameObject, first);
+        }
+
+        enum Stage { Open, Lidded, Sealed, Labeled }
+
+        static string Pickles(Stage stage, float salt, int slices = 20) =>
+            JarState(stage, slices: slices, cloves: 2, kinds: "\"Cucumber\",\"Clove\"", amounts: slices + ".0,2.0", dill: true, vinegar: 0.5f, salt: salt);
+
+        // A saved jar (JarContents' state), brine to the line.
+        static string JarState(Stage stage, int slices = 0, int cloves = 0, int wedges = 0, string kinds = "", string amounts = "",
+            bool dill = false, bool lemon = false, bool salsa = false, int peppercorns = 0, float vinegar = 0f, float salt = -1f, bool bad = false)
+        {
+            var c = System.Globalization.CultureInfo.InvariantCulture;
+            bool poured = salt >= 0f;
+            return "{" + string.Format(c,
+                "\"slices\":{0},\"cloves\":{1},\"wedges\":{2},\"lemon\":{3},\"salsa\":{4},\"badBatch\":{5},\"kinds\":[{6}],\"kindAmounts\":[{7}],\"peppercorns\":{8},\"dill\":{9},\"brine\":0.88,",
+                slices, cloves, wedges, B(lemon), B(salsa), B(bad), kinds, amounts, peppercorns, B(dill))
+                + string.Format(c, "\"lid\":{0},\"processed\":{1},\"sealedUp\":{2},\"labeled\":{3},\"brineVinegar\":{4},\"brineSalt\":{5},\"poured\":{6}",
+                B(stage != Stage.Open), B(stage >= Stage.Sealed), B(stage >= Stage.Sealed), B(stage == Stage.Labeled),
+                vinegar, poured ? salt : 0f, poured ? 0.88f : 0f) + "}";
+        }
+
+        static string B(bool value) => value ? "true" : "false";
 
         // Set hunger and rest, or hurry the clock on (food ages with it).
         void OpenSurvival()
@@ -243,7 +302,10 @@ namespace GrandmasHouse.DevTools
         }
 
         // A little row of them on the floor ahead, so they don't land in a heap.
-        void Spawn(SavedItem prefab)
+        void Spawn(SavedItem prefab) => Spawn(prefab, null, Nice(prefab));
+
+        // With a saved state, it comes as saved (a jar already filled).
+        void Spawn(SavedItem prefab, string state, string label)
         {
             Transform eye = hands.ViewPoint;
             Vector3 ahead = Vector3.ProjectOnPlane(eye.forward, Vector3.up).normalized;
@@ -256,6 +318,7 @@ namespace GrandmasHouse.DevTools
                 Vector3 at = eye.position + ahead * (distance + along) + side * across + Vector3.down * 0.3f;
                 SavedItem made = Instantiate(prefab, at, facing * prefab.transform.rotation);
                 made.name = prefab.name;
+                if (state != null && made.TryGetComponent(out Kitchen.JarContents filled)) filled.Restore(state);
                 if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsServer
                     && made.TryGetComponent(out Unity.Netcode.NetworkObject shared))
                 {
@@ -267,7 +330,7 @@ namespace GrandmasHouse.DevTools
                     pickup.Drop();
                 }
             }
-            status.text = "Spawned " + amount + " × " + Nice(prefab);
+            status.text = "Spawned " + amount + " × " + label;
         }
 #else
         void Awake() => Destroy(gameObject);

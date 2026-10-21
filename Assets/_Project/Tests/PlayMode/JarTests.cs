@@ -110,6 +110,62 @@ namespace GrandmasHouse.Tests
             StringAssert.Contains("Just right", entries[0].body);
         }
 
+        // Filled jars set down on the counter can be picked up again, open,
+        // lidded or sealed: looking at one, your hands find the jar.
+        [UnityTest]
+        public IEnumerator AFilledJarSetDownCanBePickedUpAgain()
+        {
+            var hands = Homestead.Find<Carrying.PlayerHands>();
+            string open = Pickles;
+            string lidded = Pickles.Replace("\"lid\":false", "\"lid\":true");
+            string done = Pickles.Replace("\"lid\":false,\"processed\":false,\"sealedUp\":false,\"labeled\":false}",
+                "\"lid\":true,\"processed\":true,\"sealedUp\":true,\"labeled\":true,\"brineVinegar\":0.5,\"brineSalt\":2.0,\"poured\":0.88}");
+            int n = 0;
+            foreach (var state in new[] { open, lidded, done })
+            {
+                var filled = Homestead.Make<JarContents>("PintJar");
+                filled.Restore(state);
+                var item = filled.GetComponent<Carrying.Pickup>();
+                yield return null;
+                hands.Give(item);
+                yield return new WaitForSeconds(0.3f);
+                Assert.IsTrue(hands.IsHolding(item));
+                Vector3 counter = new Vector3(1.0f + n * 0.25f, 0.9f, 6.5f);
+                hands.TakeHeld().PlaceOn(counter, 0f, 0.2f);
+                yield return new WaitForSeconds(0.5f);
+                n++;
+                Vector3 eye = counter + new Vector3(0f, 0.6f, -0.6f);
+                Vector3 at = filled.transform.position + Vector3.up * 0.07f;
+                Assert.IsTrue(Physics.Raycast(eye, at - eye, out RaycastHit hit, 2f, ~0, QueryTriggerInteraction.Ignore), "Nothing to look at.");
+                Interaction.IInteractable found = null;
+                foreach (var thing in hit.collider.GetComponentsInParent<Interaction.IInteractable>()) if (thing.CanInteract(hands)) { found = thing; break; }
+                string what = "state " + n + ": looked at " + hit.collider.name + " under " + (hit.collider.transform.parent ? hit.collider.transform.parent.name : "-") + ", resting " + item.IsResting + ", colliders " + item.CollidersOn;
+                Assert.AreSame(item, found as Carrying.Pickup, "Looking at a filled jar should offer to pick it up. " + what);
+            }
+        }
+
+        // The dev menu's ready-made jars are what they say they are.
+        [UnityTest]
+        public IEnumerator TheDevMenusFilledJarsAreRight()
+        {
+            var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+            var menu = typeof(DevTools.DevMenu);
+            var stage = menu.GetNestedType("Stage", System.Reflection.BindingFlags.NonPublic);
+            var pickles = menu.GetMethod("Pickles", flags);
+            object Labeled = System.Enum.Parse(stage, "Labeled");
+            string Pickles(float salt, int slices) => (string)pickles.Invoke(null, new object[] { Labeled, salt, slices });
+
+            jar.Restore(Pickles(2f, 20));
+            yield return null;
+            Assert.AreEqual("Dill Pickle Chips", jar.Contents);
+            Assert.AreEqual(Data.Ribbon.Blue, jar.Quality);
+            jar.Restore(Pickles(5f, 20));
+            Assert.AreEqual(Data.Ribbon.Red, jar.Quality);
+            jar.Restore(Pickles(5f, 10));
+            Assert.AreEqual(Data.Ribbon.White, jar.Quality);
+            Assert.IsTrue(jar.IsSealed && jar.IsLabeled);
+        }
+
         static string RoundTrip(string state)
         {
             var copy = Homestead.Make<JarContents>("PintJar");
