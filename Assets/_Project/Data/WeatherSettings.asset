@@ -18,16 +18,16 @@ MonoBehaviour:
   - 52
   - 24
   monthLow:
-  - 30
+  - 43
   - 50
-  - 26
+  - 30
   - 0
   dailyWander: 8
   snapChance:
   - 0
   - 0
   - 0.02
-  - 0.12
+  - 0.15
   snapDrop: 25
   snapDaysMin: 2
   snapDaysMax: 4

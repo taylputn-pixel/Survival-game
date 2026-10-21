@@ -25,7 +25,10 @@ namespace GrandmasHouse.DayCycle
         public float Outside => Model.At(clock.Day, clock.Hour);
         public WeatherModel.Day Today => Model.DayOf(clock.Day);
         public bool GroundFrozen => Today.high < settings.groundFrozenBelow;
+        public bool Snowing => Today.snow;
+        public float SnowCover => Model.SnowCover(clock.Day);
         public DayClock Clock => clock;
+        public CalendarSettings Calendar => calendar;
 
         // A killing frost came through the garden (for the radio and tests).
         public event Action Frosted;
@@ -109,10 +112,11 @@ namespace GrandmasHouse.DayCycle
             text.Append("It's " + (now < 0 ? -now + " below zero" : now + " degrees") + " right now. ");
             bool warnedFrost = false, warnedSnap = Today.coldSnap;
             if (Today.coldSnap) text.Append("This cold snap is holding on. ");
+            if (Today.snow) text.Append("Snow coming down today. ");
             for (int i = 0; i <= settings.forecastDays && i < When.Length; i++)
             {
                 var d = Model.DayOf(clock.Day + i);
-                text.Append(When[i] + ", a high of " + Degrees(d.high) + " and a low of " + Degrees(d.low) + ". ");
+                text.Append(When[i] + ", a high of " + Degrees(d.high) + " and a low of " + Degrees(d.low) + (i > 0 && d.snow ? ", with snow" : "") + ". ");
                 if (i > 0 && d.coldSnap && !warnedSnap)
                 {
                     text.Append("A cold snap is coming in. Bring in wood and stay by the stove. ");

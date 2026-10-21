@@ -45,7 +45,23 @@ namespace GrandmasHouse.Tests
             }
         }
 
-        void ToWinter(int dayOfWinter = 10, float hour = 10f) => clock.Restore("{\"day\":" + (90 + dayOfWinter) + ",\"hour\":" + hour + "}");
+        // The first day of a month (0 spring .. 3 winter), from the calendar.
+        int MonthStart(int month)
+        {
+            int day = 1;
+            for (int m = 0; m < month; m++) day += weather.Calendar.months[m].days;
+            return day;
+        }
+
+        int WinterLength => weather.Calendar.months[3].days;
+
+        // Midwinter by default.
+        void ToWinter(int dayOfWinter = -1, float hour = 10f)
+        {
+            if (dayOfWinter < 1) dayOfWinter = (WinterLength + 1) / 2;
+            clock.Restore("{\"day\":" + (MonthStart(3) + dayOfWinter - 1) + ",\"hour\":" + hour + "}");
+            weather.Clock.Advance(0f);
+        }
 
         [UnityTest]
         public IEnumerator TheStoveBurnsWoodAndWarmsTheHouse()
@@ -97,7 +113,7 @@ namespace GrandmasHouse.Tests
             weather.Frost();
             Assert.IsTrue(bed.Spots[0].IsEmpty, "A killing frost should take the plant.");
 
-            ToWinter(15);
+            ToWinter();
             yield return null;
             Assert.IsTrue(weather.GroundFrozen, "Midwinter ground should be frozen.");
             var packet = Homestead.Make<Pickup>("TomatoSeeds");
@@ -119,7 +135,7 @@ namespace GrandmasHouse.Tests
             for (int s = 1; s < 500 && seed == 0; s++)
             {
                 weather.Model.Seed = s;
-                for (int d = 92; d < 115; d++)
+                for (int d = MonthStart(3); d + 2 < MonthStart(3) + WinterLength; d++)
                 {
                     if (!weather.Model.DayOf(d).coldSnap && !weather.Model.DayOf(d + 1).coldSnap && weather.Model.DayOf(d + 2).coldSnap) { seed = s; day = d; break; }
                 }
@@ -146,7 +162,7 @@ namespace GrandmasHouse.Tests
             for (int s = 1; s < 50 && !warned; s++)
             {
                 weather.Model.Seed = s;
-                for (int d = 61; d < 90 && !warned; d++)
+                for (int d = MonthStart(2); d < MonthStart(3) && !warned; d++)
                 {
                     clock.Restore("{\"day\":" + d + ",\"hour\":9}");
                     if (!weather.GroundFrozen && weather.Forecast().Contains("Killing frost")) warned = true;

@@ -38,5 +38,7 @@ namespace GrandmasHouse.Saving
         public static ISaveStore Store { get; set; } = new FileSaveStore();
         // Set by the title screen's Continue; the game scene loads it on start.
         public static bool LoadOnStart { get; set; }
+        // Set by the title screen's New game: the game opens with why you came.
+        public static bool NewGame { get; set; }
     }
 }

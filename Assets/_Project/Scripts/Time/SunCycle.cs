@@ -16,6 +16,12 @@ namespace GrandmasHouse.DayCycle
         [SerializeField] float sunriseHeading = 90f;
         [Tooltip("How often the ambient lighting is refreshed, in seconds.")]
         [SerializeField] float lightingRefreshSeconds = 0.5f;
+        [Tooltip("How much sun gets through on a snowy, overcast day.")]
+        [Range(0f, 1f)] [SerializeField] float overcastSun = 0.4f;
+        [Range(0f, 1f)] [SerializeField] float overcastSky = 0.55f;
+
+        // How far into night it is (0 day, 1 full night), for lamps and headlights.
+        public static float Darkness { get; private set; }
 
         Light sun;
         Material sky;
@@ -55,17 +61,20 @@ namespace GrandmasHouse.DayCycle
             // Rises just above the horizon at dawn, sets at dusk, and keeps sinking
             // through twilight so the afterglow on the horizon fades out too.
             float elevation = Mathf.Sin(progress * Mathf.PI) * settings.noonElevation + Mathf.Lerp(2f, -4f, progress) - 14f * night;
+            Darkness = night;
             float heading = sunriseHeading + progress * 180f;
             transform.rotation = Quaternion.Euler(elevation, heading - 180f, 0f);
             sun.color = settings.sunColor.Evaluate(progress);
             // Kept just above zero so it remains the sky's sun even at night.
-            sun.intensity = Mathf.Max(settings.sunIntensity.Evaluate(progress) * (1f - night), 0.001f);
+            // Snow comes with a gray sky.
+            bool overcast = Weather.Instance != null && Weather.Instance.Snowing;
+            sun.intensity = Mathf.Max(settings.sunIntensity.Evaluate(progress) * (1f - night) * (overcast ? overcastSun : 1f), 0.001f);
 
             moon.color = settings.moonColor;
             moon.intensity = settings.moonIntensity * night;
             moon.enabled = night > 0f;
 
-            float exposure = Mathf.Lerp(settings.skyExposure.Evaluate(progress), settings.nightSkyExposure, night);
+            float exposure = Mathf.Lerp(settings.skyExposure.Evaluate(progress) * (overcast ? overcastSky : 1f), settings.nightSkyExposure, night);
             if (sky != null && sky.HasProperty("_Exposure"))
             {
                 sky.SetFloat("_Exposure", exposure);

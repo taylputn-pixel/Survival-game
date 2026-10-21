@@ -56,6 +56,7 @@ namespace GrandmasHouse.UI
         void Play(bool continueSave)
         {
             SaveSlot.LoadOnStart = continueSave;
+            SaveSlot.NewGame = !continueSave;
             SceneManager.LoadScene(gameScene);
         }
 

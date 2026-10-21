@@ -35,11 +35,13 @@ namespace GrandmasHouse.Tests
             Assert.AreEqual("Spring", calendar.MonthName);
             Assert.AreEqual(clock.Day, calendar.DayOfMonth);
 
-            clock.Restore("{\"day\":30,\"hour\":10}");
+            var months = Homestead.Find<DayCycle.Weather>().Calendar.months;
+            int spring = months[0].days;
+            clock.Restore("{\"day\":" + spring + ",\"hour\":10}");
             yield return null;
             Assert.AreEqual("Spring", calendar.MonthName);
-            Assert.AreEqual(30, calendar.DayOfMonth);
-            Assert.AreEqual(29, Crossed(calendar), "Every day before today should be crossed off.");
+            Assert.AreEqual(spring, calendar.DayOfMonth);
+            Assert.AreEqual(spring - 1, Crossed(calendar), "Every day before today should be crossed off.");
 
             clock.SleepUntilMorning();
             yield return null;
@@ -47,10 +49,11 @@ namespace GrandmasHouse.Tests
             Assert.AreEqual(1, calendar.DayOfMonth);
             Assert.AreEqual(0, Crossed(calendar), "A new page has nothing crossed off.");
 
-            clock.Restore("{\"day\":95,\"hour\":10}");
+            int winterDay2 = months[0].days + months[1].days + months[2].days + 2;
+            clock.Restore("{\"day\":" + winterDay2 + ",\"hour\":10}");
             yield return null;
             Assert.AreEqual("Winter", calendar.MonthName);
-            Assert.AreEqual(5, calendar.DayOfMonth);
+            Assert.AreEqual(2, calendar.DayOfMonth);
         }
     }
 }

@@ -98,7 +98,7 @@ namespace GrandmasHouse.Animals
                     Feed -= settings.feedPerHen;
                     Water -= settings.waterPerHen;
                     hen.DaysHungry = 0;
-                    if (Lay()) laid++;
+                    if (Lay()) { laid++; DayCycle.YearTally.Add(DayCycle.YearTally.Count.Egg); }
                 }
                 else if (++hen.DaysHungry >= settings.daysToStarve)
                 {

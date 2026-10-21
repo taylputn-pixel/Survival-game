@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07ea9242f040ce341be3f62e13681fab, type: 3}
   m_Name: TimeSettings
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Data.TimeSettings
-  realMinutesPerDay: 45
+  realMinutesPerDay: 20
   dawnHour: 6
   nightfallHour: 21
   wakeHour: 6.5

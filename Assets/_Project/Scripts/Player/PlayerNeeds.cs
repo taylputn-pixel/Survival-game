@@ -95,6 +95,7 @@ namespace GrandmasHouse.Player
                 hands.TakeHeld().Drop();
             }
             FellDown?.Invoke();
+            DayCycle.YearTally.Add(DayCycle.YearTally.Count.WentDown);
             // In a shared game the host decides when everyone is down.
             if (!(TryGetComponent(out Net.PlayerNet net) && net.IsSpawned))
             {

@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.CalendarSettings
   months:
   - name: Spring
-    days: 30
+    days: 5
     color: {r: 0.45, g: 0.65, b: 0.38, a: 1}
   - name: Summer
-    days: 30
+    days: 5
     color: {r: 0.85, g: 0.65, b: 0.2, a: 1}
   - name: Fall
-    days: 30
+    days: 5
     color: {r: 0.75, g: 0.38, b: 0.18, a: 1}
   - name: Winter
-    days: 30
+    days: 5
     color: {r: 0.4, g: 0.55, b: 0.72, a: 1}

@@ -225,6 +225,7 @@ namespace GrandmasHouse.Kitchen
             lid.localScale = size;
             IsSealed = true;
             Sfx.Play(SoundId.LidPing, lid.position, 1f, 0.03f);
+            if (Net.ItemNet.Runs(this)) DayCycle.YearTally.Add(DayCycle.YearTally.Count.Jar);
         }
 
         [System.Serializable]

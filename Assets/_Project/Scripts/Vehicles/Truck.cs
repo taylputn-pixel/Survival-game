@@ -32,6 +32,8 @@ namespace GrandmasHouse.Vehicles
         [Tooltip("The box it takes up, above wheel height (for bumping into things).")]
         [SerializeField] Vector3 bodyCenter = new Vector3(0f, 1.1f, 0f);
         [SerializeField] Vector3 bodyHalfSize = new Vector3(0.95f, 0.6f, 2.35f);
+        [Tooltip("On while someone's in the truck after dark.")]
+        [SerializeField] Light[] headlights;
         [SerializeField] string saveKey = "truck";
 
         public float Speed { get; private set; }
@@ -114,6 +116,8 @@ namespace GrandmasHouse.Vehicles
             float spin = Speed * Time.deltaTime / wheelRadius * Mathf.Rad2Deg;
             foreach (var wheel in wheels) wheel.Rotate(0f, spin, 0f, Space.Self);
             if (engine != null) engine.Set(Driver != null ? Mathf.Lerp(0.12f, 0.35f, Mathf.Abs(Speed) / topSpeed) : 0f);
+            bool lit = Occupied && DayCycle.SunCycle.Darkness > 0.15f;
+            if (headlights != null) foreach (var lamp in headlights) if (lamp != null) lamp.enabled = lit;
             if (Driver == null) return;
             Drive(Driver.Controller.InputEnabled ? moveAction.ReadValue<Vector2>() : Vector2.zero, Time.deltaTime);
         }

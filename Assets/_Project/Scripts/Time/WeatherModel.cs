@@ -13,6 +13,7 @@ namespace GrandmasHouse.DayCycle
             public float high;
             public float low;
             public bool coldSnap;
+            public bool snow;
         }
 
         readonly WeatherSettings settings;
@@ -64,11 +65,29 @@ namespace GrandmasHouse.DayCycle
 
         public Day DayOf(int gameDay)
         {
-            Usual(gameDay, out float high, out float low, out _);
+            Usual(gameDay, out float high, out float low, out int month);
             float wander = (Roll(gameDay, 0) * 2f - 1f) * settings.dailyWander;
             bool snap = InColdSnap(gameDay);
             float drop = snap ? settings.snapDrop : 0f;
-            return new Day { high = high + wander - drop, low = low + wander - drop, coldSnap = snap };
+            var day = new Day { high = high + wander - drop, low = low + wander - drop, coldSnap = snap };
+            // A cold snap comes in clear and dry; snow needs a gray day near freezing.
+            day.snow = !snap && day.high <= settings.snowBelow && Roll(gameDay, 3) < settings.SnowChance(month);
+            return day;
+        }
+
+        // How white the ground is on a day (0 bare, 1 covered): snow piles up
+        // day by day and warm days melt it back.
+        public float SnowCover(int gameDay)
+        {
+            float cover = 0f;
+            for (int d = Mathf.Max(1, gameDay - 14); d <= gameDay; d++)
+            {
+                var day = DayOf(d);
+                if (day.high > settings.meltAbove) cover -= settings.meltPerDay;
+                if (day.snow) cover += settings.snowCoverPerDay;
+                cover = Mathf.Clamp01(cover);
+            }
+            return cover;
         }
 
         // The temperature outside at an hour of a day: coldest just before dawn,

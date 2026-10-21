@@ -99,6 +99,7 @@ namespace GrandmasHouse.Kitchen
             if (log == null) return;
             int pieces = log.Pieces;
             Net.ItemNet.Remove(log.gameObject);
+            DayCycle.YearTally.Add(DayCycle.YearTally.Count.Firewood, pieces);
             for (int i = 0; i < pieces; i++)
             {
                 float angle = i * 360f / pieces;

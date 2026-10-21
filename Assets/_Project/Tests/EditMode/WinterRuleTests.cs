@@ -111,5 +111,36 @@ namespace GrandmasHouse.Tests
             needs.warmth = 0f;
             Assert.AreEqual(settings.coldSpeed, needs.SpeedMultiplier(settings), 0.001f);
         }
+
+        [Test]
+        public void ItSnowsInWinterAndNeverInSummer()
+        {
+            int winterSnow = 0;
+            for (int seed = 1; seed <= 20; seed++)
+            {
+                var model = new WeatherModel(weather, calendar, seed);
+                for (int d = 31; d <= 60; d++) Assert.IsFalse(model.DayOf(d).snow, "Snow in summer, day " + d);
+                for (int d = 91; d <= 120; d++)
+                {
+                    var day = model.DayOf(d);
+                    if (!day.snow) continue;
+                    winterSnow++;
+                    Assert.LessOrEqual(day.high, weather.snowBelow);
+                    Assert.IsFalse(day.coldSnap, "A cold snap is clear and dry.");
+                }
+            }
+            Assert.Greater(winterSnow, 100, "Winter should see plenty of snow.");
+        }
+
+        [Test]
+        public void SnowPilesUpAndMeltsInSpring()
+        {
+            var model = new WeatherModel(weather, calendar, 11);
+            float most = 0f;
+            for (int d = 91; d <= 120; d++) most = Mathf.Max(most, model.SnowCover(d));
+            Assert.Greater(most, 0.5f, "Winter ground should go white.");
+            Assert.AreEqual(0f, model.SnowCover(50), "No snow on the ground in summer.");
+            Assert.AreEqual(0f, model.SnowCover(150), "It's gone by mid-spring.");
+        }
     }
 }

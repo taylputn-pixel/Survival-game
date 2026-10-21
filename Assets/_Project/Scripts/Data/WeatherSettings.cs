@@ -35,6 +35,17 @@ namespace GrandmasHouse.Data
         [Tooltip("A day whose high doesn't get above this has frozen ground: nothing can be planted.")]
         public float groundFrozenBelow = 36f;
 
+        [Header("Snow")]
+        [Tooltip("Chance of snow on a cold enough day, for each calendar month.")]
+        public float[] snowChance = { 0f, 0f, 0.25f, 0.5f };
+        [Tooltip("It only snows on a day whose high stays at or below this.")]
+        public float snowBelow = 36f;
+        [Tooltip("How much a day of snow covers the ground (1 = all white).")]
+        public float snowCoverPerDay = 0.45f;
+        [Tooltip("A day whose high gets above this melts some of it off.")]
+        public float meltAbove = 40f;
+        public float meltPerDay = 0.35f;
+
         [Header("Shelter")]
         [Tooltip("How many degrees warmer than outside a house holds with no fire.")]
         public float houseHolds = 20f;
@@ -52,6 +63,7 @@ namespace GrandmasHouse.Data
         public float High(int month) => At(monthHigh, month);
         public float Low(int month) => At(monthLow, month);
         public float SnapChance(int month) => At(snapChance, month);
+        public float SnowChance(int month) => At(snowChance, month);
 
         static float At(float[] values, int index) =>
             values == null || values.Length == 0 ? 0f : values[Mathf.Clamp(index, 0, values.Length - 1)];
