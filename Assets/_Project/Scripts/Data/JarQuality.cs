@@ -64,6 +64,35 @@ namespace GrandmasHouse.Data
             return FromMarks(count);
         }
 
+        // What a mark means for next time, as you'd say it tasting the jar.
+        public static string Advice(string mark)
+        {
+            switch (mark)
+            {
+                case "not packed full": return "Pack the jars fuller.";
+                case "too much headspace": return "Fill it up to the line.";
+                case "filled too high": return "Only fill to the line; leave room under the lid.";
+                case "weak brine": return "Needs more vinegar.";
+                case "sharp brine": return "Too sharp; less vinegar, more water.";
+                case "needs salt": return "Needs more salt.";
+                case "too salty": return "Too salty; go easier on the salt.";
+                case "short on garlic": return "Needs more garlic.";
+                case "no peppercorns": return "Needs peppercorns.";
+                default: return mark;
+            }
+        }
+
+        // A tasting note: what it was, its ribbon, and what it needs.
+        public static string Tasting(string recipe, Ribbon ribbon, IList<string> marks)
+        {
+            string ribbonName = Name(ribbon);
+            string verdict = ribbonName != null ? recipe + ": a " + ribbonName + " jar." : recipe + ": no ribbon for this one.";
+            if (marks == null || marks.Count == 0) return verdict + " Just right.";
+            var advice = new List<string>();
+            foreach (var mark in marks) advice.Add(Advice(mark));
+            return verdict + " " + string.Join(" ", advice);
+        }
+
         public static Ribbon FromMarks(int marks) =>
             marks <= 0 ? Ribbon.Blue : marks == 1 ? Ribbon.Red : marks == 2 ? Ribbon.White : Ribbon.None;
 

@@ -8,7 +8,8 @@ namespace GrandmasHouse.Interaction
 {
     // Everything of Grandma's you've found so far, and so what the journal
     // holds: the notes and recipe cards read, and each page of her books that
-    // you've turned to. In a game with friends the household shares one
+    // you've turned to; and your own tasting notes, the last jar of each
+    // recipe eaten and what it needed. In a game with friends the household shares one
     // (a SharedState beside it keeps everyone's the same), and it's saved.
     public class Discoveries : MonoBehaviour, ISaveable
     {
@@ -17,6 +18,19 @@ namespace GrandmasHouse.Interaction
         readonly List<string> pages = new List<string>();
 
         public IReadOnlyList<NoteData> Found => found;
+        public IReadOnlyList<Tasting> Tastings => tastings;
+
+        // How the last jar of a recipe tasted.
+        [Serializable]
+        public class Tasting
+        {
+            public string recipe;
+            public Ribbon ribbon;
+            public List<string> marks = new List<string>();
+            public string Note => JarQuality.Tasting(recipe, ribbon, marks);
+        }
+
+        readonly List<Tasting> tastings = new List<Tasting>();
         public event Action<NoteData> NoteFound;
         // Anything changed: found here, or taken in from a save or a friend.
         public event Action Changed;
@@ -26,6 +40,7 @@ namespace GrandmasHouse.Interaction
         {
             public List<string> notes = new List<string>();
             public List<string> pages = new List<string>();
+            public List<Tasting> tastings = new List<Tasting>();
         }
 
         public string SaveKey => "discoveries";
@@ -38,6 +53,7 @@ namespace GrandmasHouse.Interaction
                 state.notes.Add(note.name);
             }
             state.pages.AddRange(pages);
+            state.tastings.AddRange(tastings);
             return JsonUtility.ToJson(state);
         }
 
@@ -56,6 +72,8 @@ namespace GrandmasHouse.Interaction
                 }
             }
             if (state.pages != null) pages.AddRange(state.pages);
+            tastings.Clear();
+            if (state.tastings != null) tastings.AddRange(state.tastings);
             foreach (var note in found)
             {
                 if (!before.Contains(note)) NoteFound?.Invoke(note);
@@ -79,6 +97,19 @@ namespace GrandmasHouse.Interaction
             NoteFound?.Invoke(note);
             Changed?.Invoke();
         }
+
+        // A jar eaten: its tasting note replaces the last one for that recipe.
+        public void Taste(string recipe, Ribbon ribbon, IEnumerable<string> marks)
+        {
+            if (string.IsNullOrEmpty(recipe)) return;
+            tastings.RemoveAll(t => t.recipe == recipe);
+            var tasting = new Tasting { recipe = recipe, ribbon = ribbon };
+            if (marks != null) tasting.marks.AddRange(marks);
+            tastings.Add(tasting);
+            Changed?.Invoke();
+        }
+
+        public Tasting TastingOf(string recipe) => tastings.Find(t => t.recipe == recipe);
 
         // A page of a book, read.
         public void RecordPage(NoteData book, int page)

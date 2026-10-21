@@ -73,6 +73,21 @@ namespace GrandmasHouse.Tests
         }
 
         [Test]
+        public void ATastingNoteSaysWhatItNeeds()
+        {
+            var jar = AsTheCardSays(pickles);
+            jar.saltPerPot = 0f;
+            jar.cloves = 0;
+            var marks = new List<string>();
+            var ribbon = JarQuality.Grade(pickles, jar, marks);
+            string note = JarQuality.Tasting(pickles.displayName, ribbon, marks);
+            StringAssert.StartsWith("Dill Pickle Chips: a white ribbon jar.", note);
+            StringAssert.Contains("Needs more salt.", note);
+            StringAssert.Contains("Needs more garlic.", note);
+            StringAssert.EndsWith("Just right.", JarQuality.Tasting("Salsa", Ribbon.Blue, new List<string>()));
+        }
+
+        [Test]
         public void CardsSpeakInGameAmounts()
         {
             foreach (var r in new[] { pickles, garlic, salsa, tomatoes })

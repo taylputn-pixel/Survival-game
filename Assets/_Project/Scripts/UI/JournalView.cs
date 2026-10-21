@@ -16,7 +16,8 @@ namespace GrandmasHouse.UI
 {
     // The household's journal: what everyone has learned so far, copied out
     // from Grandma's recipe cards and books. Recipes, How-to (one entry per
-    // book page read) and Notes. Nothing shows for what nobody has found yet.
+    // book page read) and Notes, and Tasting: your own notes on the last jar
+    // of each recipe you ate. Nothing shows for what nobody has found yet.
     // Open it with the Journal button; Next and Previous go through the
     // entries, Interact turns to the next section (or click them), Back or
     // Journal closes it.
@@ -34,7 +35,7 @@ namespace GrandmasHouse.UI
         public int Tab { get; private set; }
         public int Selected { get; private set; }
         public IReadOnlyList<Entry> Entries => entries;
-        public static readonly string[] Tabs = { "Recipes", "How-to", "Notes" };
+        public static readonly string[] Tabs = { "Recipes", "How-to", "Notes", "Tasting" };
 
         public class Entry
         {
@@ -177,6 +178,13 @@ namespace GrandmasHouse.UI
                 else if (tab == 2 && (note.kind == NoteKind.Note || note.kind == NoteKind.DiaryPage))
                 {
                     into.Add(new Entry { title = note.title, body = note.Body, source = note.marginNote });
+                }
+            }
+            if (tab == 3)
+            {
+                foreach (var tasting in discoveries.Tastings)
+                {
+                    into.Add(new Entry { title = tasting.recipe, body = tasting.Note, source = "From the last jar we ate" });
                 }
             }
         }

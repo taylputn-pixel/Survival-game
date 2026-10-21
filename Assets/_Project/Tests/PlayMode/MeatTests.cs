@@ -120,6 +120,32 @@ namespace GrandmasHouse.Tests
             body.enabled = true;
         }
 
+        // Waits for what's in your arms to stop moving (it glides after you).
+        IEnumerator Settle()
+        {
+            Vector3 last = hands.Held.transform.position;
+            int still = 0;
+            for (float t = 0f; t < 6f && still < 10; t += Time.deltaTime)
+            {
+                yield return null;
+                Vector3 now = hands.Held.transform.position;
+                still = (now - last).sqrMagnitude < 0.000001f ? still + 1 : 0;
+                last = now;
+            }
+        }
+
+        // Walks so the hen in your arms is over this spot, and lets her go.
+        IEnumerator LetHerGoAt(Vector3 spot)
+        {
+            yield return Settle();
+            Vector3 reach = Flat(hands.Held.transform.position - hands.transform.position);
+            Stand(Flat(spot) - reach + Vector3.up * 0.1f);
+            yield return Settle();
+            hands.TakeHeld().Drop();
+            yield return null;
+            yield return null;
+        }
+
         // Set down out in the yard she stays loose there, pecking about;
         // carried back and set down in the run, she's home.
         [UnityTest]
@@ -130,18 +156,12 @@ namespace GrandmasHouse.Tests
             Hen hen = HenInTheRun();
             hen.Interact(hands);
             yield return null;
-            Stand(new Vector3(2f, 0.1f, -5f));
-            // Your arms catch up with you.
-            yield return new WaitForSeconds(1f);
-            string where = "player " + hands.transform.position + " held " + hands.Held.transform.position;
-            hands.TakeHeld().Drop();
-            yield return null;
-            yield return null;
+            var yard = new Vector3(2f, 0f, -5f);
+            yield return LetHerGoAt(yard);
             Assert.IsFalse(hen.Carried);
             Assert.IsTrue(hen.Loose, "Out in the yard she's loose.");
-            where += " hen " + hen.transform.position;
             Assert.IsTrue(hen.GetComponentInChildren<Renderer>().enabled);
-            Assert.Less(Vector3.Distance(Flat(hen.transform.position), new Vector3(2f, 0f, -5f)), 1.2f, "She lands where she was let go, not back in the coop. " + where);
+            Assert.Less(Vector3.Distance(Flat(hen.transform.position), yard), 0.3f, "She lands where she was let go, not back in the coop.");
             Assert.AreEqual(0, Object.FindObjectsByType<LiveHen>().Length, "No hen left in your arms.");
 
             // She wanders about there, not home.
@@ -157,11 +177,7 @@ namespace GrandmasHouse.Tests
             // Back in the run.
             hen.Interact(hands);
             yield return null;
-            Stand(flock.SpotInRun() + Vector3.up * 0.1f);
-            yield return new WaitForSeconds(1f);
-            hands.TakeHeld().Drop();
-            yield return null;
-            yield return null;
+            yield return LetHerGoAt(flock.SpotInRun());
             Assert.IsFalse(hen.Loose, "Set down in the run, she's home.");
             Assert.IsTrue(flock.RunContains(hen.transform.position));
 

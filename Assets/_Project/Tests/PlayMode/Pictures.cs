@@ -81,6 +81,30 @@ namespace GrandmasHouse.Tests
             weather = Homestead.Find<Weather>();
         }
 
+        // The containers around the homestead, a labeled jar up close, and the timer.
+        [UnityTest]
+        public IEnumerator TakeKitchenPictures()
+        {
+            yield return Load(newGame: false);
+            yield return At(1, 11f);
+            Shoot("7-crates", new Vector3(4.55f, 1.25f, 3.7f), new Vector3(5.0f, 0.1f, 5.25f));
+            Shoot("8-sacks", new Vector3(1.4f, 1.2f, -2.3f), new Vector3(0.55f, 0.2f, -0.42f));
+            Shoot("9-egg-basket", new Vector3(-4.9f, 1.1f, 3.3f), new Vector3(-6.0f, 0.05f, 2.2f));
+
+            var jar = Homestead.Make<Kitchen.JarContents>("PintJar");
+            jar.Restore("{\"slices\":20,\"cloves\":2,\"wedges\":0,\"lemon\":false,\"salsa\":false,\"badBatch\":false,\"kinds\":[\"Cucumber\",\"Clove\"],\"kindAmounts\":[20.0,2.0],\"peppercorns\":0,\"dill\":true,\"brine\":0.88,\"lid\":true,\"processed\":true,\"sealedUp\":true,\"labeled\":true,\"brineVinegar\":0.5,\"brineSalt\":2.0,\"poured\":0.88}");
+            jar.GetComponent<Pickup>().SetResting(true, true);
+            jar.transform.SetPositionAndRotation(new Vector3(2.6f, 0.9f, 6.55f), Quaternion.Euler(0f, 180f, 0f));
+            var open = Homestead.Make<Kitchen.JarContents>("PintJar");
+            open.Restore("{\"slices\":12,\"cloves\":0,\"wedges\":0,\"lemon\":false,\"salsa\":false,\"badBatch\":false,\"kinds\":[\"Cucumber\"],\"kindAmounts\":[12.0],\"peppercorns\":0,\"dill\":true,\"brine\":0.5,\"lid\":false,\"processed\":false,\"sealedUp\":false,\"labeled\":false}");
+            open.GetComponent<Pickup>().SetResting(true, true);
+            open.transform.SetPositionAndRotation(new Vector3(2.75f, 0.9f, 6.55f), Quaternion.identity);
+            yield return null;
+            Shoot("10-jars", new Vector3(2.68f, 1.12f, 6.18f), new Vector3(2.68f, 0.97f, 6.55f));
+            Shoot("11-rosette", new Vector3(2.6f, 1.25f, 6.45f), new Vector3(2.6f, 1.04f, 6.55f));
+            Shoot("12-timer", new Vector3(3.08f, 1.1f, 6.55f), new Vector3(3.08f, 0.93f, 6.78f));
+        }
+
         [UnityTest]
         public IEnumerator TakePictures()
         {

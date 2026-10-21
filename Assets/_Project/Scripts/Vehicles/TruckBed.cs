@@ -5,14 +5,16 @@ using UnityEngine;
 
 namespace GrandmasHouse.Vehicles
 {
-    // The pickup's bed. Look at it holding a log (or firewood) to load it;
-    // what's in the bed rides along wherever the truck goes. Take things out
-    // by picking them up like anything else.
+    // The pickup's bed. Look at it holding a log, firewood, or something
+    // that holds goods (a jar crate, a sack of produce, a basket) to load it;
+    // what's in the bed rides along wherever the truck goes, and what's in a
+    // crate rides in the crate. Take things out by picking them up like
+    // anything else.
     public class TruckBed : MonoBehaviour, IInteractable, ISharedUse
     {
         [SerializeField] Transform[] spots;
 
-        static bool Hauls(Pickup item) => item.GetComponent<Log>() != null || item.GetComponent<Firewood>() != null;
+        static bool Hauls(Pickup item) => item.GetComponent<Log>() != null || item.GetComponent<Firewood>() != null || item.OwnContainer != null;
 
         Transform FreeSpot()
         {

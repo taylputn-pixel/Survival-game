@@ -18,7 +18,9 @@ namespace GrandmasHouse.Kitchen
         {
             var go = GameObject.CreatePrimitive(shape);
             go.name = name;
-            Object.Destroy(go.GetComponent<Collider>());
+            // Gone at once, not at the end of the frame: a jar notes its own
+            // colliders as it wakes, and a mark's must never be among them.
+            Object.DestroyImmediate(go.GetComponent<Collider>());
             go.transform.SetParent(parent, false);
             go.transform.localPosition = at;
             go.transform.localRotation = turn == default ? Quaternion.identity : turn;

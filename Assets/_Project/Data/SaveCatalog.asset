@@ -91,6 +91,12 @@ MonoBehaviour:
     prefab: {fileID: 767647525408192853, guid: 5db22dbdb08b86d419140c0516b2c9ea, type: 3}
   - key: Axe
     prefab: {fileID: 767647525408192853, guid: a60ffd9bcfa862a42bafbdbe035620df, type: 3}
+  - key: JarCrate
+    prefab: {fileID: 5237070889829467272, guid: 49fa0b75df5814b4dbbdedeee4d4d69b, type: 3}
+  - key: BurlapSack
+    prefab: {fileID: 5237070889829467272, guid: 155270b330efbe6459f12bde8aa664ef, type: 3}
+  - key: EggBasket
+    prefab: {fileID: 5237070889829467272, guid: 66087d92a65422b49b4df41000997e22, type: 3}
   crops:
   - {fileID: 11400000, guid: 5e15d42a32eb7a64e9c79284b28618b4, type: 2}
   - {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}

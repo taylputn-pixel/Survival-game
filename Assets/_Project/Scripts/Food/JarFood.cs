@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.Kitchen;
@@ -28,6 +29,21 @@ namespace GrandmasHouse.Food
 
         public bool CanEat => jar.HasContents;
 
+        // A sealed jar of one of Grandma's recipes, eaten: how it was made
+        // shows in the taste. Said on screen, and kept as a tasting note in
+        // the journal for next time.
+        void Taste()
+        {
+            RecipeData recipe = jar.Recipe;
+            if (recipe == null || jar.IsInedible || jar.BadBatch || !jar.IsSealed) return;
+            var marks = new List<string>();
+            Ribbon ribbon = JarQuality.Grade(recipe, jar.Makings, marks);
+            var caption = FindAnyObjectByType<UI.Caption>();
+            if (caption != null) caption.Show(JarQuality.Tasting(recipe.displayName, ribbon, marks), 7f);
+            var journal = FindAnyObjectByType<Interaction.Discoveries>();
+            if (journal != null) journal.Taste(recipe.displayName, ribbon, marks);
+        }
+
         // How much food is in it: the salsa's level, or how packed it is.
         float Share => jar.HasSalsa ? jar.BrineLevel : Mathf.Min(1f, jar.Fullness);
 
@@ -44,6 +60,7 @@ namespace GrandmasHouse.Food
 
         public void Eaten(PlayerHands hands)
         {
+            Taste();
             jar.Empty();
             if (TryGetComponent(out ItemNet net) && net.Live)
             {
