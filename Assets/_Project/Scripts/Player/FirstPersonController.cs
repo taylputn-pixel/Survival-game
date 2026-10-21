@@ -93,9 +93,12 @@ namespace GrandmasHouse.Player
 
         void Move(Vector2 input)
         {
-            // Lying in bed, the body is put in place by the bed.
+            // Lying in bed or sitting in the truck, the body is put in place
+            // by the bed or seat: no walking, so no steps and no bob.
             if (!body.enabled)
             {
+                horizontalVelocity = Vector3.zero;
+                verticalVelocity = 0f;
                 return;
             }
             float speed = (BriskAllowed && briskAction.IsPressed() ? settings.briskSpeed : settings.walkSpeed) * SpeedMultiplier;
@@ -123,7 +126,7 @@ namespace GrandmasHouse.Player
         void HeadBob()
         {
             float speed = horizontalVelocity.magnitude;
-            if (settings.headBobAmount <= 0f || speed < 0.1f || !body.isGrounded)
+            if (settings.headBobAmount <= 0f || speed < 0.1f || !body.enabled || !body.isGrounded)
             {
                 cameraPivot.localPosition = Vector3.Lerp(cameraPivot.localPosition, pivotRestPosition, 8f * Time.deltaTime);
                 return;

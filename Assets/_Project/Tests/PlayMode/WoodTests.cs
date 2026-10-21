@@ -179,6 +179,42 @@ namespace GrandmasHouse.Tests
             Assert.Less(truck.transform.position.z, -41.2f - 2f, "The truck drove through the tree.");
         }
 
+        // Getting in mid-stride: the walking stops (no steps, no bob).
+        [UnityTest]
+        public IEnumerator GettingInWhileRunningStopsTheSteps()
+        {
+            var hands = Homestead.Find<PlayerHands>();
+            var walker = hands.Controller;
+            typeof(FirstPersonController).GetField("horizontalVelocity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .SetValue(walker, hands.transform.forward * 5f);
+            Assert.IsTrue(walker.IsMoving);
+            truck.SitIn(hands);
+            for (int i = 0; i < 30; i++) yield return null;
+            Assert.IsFalse(walker.IsMoving, "Sitting in the truck isn't walking.");
+            truck.Leave(hands);
+        }
+
+        [UnityTest]
+        public IEnumerator TheDriverCanSeeOut()
+        {
+            var hands = Homestead.Find<PlayerHands>();
+            truck.SitIn(hands);
+            yield return null;
+            yield return null;
+            float eye = hands.ViewPoint.position.y;
+            foreach (var name in new[] { "Windshield", "Back Window" })
+            {
+                var glass = truck.transform.Find(name).GetComponent<Renderer>();
+                Assert.Less(glass.sharedMaterial.GetColor("_BaseColor").a, 0.5f, name + " should be see-through.");
+                Assert.That(eye, Is.InRange(glass.bounds.min.y + 0.1f, glass.bounds.max.y - 0.1f), "Your eyes should be level with the " + name.ToLower() + ".");
+            }
+            foreach (Transform part in truck.transform)
+            {
+                if (part.name == "Window") Assert.Less(part.GetComponent<Renderer>().sharedMaterial.GetColor("_BaseColor").a, 0.5f, "Side windows should be see-through.");
+            }
+            truck.Leave(hands);
+        }
+
         [UnityTest]
         public IEnumerator TheTruckIsParkedWhereItWasLeft()
         {

@@ -127,6 +127,17 @@ namespace GrandmasHouse.Tests
             yield return At(falling, 13f);
             yield return new WaitForSeconds(6f);
             Shoot("6-snowing", eyes.position, eyes.position + hands.transform.forward + Vector3.up * 0.1f);
+            // From the driver's seat on a clear day: ahead, out the side, and back.
+            yield return At(2, 12f);
+            truck.SitIn(hands);
+            yield return null;
+            yield return null;
+            Vector3 eye = eyes.position;
+            Shoot("7-drive-ahead", eye, eye + truck.transform.forward * 10f - Vector3.up * 0.6f);
+            Shoot("8-drive-side", eye, eye - truck.transform.right * 10f);
+            Shoot("9-drive-back", eye, eye - truck.transform.forward * 10f);
+            truck.Leave(hands);
+            Debug.Log("[shots] eye " + (eye.y - truck.transform.position.y));
             Debug.Log("[shots] cover " + weather.Model.SnowCover(white) + " day " + white + ", snowing day " + falling + " " + weather.Model.DayOf(falling).snow);
         }
     }
