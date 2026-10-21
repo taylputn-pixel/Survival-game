@@ -55,6 +55,28 @@ namespace GrandmasHouse.Data
         public float sickHungerMultiplier = 1.5f;
         [Range(0.3f, 1f)] public float sickSpeed = 0.85f;
 
+        [Header("Cold")]
+        [Range(0f, 100f)] public float startWarmth = 100f;
+        [Tooltip("Felt temperature (F) at or above which you're warm enough and warm back up.")]
+        public float comfortableAbove = 55f;
+        [Tooltip("Warmth lost per hour for each degree below comfortable.")]
+        public float coldPerDegreeHour = 0.25f;
+        [Tooltip("Warmth regained per hour somewhere warm.")]
+        public float warmUpPerHour = 40f;
+        [Tooltip("Hours at no warmth before you collapse. Someone has to warm you up.")]
+        public float freezeCollapseHours = 2f;
+        [Tooltip("Freezing hours that heal per hour once you're warm again.")]
+        public float freezingRecoveryPerHour = 4f;
+        [Tooltip("Warmth you're left with when someone brings you round.")]
+        public float warmedUpTo = 30f;
+        [Tooltip("Below this you feel chilly (frost creeps in at the screen's edge).")]
+        public float chillyBelow = 70f;
+        [Tooltip("Below this you're cold: you shiver.")]
+        public float coldBelow = 35f;
+        [Tooltip("Below this the cold slows you down.")]
+        public float coldSlowBelow = 25f;
+        [Range(0.3f, 1f)] public float coldSpeed = 0.75f;
+
         [Header("Sleep")]
         [Tooltip("In-game hours that pass per real second while asleep.")]
         public float sleepHoursPerSecond = 1.5f;

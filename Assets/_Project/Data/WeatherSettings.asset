@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a22cd9e02eafebc47be16e86fb6cdbd7, type: 3}
+  m_Name: WeatherSettings
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.WeatherSettings
+  monthHigh:
+  - 55
+  - 80
+  - 52
+  - 24
+  monthLow:
+  - 30
+  - 50
+  - 26
+  - 0
+  dailyWander: 8
+  snapChance:
+  - 0
+  - 0
+  - 0.02
+  - 0.12
+  snapDrop: 25
+  snapDaysMin: 2
+  snapDaysMax: 4
+  coldestHour: 6
+  warmestHour: 15
+  killingFrost: 28
+  groundFrozenBelow: 36
+  houseHolds: 20
+  stoveHeat: 45
+  besideStove: 20
+  besideStoveRadius: 2.5
+  inBed: 15
+  forecastDays: 3

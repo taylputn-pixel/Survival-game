@@ -8,11 +8,12 @@ using UnityEngine;
 namespace GrandmasHouse.Audio
 {
     // Grandma's tabletop radio. Press Interact to turn it on, again to tune
-    // to the next station, and after the last station it clicks off. Music
-    // only: no news, no talk. It sounds like an old radio, and you hear it
-    // best near the kitchen table.
+    // to the next station, and after the last station it clicks off. The
+    // other button tunes in the farm report: the weather for the next few
+    // days, written along the bottom of the screen for whoever's listening.
+    // It sounds like an old radio, and you hear it best near the kitchen table.
     [RequireComponent(typeof(AudioSource))]
-    public class Radio : MonoBehaviour, IInteractable, ISaveable, GrandmasHouse.Interaction.ISharedUse
+    public class Radio : MonoBehaviour, IInteractable, IAltInteractable, ISaveable, GrandmasHouse.Interaction.ISharedUse
     {
         [Serializable]
         public class Station
@@ -62,6 +63,16 @@ namespace GrandmasHouse.Audio
         }
 
         public bool CanInteract(PlayerHands hands) => true;
+
+        public bool CanAltInteract(PlayerHands hands) => DayCycle.Weather.Instance != null;
+        public string AltVerb(PlayerHands hands) => "Hear the forecast";
+
+        public void AltInteract(PlayerHands hands)
+        {
+            Sfx.Play(SoundId.RadioStatic, transform.position);
+            var caption = FindAnyObjectByType<UI.Caption>();
+            if (caption != null) caption.Show(DayCycle.Weather.Instance.Forecast(), 14f);
+        }
 
         public string PromptVerb(PlayerHands hands)
         {

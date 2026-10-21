@@ -151,6 +151,14 @@ namespace GrandmasHouse.Garden
             return true;
         }
 
+        // A killing frost (the host): everything growing dies. Says how many plants were lost.
+        public int Frost()
+        {
+            int killed = 0;
+            foreach (var spot in spots) if (spot.Frost()) killed++;
+            return killed;
+        }
+
         // ---- Changes to the bed ----
 
         public void Plant(PlantSpot spot, CropData crop, float seconds)

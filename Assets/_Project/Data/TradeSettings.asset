@@ -136,6 +136,13 @@ MonoBehaviour:
     - 1
     - 1
     - 1.5
+  - key: Firewood
+    worth: 0.5
+    byMonth:
+    - 1
+    - 0.8
+    - 1.2
+    - 1.6
   jars:
   - recipe: Dill Pickle Chips
     worth: 5

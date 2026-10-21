@@ -31,6 +31,8 @@ namespace GrandmasHouse.Player
         // Starved until you dropped; waiting for someone to feed you.
         public bool Collapsed { get; private set; }
         bool On => clock.Mode.hungerHasPenalties;
+        // How cold it feels where you are (F): outside, indoors, by the stove, in bed.
+        public float Felt => DayCycle.Weather.Instance != null ? DayCycle.Weather.Instance.FeltAt(transform.position + Vector3.up, Asleep) : settings.comfortableAbove;
 
         // Something was eaten: true if it made you sick.
         public event Action<bool> Ate;
@@ -68,7 +70,7 @@ namespace GrandmasHouse.Player
                 return;
             }
 
-            State.Pass(hours, Asleep, settings);
+            State.Pass(hours, Asleep, settings, Felt);
             controller.SpeedMultiplier = State.SpeedMultiplier(settings);
             controller.BriskAllowed = State.CanWalkBriskly(settings);
             Fumble();
@@ -138,8 +140,15 @@ namespace GrandmasHouse.Player
             if (Collapsed && sickFor <= 0f && nutrition > 0f)
             {
                 State.BringRound(settings);
-                StandUp();
+                if (!State.Collapsed(settings)) StandUp();
             }
+        }
+
+        // Someone rubbed your hands and got you up by the fire.
+        public void WarmedUp()
+        {
+            State.WarmUp(settings);
+            if (Collapsed && !State.Collapsed(settings)) StandUp();
         }
 
         void StandUp()
@@ -157,6 +166,8 @@ namespace GrandmasHouse.Player
             State.rest = rest;
             State.starvingHours = starvingHours;
             State.sickHours = 0f;
+            State.warmth = 100f;
+            State.freezingHours = 0f;
             if (Collapsed && !State.Collapsed(settings))
             {
                 StandUp();

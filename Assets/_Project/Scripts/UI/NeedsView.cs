@@ -25,9 +25,11 @@ namespace GrandmasHouse.UI
 
         InputAction statusAction;
         Image vignette;
+        // Frost creeping in from the edges as you get cold.
+        Image frost;
         GameObject panel;
-        Text hungerWord, restWord, conditionWord, message;
-        RectTransform hungerBar, restBar;
+        Text hungerWord, restWord, warmthWord, conditionWord, message;
+        RectTransform hungerBar, restBar, warmthBar;
         Image deathScreen;
         Text deathText;
         float nextGrowl;
@@ -50,6 +52,12 @@ namespace GrandmasHouse.UI
             vignette.sprite = VignetteSprite();
             vignette.color = Color.clear;
             vignette.raycastTarget = false;
+
+            frost = UIKit.Rect("Frost", transform).gameObject.AddComponent<Image>();
+            UIKit.Stretch(frost.rectTransform);
+            frost.sprite = vignette.sprite;
+            frost.color = new Color(0.85f, 0.93f, 1f, 0f);
+            frost.raycastTarget = false;
 
             BuildPanel();
 
@@ -98,7 +106,7 @@ namespace GrandmasHouse.UI
         void BuildPanel()
         {
             RectTransform rect = UIKit.Rect("Status", transform);
-            Place(rect, new Vector2(0.5f, 0.78f), new Vector2(560f, 200f));
+            Place(rect, new Vector2(0.5f, 0.76f), new Vector2(560f, 254f));
             var paper = rect.gameObject.AddComponent<Image>();
             paper.color = UIKit.Paper;
             paper.raycastTarget = false;
@@ -109,6 +117,7 @@ namespace GrandmasHouse.UI
             layout.childForceExpandHeight = false;
             hungerWord = Line(rect, "Hunger", out hungerBar);
             restWord = Line(rect, "Rest", out restBar);
+            warmthWord = Line(rect, "Warmth", out warmthBar);
             conditionWord = Line(rect, "Health", out _);
             panel = rect.gameObject;
             panel.SetActive(false);
@@ -171,7 +180,14 @@ namespace GrandmasHouse.UI
                 conditionWord.text = Words(state.Condition(settings));
                 hungerBar.anchorMax = new Vector2(state.hunger / 100f, hungerBar.anchorMax.y);
                 restBar.anchorMax = new Vector2(state.rest / 100f, restBar.anchorMax.y);
+                warmthWord.text = Words(state.Warmth(settings));
+                warmthBar.anchorMax = new Vector2(state.warmth / 100f, warmthBar.anchorMax.y);
             }
+
+            // Cold: pale frost closes in, thicker the colder you are.
+            float cold = on ? Mathf.InverseLerp(settings.chillyBelow, 0f, state.warmth) * 0.85f : 0f;
+            var frostTarget = new Color(0.85f, 0.93f, 1f, cold);
+            frost.color = Color.Lerp(frost.color, frostTarget, 1f - Mathf.Exp(-1.5f * Time.deltaTime));
 
             // The edges close in as you tire, starve or fall sick.
             float worn = 0f;
@@ -209,7 +225,8 @@ namespace GrandmasHouse.UI
         {
             panel.SetActive(false);
             StopAllCoroutines();
-            StartCoroutine(Dim(0.75f, "You collapsed from hunger.\nSomeone has to feed you."));
+            bool cold = needs.State.IsFreezing && needs.State.hunger > 0f;
+            StartCoroutine(Dim(0.75f, cold ? "You collapsed from the cold.\nSomeone has to warm you up." : "You collapsed from hunger.\nSomeone has to feed you."));
         }
 
         void OnCameRound()
@@ -219,7 +236,7 @@ namespace GrandmasHouse.UI
             var c = deathText.color;
             c.a = 0f;
             deathText.color = c;
-            message.text = "You came round. Eat something soon.";
+            message.text = needs.State.warmth < needs.Settings.coldBelow ? "You came round. Get warm." : "You came round. Eat something soon.";
             messageUntil = Time.time + messageSeconds;
         }
 
@@ -257,7 +274,8 @@ namespace GrandmasHouse.UI
                 deathScreen.color = new Color(0f, 0f, 0f, Mathf.Lerp(from, 1f, t / 2f));
                 yield return null;
             }
-            deathText.text = shared ? "Everyone starved." : "You starved.";
+            bool froze = needs.State.IsFreezing && needs.State.hunger > 0f;
+            deathText.text = froze ? (shared ? "Everyone froze." : "You froze.") : (shared ? "Everyone starved." : "You starved.");
             for (float t = 0f; t < 1.5f; t += Time.deltaTime)
             {
                 var c = deathText.color;
@@ -291,11 +309,20 @@ namespace GrandmasHouse.UI
             _ => "Exhausted",
         };
 
+        static string Words(WarmthLevel level) => level switch
+        {
+            WarmthLevel.Warm => "Warm",
+            WarmthLevel.Chilly => "Chilly",
+            WarmthLevel.Cold => "Cold",
+            _ => "Freezing",
+        };
+
         static string Words(Condition condition) => condition switch
         {
             Condition.Healthy => "Fine",
             Condition.Sick => "Sick",
             Condition.Malnourished => "Malnourished",
+            Condition.Freezing => "Freezing",
             _ => "Dead",
         };
 

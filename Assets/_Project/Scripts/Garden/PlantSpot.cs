@@ -135,6 +135,18 @@ namespace GrandmasHouse.Garden
             pests = pests.Count,
         };
 
+        // A killing frost: the plant and anything ripe on it are lost.
+        public bool Frost()
+        {
+            if (Crop == null) return false;
+            foreach (var item in ripe)
+            {
+                if (item != null) Net.ItemNet.Remove(item.gameObject);
+            }
+            Restore(new State());
+            return true;
+        }
+
         // Puts the plant back as it was; the picking on it comes back with the items.
         public void Restore(State state)
         {

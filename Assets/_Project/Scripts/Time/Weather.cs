@@ -1,0 +1,140 @@
+using System;
+using System.Collections.Generic;
+using GrandmasHouse.Data;
+using GrandmasHouse.Garden;
+using GrandmasHouse.Kitchen;
+using GrandmasHouse.Saving;
+using Unity.Netcode;
+using UnityEngine;
+
+namespace GrandmasHouse.DayCycle
+{
+    // The weather outside, and how cold it is wherever someone stands. The
+    // days come from a seed saved with the game (shared with friends), so
+    // there's nothing to send but that. On the host, a killing frost takes
+    // whatever is still growing in the garden.
+    public class Weather : MonoBehaviour, ISaveable
+    {
+        [SerializeField] DayClock clock;
+        [SerializeField] CalendarSettings calendar;
+        [SerializeField] WeatherSettings settings;
+
+        public static Weather Instance { get; private set; }
+        public WeatherSettings Settings => settings;
+        public WeatherModel Model { get; private set; }
+        public float Outside => Model.At(clock.Day, clock.Hour);
+        public WeatherModel.Day Today => Model.DayOf(clock.Day);
+        public bool GroundFrozen => Today.high < settings.groundFrozenBelow;
+        public DayClock Clock => clock;
+
+        // A killing frost came through the garden (for the radio and tests).
+        public event Action Frosted;
+
+        float nextCheck;
+        bool frostedTonight;
+
+        void Awake()
+        {
+            Instance = this;
+            Model = new WeatherModel(settings, calendar, UnityEngine.Random.Range(1, int.MaxValue));
+        }
+
+        void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+
+        static bool Hosting => NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
+
+        void Update()
+        {
+            if (Time.time < nextCheck) return;
+            nextCheck = Time.time + 0.5f;
+            bool frost = Outside <= settings.killingFrost;
+            if (frost && !frostedTonight && Hosting) Frost();
+            frostedTonight = frost;
+        }
+
+        // Everything still growing outside dies.
+        public void Frost()
+        {
+            int killed = 0;
+            foreach (var bed in FindObjectsByType<GardenBed>(FindObjectsSortMode.None)) killed += bed.Frost();
+            if (killed > 0) Frosted?.Invoke();
+        }
+
+        // How cold it feels at a spot: outside, or in a shelter (and its stove),
+        // beside a lit stove, and under the blankets.
+        public float FeltAt(Vector3 position, bool inBed)
+        {
+            float outside = Outside;
+            float felt = outside;
+            foreach (var shelter in Shelter.All)
+            {
+                if (shelter.Contains(position))
+                {
+                    felt = shelter.Temperature(outside, settings);
+                    break;
+                }
+            }
+            foreach (var stove in WoodStove.All)
+            {
+                if (stove.Heat > 0f && Vector3.Distance(stove.transform.position, position) <= settings.besideStoveRadius)
+                {
+                    felt += settings.besideStove * stove.Heat;
+                }
+            }
+            if (inBed) felt += settings.inBed;
+            return felt;
+        }
+
+        // ---- The farm report ----
+
+        static string Degrees(float f)
+        {
+            int d = Mathf.RoundToInt(f);
+            return d < 0 ? -d + " below" : d.ToString();
+        }
+
+        static readonly string[] When = { "Today", "Tomorrow", "The day after", "In three days", "In four days" };
+
+        // What the radio says: now, today, the days ahead, and warnings
+        // about frost and cold snaps in plain words.
+        public string Forecast()
+        {
+            var date = calendar.DateOf(clock.Day);
+            var text = new System.Text.StringBuilder();
+            text.Append("Farm report for " + calendar.months[date.month].name + ", day " + date.dayOfMonth + ". ");
+            int now = Mathf.RoundToInt(Outside);
+            text.Append("It's " + (now < 0 ? -now + " below zero" : now + " degrees") + " right now. ");
+            bool warnedFrost = false, warnedSnap = Today.coldSnap;
+            if (Today.coldSnap) text.Append("This cold snap is holding on. ");
+            for (int i = 0; i <= settings.forecastDays && i < When.Length; i++)
+            {
+                var d = Model.DayOf(clock.Day + i);
+                text.Append(When[i] + ", a high of " + Degrees(d.high) + " and a low of " + Degrees(d.low) + ". ");
+                if (i > 0 && d.coldSnap && !warnedSnap)
+                {
+                    text.Append("A cold snap is coming in. Bring in wood and stay by the stove. ");
+                    warnedSnap = true;
+                }
+                if (!warnedFrost && d.low <= settings.killingFrost && !GroundFrozen)
+                {
+                    text.Append((i == 0 ? "Killing frost tonight" : "Killing frost by then") + ": pick what's left in your garden. ");
+                    warnedFrost = true;
+                }
+            }
+            return text.ToString().Trim();
+        }
+
+        [Serializable]
+        class State
+        {
+            public int seed;
+        }
+
+        public string SaveKey => "weather";
+        public string Capture() => JsonUtility.ToJson(new State { seed = Model.Seed });
+        public void Restore(string json) => Model.Seed = JsonUtility.FromJson<State>(json).seed;
+    }
+}

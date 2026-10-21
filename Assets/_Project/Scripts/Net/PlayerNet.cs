@@ -152,12 +152,17 @@ namespace GrandmasHouse.Net
             feeder.Held != null && feeder.Held.TryGetComponent(out IEdible food) && food.CanEat ? food : null;
 
         public bool CanInteract(PlayerHands feeder) =>
-            IsSpawned && feeder != hands && FoodIn(feeder) != null && (IsDown || !IsAsleep);
+            IsSpawned && feeder != hands && (FoodIn(feeder) != null ? IsDown || !IsAsleep : feeder.IsEmpty && IsDown);
 
-        public string PromptVerb(PlayerHands feeder) => "Feed";
+        public string PromptVerb(PlayerHands feeder) => FoodIn(feeder) != null ? "Feed" : "Warm them up";
 
         public void Interact(PlayerHands feeder)
         {
+            if (FoodIn(feeder) == null)
+            {
+                WarmRpc();
+                return;
+            }
             IEdible food = FoodIn(feeder);
             var settings = feeder.GetComponent<PlayerNeeds>().Settings;
             FeedRpc(food.Nutrition, food.SickHours(settings));
@@ -166,6 +171,9 @@ namespace GrandmasHouse.Net
 
         [Rpc(SendTo.Owner)]
         void FeedRpc(float nutrition, float sickFor) => needs.Fed(nutrition, sickFor);
+
+        [Rpc(SendTo.Owner)]
+        void WarmRpc() => needs.WarmedUp();
 
         // Everyone is down: the host tells each player the game is over.
         [Rpc(SendTo.Owner)]

@@ -85,6 +85,8 @@ MonoBehaviour:
     prefab: {fileID: 1568808308163170717, guid: 7e0497a450342fc4eb5ab2d0d6e59b4a, type: 3}
   - key: Chicken
     prefab: {fileID: 767647525408192853, guid: e30cdc5721fb70c41811306ebd033f67, type: 3}
+  - key: Firewood
+    prefab: {fileID: 767647525408192853, guid: 498caced1bf6ad544a37d8bb18f647f5, type: 3}
   crops:
   - {fileID: 11400000, guid: 5e15d42a32eb7a64e9c79284b28618b4, type: 2}
   - {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}

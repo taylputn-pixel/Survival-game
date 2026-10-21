@@ -48,6 +48,8 @@ namespace GrandmasHouse.Garden
                 return !can.IsEmpty;
             }
             var packet = hands.Held.GetComponent<SeedPacket>();
+            // Frozen ground takes no seed, until spring.
+            if (DayCycle.Weather.Instance != null && DayCycle.Weather.Instance.GroundFrozen) return false;
             return packet != null && packet.HasSeeds && SpotAt(hands) != null;
         }
 

@@ -37,6 +37,9 @@ namespace GrandmasHouse.Net
             yield return new WaitForSeconds(3f);
             PlayerHands hands = me.Hands;
             yield return Journal(hands);
+            var weather = DayCycle.Weather.Instance;
+            var stove = FindAnyObjectByType<Kitchen.WoodStove>();
+            if (weather != null) Log("weather: seed " + weather.Model.Seed + ", outside " + weather.Outside.ToString("F1") + ", stove burning " + (stove != null && stove.Burning) + " logs " + (stove != null ? stove.Logs : -1));
             yield return Store(me);
 
             Pickup tomato = Loose();
