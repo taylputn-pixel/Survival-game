@@ -11754,6 +11754,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Animals.Flock
   settings: {fileID: 11400000, guid: 9a60ceb026ff557479ea1abe00b3ba84, type: 2}
   clock: {fileID: 2003454500}
+  calendar: {fileID: 11400000, guid: ebd007af040a4984eb52a42b028a302a, type: 2}
   hens:
   - {fileID: 446156643}
   - {fileID: 44262360}
@@ -24203,6 +24204,8 @@ MonoBehaviour:
   moon: {fileID: 1258361597}
   sunriseHeading: 90
   lightingRefreshSeconds: 0.5
+  overcastSun: 0.4
+  overcastSky: 0.55
 --- !u!1 &411924393
 GameObject:
   m_ObjectHideFlags: 0
@@ -140122,6 +140125,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1498811334}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2130404646
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2130404648}
+  - component: {fileID: 2130404647}
+  m_Layer: 0
+  m_Name: Outdoor Sounds
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2130404647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2130404646}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a14fd8641cc9fd4aa60fe729f897dff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Audio.Outdoors
+  calmWind: 0.3
+  winterWind: 0.6
+  snowWind: 0.9
+  indoors: 0.3
+  birdEvery: {x: 2, y: 7}
+--- !u!4 &2130404648
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2130404646}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2131031824
 GameObject:
   m_ObjectHideFlags: 0
@@ -141546,3 +141598,4 @@ SceneRoots:
   - {fileID: 1369783428}
   - {fileID: 1244051955}
   - {fileID: 1232590207}
+  - {fileID: 2130404648}

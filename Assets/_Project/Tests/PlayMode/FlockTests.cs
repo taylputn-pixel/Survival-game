@@ -54,6 +54,29 @@ namespace GrandmasHouse.Tests
             Assert.AreEqual(before + 4, Eggs());
         }
 
+        // Short cold days: fed hens still eat but lay far less in winter.
+        [Test]
+        public void HensLayLessInWinter()
+        {
+            var calendar = Homestead.Find<DayCycle.Weather>().Calendar;
+            int winter = 1;
+            for (int m = 0; m < 3; m++) winter += calendar.months[m].days;
+            flock.Clock.Restore("{\"day\":" + winter + ",\"hour\":22}");
+            CoopDoor().Set(false);
+            int laid = 0;
+            flock.Overnight += said => laid += int.Parse(said.Split(' ')[1].TrimEnd(','));
+            const int nights = 12;
+            for (int night = 0; night < nights; night++)
+            {
+                foreach (var p in Object.FindObjectsByType<Pickup>()) if (p.DisplayName == "Egg") Object.DestroyImmediate(p.gameObject);
+                flock.AddFeed(1f);
+                flock.AddWater(1f);
+                flock.Live(1f);
+            }
+            Assert.AreEqual(4, flock.Alive, "Fed hens don't die in winter.");
+            Assert.Less(laid, nights * 4 * 0.6f, "Winter should cut laying well short of one egg a hen a night.");
+        }
+
         [Test]
         public void HensWithNothingToEatDieAfterAFewDays()
         {

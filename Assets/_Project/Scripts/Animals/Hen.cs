@@ -1,3 +1,4 @@
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Interaction;
 using Unity.Netcode;
@@ -37,6 +38,7 @@ namespace GrandmasHouse.Animals
         float peckUntil;
         Vector3 headRest;
         Vector3 lastPosition;
+        float nextCluck;
 
         void Awake()
         {
@@ -54,6 +56,15 @@ namespace GrandmasHouse.Animals
                 Think();
             }
             Peck();
+            Cluck();
+        }
+
+        // Now and then she clucks to herself (quieter on the roost at night).
+        void Cluck()
+        {
+            if (!alive || Time.time < nextCluck) return;
+            if (nextCluck > 0f) Sfx.Play(SoundId.Cluck, head.position, Inside ? 0.4f : 1f, 0.12f);
+            nextCluck = Time.time + Random.Range(5f, 16f);
         }
 
         void Think()

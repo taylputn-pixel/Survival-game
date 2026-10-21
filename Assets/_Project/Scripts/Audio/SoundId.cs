@@ -31,5 +31,12 @@ namespace GrandmasHouse.Audio
         // One-shots added for survival, kept last so saved numbers don't shift.
         Eat,
         StomachGrowl,
+
+        // Outdoors and the truck (Engine, Wind and Crickets loop).
+        Engine,
+        Wind,
+        Crickets,
+        Birdsong,
+        Cluck,
     }
 }

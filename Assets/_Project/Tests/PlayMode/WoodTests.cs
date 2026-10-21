@@ -163,6 +163,23 @@ namespace GrandmasHouse.Tests
         }
 
         [UnityTest]
+        public IEnumerator TheTruckStopsAtFencesAndTrees()
+        {
+            // North into the yard fence (its south side runs along z = -8).
+            truck.transform.SetPositionAndRotation(new Vector3(7f, 0f, -14f), Quaternion.identity);
+            yield return null;
+            for (int i = 0; i < 300; i++) truck.Drive(new Vector2(0f, 1f), 0.02f);
+            Assert.Less(truck.transform.position.z, -8f - 2f, "The truck drove through the fence.");
+            Assert.Greater(truck.transform.position.z, -12f, "It should get right up to the fence.");
+
+            // North into a roadside tree.
+            truck.transform.SetPositionAndRotation(new Vector3(11.3f, 0f, -50f), Quaternion.identity);
+            yield return null;
+            for (int i = 0; i < 300; i++) truck.Drive(new Vector2(0f, 1f), 0.02f);
+            Assert.Less(truck.transform.position.z, -41.2f - 2f, "The truck drove through the tree.");
+        }
+
+        [UnityTest]
         public IEnumerator TheTruckIsParkedWhereItWasLeft()
         {
             truck.transform.SetPositionAndRotation(new Vector3(20f, 0f, -60f), Quaternion.Euler(0f, 90f, 0f));

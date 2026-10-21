@@ -56,7 +56,11 @@ namespace GrandmasHouse.Vehicles
             lastRotation = transform.rotation;
         }
 
-        void Start() => engine = Sfx.Loop(SoundId.Simmer, transform);
+        void Start()
+        {
+            engine = Sfx.Loop(SoundId.Engine, transform);
+            engine.Reach(30f);
+        }
 
         // ---- Getting in and out ----
 
@@ -115,7 +119,13 @@ namespace GrandmasHouse.Vehicles
         {
             float spin = Speed * Time.deltaTime / wheelRadius * Mathf.Rad2Deg;
             foreach (var wheel in wheels) wheel.Rotate(0f, spin, 0f, Space.Self);
-            if (engine != null) engine.Set(Driver != null ? Mathf.Lerp(0.12f, 0.35f, Mathf.Abs(Speed) / topSpeed) : 0f);
+            if (engine != null)
+            {
+                // Running while anyone's in it; it works harder and higher with speed.
+                float pace = Mathf.Abs(Speed) / topSpeed;
+                engine.Set(Occupied ? Mathf.Lerp(0.55f, 1f, pace) : 0f);
+                engine.Pitch(Mathf.Lerp(0.85f, 1.7f, pace));
+            }
             bool lit = Occupied && DayCycle.SunCycle.Darkness > 0.15f;
             if (headlights != null) foreach (var lamp in headlights) if (lamp != null) lamp.enabled = lit;
             if (Driver == null) return;

@@ -16,6 +16,8 @@ namespace GrandmasHouse.Data
         public int daysToStarve = 3;
         [Tooltip("Eggs a nest box holds before the hens stop laying in it.")]
         public int eggsPerNest = 3;
+        [Tooltip("Chance a fed hen lays overnight, by month (spring, summer, fall, winter). Short cold days mean fewer eggs.")]
+        public float[] layChance = { 1f, 1f, 0.6f, 0.25f };
 
         [Header("The fox")]
         [Tooltip("Chance each night that the fox takes a hen when the coop door is left open.")]
@@ -39,5 +41,8 @@ namespace GrandmasHouse.Data
         public float walkSpeed = 0.35f;
         [Tooltip("Seconds a hen stands pecking before she wanders on, at random in this range.")]
         public Vector2 peckSeconds = new Vector2(1.5f, 5f);
+
+        public float LayChance(int month) =>
+            layChance == null || layChance.Length == 0 ? 1f : layChance[Mathf.Clamp(month, 0, layChance.Length - 1)];
     }
 }

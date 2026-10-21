@@ -33,6 +33,11 @@ namespace GrandmasHouse.Audio
                 case SoundId.MenuClick: return Clip(id, 0.04f, t => Math.Sin(2 * Math.PI * 1800 * t) * Decay(t, 140f) * 0.35f);
                 case SoundId.Eat: return Filtered(id, 0.5f, 0.4f, t => Pulses(t, 3, 0.16f, 0.07f) * Jitter(t, 70f) * 0.7f);
                 case SoundId.StomachGrowl: return Clip(id, 1.1f, Growl);
+                case SoundId.Birdsong: return Clip(id, 0.7f, Birdsong);
+                case SoundId.Cluck: return Clip(id, 0.42f, Cluck);
+                case SoundId.Engine: return EngineLoop(id);
+                case SoundId.Wind: return Filtered(id, 8f, 0.05f, t => 0.55 + 0.3 * Math.Sin(2 * Math.PI * 0.25 * t) + 0.15 * Math.Sin(2 * Math.PI * 0.625 * t + 1.3), loop: true);
+                case SoundId.Crickets: return CricketsLoop(id);
                 case SoundId.Pour:return Filtered(id, 2f, 0.45f, t => 0.35f + 0.08f * Math.Sin(2 * Math.PI * 3 * t), loop: true);
                 case SoundId.Boil: return BubblesLoop(id, 3f, 14f);
                 case SoundId.Simmer: return BubblesLoop(id, 3f, 5f);
@@ -68,6 +73,34 @@ namespace GrandmasHouse.Audio
             double pitch = 70 + 25 * Math.Sin(2 * Math.PI * 1.3 * t) + 10 * Math.Sin(2 * Math.PI * 7 * t);
             double body = Math.Sin(2 * Math.PI * pitch * t) + 0.4 * Math.Sin(4 * Math.PI * pitch * t);
             return body * Envelope(t, 0.25, 1.1) * (0.7 + 0.3 * Jitter(t, 30)) * 0.45;
+        }
+
+        // A few quick rising whistles, like a songbird off in the trees.
+        static double Birdsong(double t)
+        {
+            const double note = 0.13;
+            int n = (int)(t / note);
+            if (n >= 4) return 0;
+            double u = t - n * note;
+            if (u > 0.09) return 0;
+            double from = n == 3 ? 3400 : 2600 + n * 180, to = n == 3 ? 2500 : 3900;
+            double f = from + (to - from) * u / 0.09;
+            return Math.Sin(2 * Math.PI * f * u) * Math.Sin(Math.PI * u / 0.09) * 0.45;
+        }
+
+        // "Buk-buk": two short, nasal bursts that drop in pitch.
+        static double Cluck(double t)
+        {
+            double sum = 0;
+            foreach (double at in new[] { 0.0, 0.16 })
+            {
+                double u = t - at;
+                if (u < 0 || u > 0.12) continue;
+                double f = 520 - 900 * u;
+                double voice = Math.Sin(2 * Math.PI * f * u) + 0.5 * Math.Sin(4 * Math.PI * f * u) + 0.3 * Math.Sin(6 * Math.PI * f * u);
+                sum += voice * Math.Min(u / 0.008, 1.0) * Decay(u, 28) * 0.4;
+            }
+            return sum;
         }
 
         static double Chop(double t)
@@ -187,6 +220,56 @@ namespace GrandmasHouse.Audio
             var clip = AudioClip.Create(id.ToString(), data.Length, 1, Rate, false);
             clip.SetData(data, 0);
             return clip;
+        }
+
+        // An old six-cylinder idling: a low throb with a rough edge. The
+        // truck raises its pitch as it speeds up.
+        static AudioClip EngineLoop(SoundId id)
+        {
+            const float seconds = 2f;
+            int count = (int)(seconds * Rate);
+            var data = new float[count];
+            float low = 0f;
+            for (int i = 0; i < count; i++)
+            {
+                double t = (double)i / Rate;
+                // 36 Hz firing, whole cycles in two seconds so the loop meets itself.
+                double throb = Math.Sin(2 * Math.PI * 36 * t) + 0.6 * Math.Sin(2 * Math.PI * 72 * t) + 0.3 * Math.Sin(2 * Math.PI * 108 * t);
+                double pulse = 0.75 + 0.25 * Math.Sin(2 * Math.PI * 12 * t);
+                low += (Noise() - low) * 0.05f;
+                data[i] = (float)(throb * pulse * 0.5 + low * 0.6);
+            }
+            Normalize(data, 0.6f);
+            data = LoopSeam(data, 0.05f);
+            var clip = AudioClip.Create(id.ToString(), data.Length, 1, Rate, false);
+            clip.SetData(data, 0);
+            return clip;
+        }
+
+        // Two crickets trilling out of step on a summer night.
+        static AudioClip CricketsLoop(SoundId id)
+        {
+            const float seconds = 3f;
+            int count = (int)(seconds * Rate);
+            var data = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                double t = (double)i / Rate;
+                data[i] = (float)(Cricket(t, 4400, 0.6, 0.0) + Cricket(t, 4700, 0.75, 0.31) * 0.7);
+            }
+            Normalize(data, 0.5f);
+            data = LoopSeam(data, 0.05f);
+            var clip = AudioClip.Create(id.ToString(), data.Length, 1, Rate, false);
+            clip.SetData(data, 0);
+            return clip;
+        }
+
+        // Three quick pulses of a high tone, every so often.
+        static double Cricket(double t, double pitch, double every, double offset)
+        {
+            double u = (t + offset) % every;
+            double gate = Pulses(u, 3, 0.045, 0.025);
+            return Math.Sin(2 * Math.PI * pitch * t) * gate;
         }
 
         static void Normalize(float[] data, float peak)

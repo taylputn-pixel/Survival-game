@@ -26,6 +26,7 @@ namespace GrandmasHouse.Audio
             { SoundId.PickUp, 0.25f }, { SoundId.WeedPull, 0.5f }, { SoundId.SoilPat, 0.4f },
             { SoundId.StepWood, 0.3f }, { SoundId.StepGrass, 0.25f }, { SoundId.Paper, 0.45f },
             { SoundId.MenuClick, 0.35f }, { SoundId.RadioStatic, 0.3f }, { SoundId.Pour, 0.45f }, { SoundId.Boil, 0.4f }, { SoundId.Simmer, 0.25f },
+            { SoundId.Engine, 0.5f }, { SoundId.Wind, 0.35f }, { SoundId.Crickets, 0.18f }, { SoundId.Birdsong, 0.9f }, { SoundId.Cluck, 0.4f },
         };
 
         // Domain reload may be off in the editor, so start fresh each time Play begins.
@@ -65,7 +66,8 @@ namespace GrandmasHouse.Audio
         }
 
         // A looping sound attached to something; turn it on and off as needed.
-        public static SoundLoop Loop(SoundId id, Transform on)
+        // Flat is all around you rather than from a place (wind, crickets).
+        public static SoundLoop Loop(SoundId id, Transform on, bool flat = false)
         {
             Ensure();
             var go = new GameObject(id + " Sound");
@@ -73,6 +75,7 @@ namespace GrandmasHouse.Audio
             var source = go.AddComponent<AudioSource>();
             Setup(source);
             source.loop = true;
+            if (flat) source.spatialBlend = 0f;
             source.clip = Clip(id, out float baseVolume);
             var loop = go.AddComponent<SoundLoop>();
             loop.Setup(source, baseVolume);

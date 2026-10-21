@@ -12,7 +12,7 @@ namespace GrandmasHouse.Animals
 {
     // The hens and their coop. Each night every hen eats and drinks from the
     // feeder and waterer; a fed and watered hen lays an egg in a nest box
-    // by morning, and one that goes without for a few days dies. Hens go in
+    // by morning (less often in fall and winter), and one that goes without for a few days dies. Hens go in
     // at dusk; leave the coop door open at night, or shut a hen out, and the
     // fox may take one (it leaves feathers). In a shared game the host keeps
     // the flock; anyone can feed and water it (SharedState).
@@ -20,6 +20,8 @@ namespace GrandmasHouse.Animals
     {
         [SerializeField] FlockSettings settings;
         [SerializeField] DayClock clock;
+        [Tooltip("For the month: hens lay less in winter.")]
+        [SerializeField] CalendarSettings calendar;
         [SerializeField] Hen[] hens;
         [SerializeField] HingedDoor coopDoor;
         [Tooltip("Where a hen goes in and out.")]
@@ -89,6 +91,7 @@ namespace GrandmasHouse.Animals
         public void Live(float foxRoll)
         {
             int laid = 0, starved = 0;
+            float layChance = calendar != null ? settings.LayChance(calendar.DateOf(clock.Day).month) : 1f;
             foreach (var hen in hens)
             {
                 if (!hen.Alive) continue;
@@ -98,7 +101,7 @@ namespace GrandmasHouse.Animals
                     Feed -= settings.feedPerHen;
                     Water -= settings.waterPerHen;
                     hen.DaysHungry = 0;
-                    if (Lay()) { laid++; DayCycle.YearTally.Add(DayCycle.YearTally.Count.Egg); }
+                    if ((layChance >= 1f || UnityEngine.Random.value < layChance) && Lay()) { laid++; DayCycle.YearTally.Add(DayCycle.YearTally.Count.Egg); }
                 }
                 else if (++hen.DaysHungry >= settings.daysToStarve)
                 {

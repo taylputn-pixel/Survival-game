@@ -16,6 +16,11 @@ MonoBehaviour:
   waterPerHen: 0.1
   daysToStarve: 3
   eggsPerNest: 3
+  layChance:
+  - 1
+  - 1
+  - 0.6
+  - 0.25
   foxChanceDoorOpen: 0.35
   foxChanceShutOut: 0.5
   scoop: 0.25

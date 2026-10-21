@@ -27,6 +27,12 @@ namespace GrandmasHouse.Audio
 
         public void Set(bool on) => Set(on ? 1f : 0f);
 
+        // Higher for an engine working harder.
+        public void Pitch(float pitch) => source.pitch = pitch;
+
+        // How far off it can still be heard.
+        public void Reach(float meters) => source.maxDistance = meters;
+
         void Update()
         {
             if (Mathf.Approximately(level, target))
