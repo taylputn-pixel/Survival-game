@@ -157,6 +157,24 @@ namespace GrandmasHouse.Tests
             Assert.IsTrue(hen.GetComponentInChildren<Renderer>().enabled);
         }
 
+        // Standing at the open front, looking in at the fire pit reaches the
+        // smokehouse; the booklet on its shelf still reaches the booklet.
+        [Test]
+        public void TheSmokehouseIsEasyToLookAt()
+        {
+            var smokehouse = Homestead.Find<Smokehouse>();
+            Vector3 eye = smokehouse.transform.position + new Vector3(-1.4f, 1.5f, 0f);
+            foreach (var at in new[] { new Vector3(0f, 0.05f, 0f), new Vector3(0f, 0.6f, 0.25f), new Vector3(0.2f, 0.3f, -0.3f) })
+            {
+                Vector3 target = smokehouse.transform.position + at;
+                Assert.IsTrue(Physics.Raycast(eye, target - eye, out RaycastHit hit, 3f, ~0, QueryTriggerInteraction.Ignore));
+                Assert.IsNotNull(hit.collider.GetComponentInParent<Smokehouse>(), "Looking at the fire pit hit " + hit.collider.name);
+            }
+            var booklet = GameObject.Find("Yard/Smokehouse/Meat That Keeps").GetComponent<Collider>();
+            Assert.IsTrue(Physics.Raycast(eye, booklet.bounds.center - eye, out RaycastHit read, 3f, ~0, QueryTriggerInteraction.Ignore));
+            Assert.AreEqual(booklet, read.collider, "The booklet should still be in reach.");
+        }
+
         [UnityTest]
         public IEnumerator RawChickenMakesYouSickButSmokedDoesNot()
         {
