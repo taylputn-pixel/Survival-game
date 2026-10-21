@@ -54,6 +54,8 @@ namespace GrandmasHouse.Carrying
 
         // True when picked up, false once it's resting somewhere again.
         public event Action<bool> HeldChanged;
+        // Whose hands it's in on this computer (set by PlayerHands).
+        public PlayerHands HeldBy { get; set; }
 
         Rigidbody body;
         Collider[] colliders;
@@ -69,6 +71,7 @@ namespace GrandmasHouse.Carrying
             // Only solid parts count toward its size; steam and water streams don't.
             renderers = System.Array.FindAll(GetComponentsInChildren<Renderer>(), r => r is MeshRenderer || r is SkinnedMeshRenderer);
             OwnContainer = GetComponent<Container>();
+            net = GetComponent<Net.ItemNet>();
             Vector3 euler = transform.rotation.eulerAngles;
             RestTilt = Quaternion.Euler(euler.x, 0f, euler.z);
             RestHalfHeight = transform.position.y - WorldBounds().min.y;
@@ -219,8 +222,22 @@ namespace GrandmasHouse.Carrying
             }
         }
 
+        float glideUntil;
+        Net.ItemNet net;
+
+        // A loose item lying still with no one holding it is always solid, so
+        // it can be seen and picked up again. (It's only ever left unsolid on
+        // its way somewhere, in someone's hands, or tucked into something.)
+        void Update()
+        {
+            if (HeldBy != null || transform.parent != null || Time.time < glideUntil || colliders.Length == 0 || colliders[0] == null || colliders[0].enabled) return;
+            if (net != null && net.Live && net.Holder != Net.ItemNet.NoOne) return;
+            SetCollidersEnabled(true);
+        }
+
         IEnumerator Glide(Vector3 endPosition, Quaternion endRotation, float seconds, bool local, bool collidersOn)
         {
+            glideUntil = Time.time + seconds + 0.25f;
             Vector3 startPosition = local ? transform.localPosition : transform.position;
             Quaternion startRotation = local ? transform.localRotation : transform.rotation;
 

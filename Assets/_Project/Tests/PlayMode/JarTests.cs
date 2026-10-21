@@ -166,6 +166,42 @@ namespace GrandmasHouse.Tests
             Assert.IsTrue(jar.IsSealed && jar.IsLabeled);
         }
 
+        // A lid put on too soon comes back off (the second action), until
+        // the jar has been through the canner.
+        [UnityTest]
+        public IEnumerator ALidCanComeBackOffBeforeCanning()
+        {
+            var hands = Homestead.Find<Carrying.PlayerHands>();
+            jar.Restore(Pickles.Replace("\"brine\":0.88", "\"brine\":0.0").Replace("\"lid\":false", "\"lid\":true"));
+            yield return null;
+            Assert.IsTrue(jar.CanAltInteract(hands));
+            Assert.AreEqual("Take the lid off", jar.AltVerb(hands));
+            jar.AltInteract(hands);
+            Assert.IsFalse(jar.HasLid, "The lid's off again.");
+            Assert.IsTrue(jar.TakesBrine, "Brine can go in now.");
+
+            jar.Restore(Pickles.Replace("\"lid\":false,\"processed\":false", "\"lid\":true,\"processed\":true"));
+            yield return null;
+            Assert.IsFalse(jar.CanAltInteract(hands), "Not once it's been canned.");
+        }
+
+        // Out of your hands but never set down, an item doesn't stay ghostly:
+        // lying loose with no one holding it, it's solid and can be picked up.
+        [UnityTest]
+        public IEnumerator SomethingLetGoIsSolidAgain()
+        {
+            var hands = Homestead.Find<Carrying.PlayerHands>();
+            var item = jar.GetComponent<Carrying.Pickup>();
+            hands.Give(item);
+            yield return new WaitForSeconds(0.3f);
+            Assert.IsTrue(hands.IsHolding(item));
+            Assert.IsFalse(item.CollidersOn, "Not solid in your hands.");
+            hands.Take(item);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(item.CollidersOn, "Solid again once it's out of your hands.");
+            Assert.IsTrue(item.CanInteract(hands));
+        }
+
         static string RoundTrip(string state)
         {
             var copy = Homestead.Make<JarContents>("PintJar");

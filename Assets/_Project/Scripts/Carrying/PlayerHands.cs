@@ -64,6 +64,7 @@ namespace GrandmasHouse.Carrying
                 return null;
             }
             handOf.Remove(item);
+            item.HeldBy = null;
             if (Shared(item, out ItemNet net))
             {
                 net.Released();
@@ -297,6 +298,7 @@ namespace GrandmasHouse.Carrying
             }
             Lift(item);
             carried.Add(item);
+            item.HeldBy = this;
             handOf[item] = hand;
             item.OnPickedUp();
         }

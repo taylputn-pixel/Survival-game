@@ -18,7 +18,7 @@ namespace GrandmasHouse.Kitchen
     // head of dill, salsa needs tomato, onion and jalapeño. Anything that
     // isn't one of Grandma's recipes is a "Don't eat!" jar.
     [RequireComponent(typeof(Pickup))]
-    public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard, IInteractable, GrandmasHouse.Interaction.ISharedUse
+    public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard, IInteractable, IAltInteractable, GrandmasHouse.Interaction.ISharedUse
     {
         [Tooltip("The bottom of the inside of the jar.")]
         [SerializeField] Transform inside;
@@ -192,6 +192,26 @@ namespace GrandmasHouse.Kitchen
             HasLid = true;
             StartCoroutine(LidDrop());
         }
+
+        // Changed your mind (no brine yet?): the lid comes back off, up until
+        // the jar has been through the canner.
+        public bool CanTakeOffLid => HasLid && !IsProcessed;
+
+        public void TakeOffLid()
+        {
+            if (!CanTakeOffLid) return;
+            StopAllCoroutines();
+            HasLid = false;
+            lid.gameObject.SetActive(false);
+            lid.localPosition = lidSeat;
+            lid.localScale = lidSize;
+            Sfx.Play(SoundId.LidClink, lid.position);
+        }
+
+        // Looking at a lidded jar with empty hands: the second action lifts the lid off.
+        public bool CanAltInteract(PlayerHands hands) => hands.IsEmpty && CanTakeOffLid && GetComponentInParent<Canner>() == null;
+        public void AltInteract(PlayerHands hands) => TakeOffLid();
+        public string AltVerb(PlayerHands hands) => "Take the lid off";
 
         // Out of the canner: as it cools, the lid seals with a ping.
         public void CoolAndSeal(float seconds)

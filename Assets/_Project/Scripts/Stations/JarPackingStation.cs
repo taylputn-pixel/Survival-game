@@ -23,7 +23,7 @@ namespace GrandmasHouse.Stations
     // A pot of cooked salsa is ladled into empty jars the same way.
     public class JarPackingStation : Station, IAfterLoad, GrandmasHouse.Interaction.ISharedUse
     {
-        enum Carrying { Nothing, Slices, Cloves, Dill, Peppercorns, Wedges }
+        enum Carrying { Nothing, Slices, Cloves, Dill, Peppercorns, Wedges, Lid }
 
         [SerializeField] RecipeData recipe;
         [Tooltip("Slices and peeled garlic are taken from this board's piles.")]
@@ -241,12 +241,23 @@ namespace GrandmasHouse.Stations
 
             foreach (var other in JarsOnTowel())
             {
-                if (!CursorNear(other.Mouth))
+                if (!CursorNear(other.Mouth) && !(other.HasLid && CursorNear(other.transform.position + Vector3.up * 0.05f)))
                 {
                     continue;
                 }
                 if (other.HasLid)
                 {
+                    // The lid itself (at the mouth) lifts off; lower down, the jar comes up.
+                    if (other.CanTakeOffLid && CursorNear(other.Mouth + Vector3.up * 0.006f, 0.5f))
+                    {
+                        Hint("Take the lid off");
+                        if (pressed)
+                        {
+                            other.TakeOffLid();
+                            GrabLid(other.Mouth);
+                        }
+                        return;
+                    }
                     Hint("Pick up jar");
                     if (pressed)
                     {
@@ -369,6 +380,34 @@ namespace GrandmasHouse.Stations
                     }
                     return;
                 }
+            }
+
+            if (carrying == Carrying.Lid)
+            {
+                foreach (var onTowel in JarsOnTowel())
+                {
+                    if (!IsOpen(onTowel) || !CursorNear(onTowel.Mouth))
+                    {
+                        continue;
+                    }
+                    Hint("Put on lid");
+                    if (pressed)
+                    {
+                        jar = onTowel;
+                        onTowel.PutOnLid();
+                        DropCarriedLid();
+                    }
+                    return;
+                }
+                if (CursorNear(lidStack.position))
+                {
+                    Hint("Put the lid back");
+                    if (pressed)
+                    {
+                        DropCarriedLid();
+                    }
+                }
+                return;
             }
 
             foreach (var onTowel in JarsOnTowel())
@@ -495,10 +534,10 @@ namespace GrandmasHouse.Stations
             {
                 AddDillHead(carriedDill, 0.3f);
             }
-            else if (carrying == Carrying.Peppercorns)
+            else if (carrying == Carrying.Peppercorns || carrying == Carrying.Lid)
             {
-                // Back into the tin.
-                foreach (var corn in carried) Destroy(corn.gameObject);
+                // Back into the tin, or onto the stack of lids.
+                foreach (var thing in carried) Destroy(thing.gameObject);
             }
             carried.Clear();
             carriedDill = null;
@@ -552,13 +591,12 @@ namespace GrandmasHouse.Stations
                 }
                 return true;
             }
-            if (LidTarget() is JarContents forLid && CursorNear(lidStack.position))
+            if (!pouring && CursorNear(lidStack.position))
             {
-                Hint("Put on lid");
+                Hint("Take a lid");
                 if (pressed)
                 {
-                    jar = forLid;
-                    jar.PutOnLid();
+                    GrabLid(lidStack.position);
                 }
                 return true;
             }
@@ -572,11 +610,32 @@ namespace GrandmasHouse.Stations
                     potRestPosition = pot.transform.position;
                     potRestRotation = pot.transform.rotation;
                     pouring = true;
-                    reticle.Hidden = true;
                 }
                 return true;
             }
             return false;
+        }
+
+        // A lid off the stack (or lifted off a jar), carried under the cursor.
+        void GrabLid(Vector3 from)
+        {
+            var look = lidStack.GetComponentInChildren<Renderer>();
+            var lidPiece = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            lidPiece.name = "Lid";
+            DestroyImmediate(lidPiece.GetComponent<Collider>());
+            if (look != null) lidPiece.GetComponent<Renderer>().sharedMaterial = look.sharedMaterial;
+            lidPiece.transform.SetPositionAndRotation(from, Quaternion.identity);
+            lidPiece.transform.localScale = new Vector3(0.078f, 0.004f, 0.078f);
+            carried.Clear();
+            carried.Add(lidPiece.transform);
+            carrying = Carrying.Lid;
+        }
+
+        void DropCarriedLid()
+        {
+            foreach (var thing in carried) Destroy(thing.gameObject);
+            carried.Clear();
+            carrying = Carrying.Nothing;
         }
 
         void Hint(string hint)
@@ -704,6 +763,8 @@ namespace GrandmasHouse.Stations
 
         void Pour()
         {
+            // Aim it: the pot swings over whichever open jar you point at.
+            if (AimedJar() is JarContents aimed) jar = aimed;
             if (!UseAction.IsPressed() || !pot.IsReady || jar == null)
             {
                 StopPouring();
@@ -780,13 +841,34 @@ namespace GrandmasHouse.Stations
             Debug.Log($"{packed.displayName}: {jar.SliceCount} slices, {jar.CloveCount} cloves (recipe {packed.garlicPerJar}), {jar.PeppercornCount} peppercorns, dill {(jar.HasDill ? "yes" : "no")}, brine {jar.BrineLevel:P0} (line {packed.brineLine:P0}, off by {headspaceError:+0%;-0%})");
         }
 
-        bool CursorNear(Vector3 worldPoint)
+        // The open jar on the towel nearest the cursor, if it's near one.
+        JarContents AimedJar()
+        {
+            JarContents best = null;
+            float bestDistance = grabRadius * 1.5f;
+            foreach (var onTowel in JarsOnTowel())
+            {
+                if (!IsOpen(onTowel)) continue;
+                float distance = CursorDistance(onTowel.Mouth);
+                if (distance < bestDistance)
+                {
+                    best = onTowel;
+                    bestDistance = distance;
+                }
+            }
+            return best;
+        }
+
+        float CursorDistance(Vector3 worldPoint)
         {
             Vector3 screen = View.WorldToViewportPoint(worldPoint);
+            if (screen.z <= 0f) return float.MaxValue;
             float aspect = (float)Screen.width / Screen.height;
             Vector2 offset = (Vector2)screen - CursorPoint;
-            return screen.z > 0f && new Vector2(offset.x * aspect, offset.y).magnitude < grabRadius;
+            return new Vector2(offset.x * aspect, offset.y).magnitude;
         }
+
+        bool CursorNear(Vector3 worldPoint, float scale = 1f) => CursorDistance(worldPoint) < grabRadius * scale;
 
         static bool IsDill(Pickup item) => item.DisplayName == "Dill";
     }
