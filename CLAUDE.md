@@ -1,12 +1,12 @@
 # Grandma's House
 
-A first-person comfort game about living Grandma's homestead life in Star Valley, Wyoming. You grow food, preserve it, store it, and share it through the seasons. Every task is done by hand at a "station". Grandma's story is discovered through the notes, diary, recipe cards, and jars she left behind, never told directly.
+A first-person multiplayer survival game about living off the land on Grandma's homestead in Star Valley, Wyoming, through hard economic times. You grow food, preserve it, store it, trade it with transactional neighbors, and above all get through the winter. Every craft is done by hand. Grandma's notes, recipe cards and books teach you how; her story is never told directly.
 
-## This is the `survival` branch
+## Survival is the game's direction (decided 2026-10-20)
 
-This folder (`C:\Dev\GrandmasHouse-Survival`, a git worktree of the same repo) explores a new direction: a harder, possibly multiplayer survival game. Modern times, hard economic times (not an apocalypse), and you inherit Grandma's paid-off homestead and live off the land. Hard winters, crop blight and animal disease, food spoils, and players can starve and die. Neighbors are transactional and everything is barter. Grandma's warmth is gone; her notes become a teaching aid. The goal each year is to survive the winter. Nothing is decided yet: the ideas and open questions are in the design doc's **"Direction brainstorm (open)"** tab, and the decision log should record what gets settled. The cozy game stays on `main` in `C:\Dev\GrandmasHouse`; don't change it from here.
+This folder (`C:\Dev\GrandmasHouse-Survival`, branch `survival`, a git worktree of the same repo) is where the game is made now. Modern times, hard economic times (not an apocalypse); you inherit Grandma's paid-off homestead and live off the land with up to three friends. Hard winters, food spoils, and players can starve or freeze (collapse; a friend can bring you round). Neighbors are transactional and trade is barter (the store also keeps a ledger). Grandma's warmth is gone; her notes are a teaching aid. The goal each year is to survive the winter. The design doc's **"Survival design (current direction)"** tab is the source of truth for direction. The cozy game on `main` in `C:\Dev\GrandmasHouse` is the old direction; don't change it from here.
 
-Where the cozy rules below conflict with survival (no pressure or danger, meals as bonuses only, no hard times, Cozy mode only), treat them as **under review on this branch**, not as rules.
+The cozy rules below still describe how the shared systems work (stations, carrying, the garden, canning). Where they conflict with survival (no pressure or danger, meals as bonuses only, no hard times, Cozy mode only, no weight limits), **survival wins**; the "survival branch" notes further down are the current rules.
 
 ## The design doc is the source of truth
 
