@@ -10,8 +10,10 @@ namespace GrandmasHouse.Animals
     // the coop door and goes in if it's open (or waits outside it if it's
     // shut). In the morning she comes back out if the door is open. In a
     // shared game the host moves her and everyone else sees her follow.
-    // With empty hands you can take her for the pot: a chicken to cook or
-    // cure, and one less hen laying.
+    // With empty hands you can pick her up and carry her (LiveHen); lay her
+    // on the chopping block and take the axe to her for a chicken to cook or
+    // cure, and one less hen laying. Set her down anywhere else and she
+    // flaps off back to the run.
     public class Hen : MonoBehaviour, IInteractable, ISharedUse
     {
         [SerializeField] Flock flock;
@@ -25,10 +27,11 @@ namespace GrandmasHouse.Animals
             set
             {
                 alive = value;
-                foreach (var r in GetComponentsInChildren<Renderer>(true)) r.enabled = value;
-                foreach (var c in GetComponents<Collider>()) c.enabled = value;
+                Show();
             }
         }
+        // In someone's arms (or on the block): out of the run for now.
+        public bool Carried { get; private set; }
         public int DaysHungry { get; set; }
         // Roosting in the coop for the night.
         public bool Inside { get; private set; }
@@ -49,8 +52,28 @@ namespace GrandmasHouse.Animals
 
         static bool Hosting => NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
 
+        void Show()
+        {
+            bool seen = alive && !Carried;
+            foreach (var r in GetComponentsInChildren<Renderer>(true)) r.enabled = seen;
+            foreach (var c in GetComponents<Collider>()) c.enabled = seen;
+        }
+
+        // Picked up, or back in the run at this spot.
+        public void SetCarried(bool carried, Vector3 at)
+        {
+            Carried = carried;
+            Show();
+            if (carried) return;
+            Inside = false;
+            transform.position = at;
+            lastPosition = at;
+            PickSpot();
+        }
+
         void Update()
         {
+            if (Carried) return;
             if (alive && Hosting)
             {
                 Think();
@@ -105,9 +128,9 @@ namespace GrandmasHouse.Animals
 
         void PickSpot() => target = flock.SpotInRun();
 
-        public bool CanInteract(PlayerHands hands) => alive && !Inside && hands.IsEmpty;
-        public string PromptVerb(PlayerHands hands) => "Take her for the pot";
-        public void Interact(PlayerHands hands) => flock.Butcher(this);
+        public bool CanInteract(PlayerHands hands) => alive && !Inside && !Carried && hands.IsEmpty;
+        public string PromptVerb(PlayerHands hands) => "Pick her up";
+        public void Interact(PlayerHands hands) => flock.PickUp(this, hands);
 
         // A step toward a place; true once she's there.
         bool WalkTo(Vector3 place, float speed)

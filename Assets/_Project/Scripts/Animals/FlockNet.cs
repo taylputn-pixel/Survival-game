@@ -1,4 +1,5 @@
 using Unity.Netcode;
+using UnityEngine;
 
 namespace GrandmasHouse.Animals
 {
@@ -9,9 +10,9 @@ namespace GrandmasHouse.Animals
 
         void Awake() => flock = GetComponent<Flock>();
 
-        public void Butcher(int hen) => ButcherRpc(hen);
+        public void Butcher(int hen, Vector3 at) => ButcherRpc(hen, at);
 
         [Rpc(SendTo.Server)]
-        void ButcherRpc(int hen) => flock.Butcher(hen);
+        void ButcherRpc(int hen, Vector3 at) => flock.Butcher(hen, at);
     }
 }

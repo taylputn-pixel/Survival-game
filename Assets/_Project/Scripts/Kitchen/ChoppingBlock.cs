@@ -12,7 +12,8 @@ namespace GrandmasHouse.Kitchen
     // A stump for splitting wood. Stand a log on it, take up the axe and
     // swing: a few good swings split it into firewood that tumbles off the
     // block. Every swing is work, and tires you a little. The host makes the
-    // firewood; a friend's last swing asks the host to.
+    // firewood; a friend's last swing asks the host to. A hen carried over
+    // and laid on the block takes one swing: a chicken for the pot.
     public class ChoppingBlock : MonoBehaviour, IInteractable, ISharedUse
     {
         [SerializeField] Transform top;
@@ -24,6 +25,8 @@ namespace GrandmasHouse.Kitchen
 
         public int Swings { get; private set; }
         public Log OnBlock => top.GetComponentInChildren<Log>();
+        public Animals.LiveHen HenOnBlock => top.GetComponentInChildren<Animals.LiveHen>();
+        bool Empty => OnBlock == null && HenOnBlock == null;
 
         bool swinging;
 
@@ -32,14 +35,21 @@ namespace GrandmasHouse.Kitchen
         public bool CanInteract(PlayerHands hands)
         {
             if (swinging) return false;
-            if (Holding<Log>(hands)) return OnBlock == null;
-            return Holding<Axe>(hands) && OnBlock != null;
+            if (Holding<Log>(hands) || Holding<Animals.LiveHen>(hands)) return Empty;
+            return Holding<Axe>(hands) && !Empty;
         }
 
-        public string PromptVerb(PlayerHands hands) => Holding<Log>(hands) ? "Stand it on the block" : "Swing the axe";
+        public string PromptVerb(PlayerHands hands) =>
+            Holding<Log>(hands) ? "Stand it on the block" : Holding<Animals.LiveHen>(hands) ? "Lay her on the block" : "Swing the axe";
 
         public void Interact(PlayerHands hands)
         {
+            if (Holding<Animals.LiveHen>(hands))
+            {
+                Pickup hen = hands.TakeHeld();
+                hen.AttachTo(top, Vector3.up * 0.05f, Quaternion.Euler(0f, 0f, 90f), 0.25f, collidersOn: true);
+                return;
+            }
             if (Holding<Log>(hands))
             {
                 Pickup log = hands.TakeHeld();
@@ -74,7 +84,13 @@ namespace GrandmasHouse.Kitchen
                 needs.State.rest = Mathf.Max(0f, needs.State.rest - restPerSwing);
             }
             Swings++;
-            if (Swings >= swingsToSplit) Split();
+            var hen = HenOnBlock;
+            if (hen != null)
+            {
+                Swings = 0;
+                hen.Cull();
+            }
+            else if (Swings >= swingsToSplit) Split();
             hands.Controller.InputEnabled = true;
             swinging = false;
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GrandmasHouse.Audio;
 using GrandmasHouse.Carrying;
 using GrandmasHouse.Data;
 using GrandmasHouse.DayCycle;
@@ -131,25 +132,45 @@ namespace GrandmasHouse.Animals
 
         // ---- Taking a hen for the pot ----
 
-        // The host does it; anyone else asks the host.
-        public void Butcher(Hen hen)
+        // Into your arms. Lay her on the chopping block for the axe.
+        public void PickUp(Hen hen, PlayerHands hands)
+        {
+            if (!hen.Alive || hen.Carried) return;
+            var live = LiveHen.Make(hen, this);
+            hen.SetCarried(true, hen.transform.position);
+            hands.Give(live.Pickup);
+            Sfx.Play(SoundId.Cluck, hen.transform.position, 1f, 0.2f);
+        }
+
+        // Set down anywhere but the block, she flaps off back to the run.
+        public void LetGo(Hen hen)
+        {
+            if (!hen.Alive) return;
+            hen.SetCarried(false, SpotInRun());
+            Sfx.Play(SoundId.Cluck, hen.transform.position, 1f, 0.2f);
+        }
+
+        // The axe on the block: she's gone for good and leaves a chicken
+        // there. The host does it; anyone else asks the host.
+        public void Butcher(Hen hen, Vector3 at)
         {
             int index = Array.IndexOf(hens, hen);
             if (index < 0 || !hen.Alive) return;
             if (!Hosting && TryGetComponent(out FlockNet net))
             {
-                net.Butcher(index);
+                net.Butcher(index, at);
                 return;
             }
-            Butcher(index);
+            Butcher(index, at);
         }
 
-        public void Butcher(int index)
+        public void Butcher(int index, Vector3 at)
         {
             Hen hen = hens[index];
             if (!hen.Alive) return;
             hen.Alive = false;
-            Pickup bird = Instantiate(chickenPrefab, hen.transform.position + Vector3.up * 0.15f, hen.transform.rotation);
+            hen.SetCarried(false, hen.transform.position);
+            Pickup bird = Instantiate(chickenPrefab, at + Vector3.up * 0.15f, Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f));
             bird.name = chickenPrefab.name;
             if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer && bird.TryGetComponent(out NetworkObject shared))
             {

@@ -48,23 +48,69 @@ namespace GrandmasHouse.Tests
             return n;
         }
 
+        Hen HenInTheRun()
+        {
+            foreach (var h in Object.FindObjectsByType<Hen>()) if (h.Alive && !h.Inside) return h;
+            Assert.Fail("No hen out in the run.");
+            return null;
+        }
+
+        // Carried to the chopping block, laid on it, and the axe.
         [UnityTest]
-        public IEnumerator AHenTakenForThePotGivesAChicken()
+        public IEnumerator AHenOnTheBlockGivesAChicken()
         {
             var flock = Homestead.Find<Flock>();
-            Hen hen = null;
-            foreach (var h in Object.FindObjectsByType<Hen>()) if (h.Alive && !h.Inside) hen = h;
-            Assert.IsNotNull(hen);
+            var block = Homestead.Find<ChoppingBlock>();
+            Hen hen = HenInTheRun();
             Assert.IsTrue(hen.CanInteract(hands));
-            Assert.AreEqual("Take her for the pot", hen.PromptVerb(hands));
-            int before = Chickens();
+            Assert.AreEqual("Pick her up", hen.PromptVerb(hands));
             hen.Interact(hands);
             yield return null;
+            Assert.IsTrue(hen.Carried);
+            Assert.AreEqual("Hen", hands.Held.DisplayName);
+            Assert.IsFalse(hen.CanInteract(hands));
+            Assert.AreEqual(4, flock.Alive, "Picking her up isn't the end of her.");
+
+            Assert.IsTrue(block.CanInteract(hands));
+            Assert.AreEqual("Lay her on the block", block.PromptVerb(hands));
+            block.Interact(hands);
+            yield return new WaitForSeconds(0.4f);
+            Assert.IsTrue(hands.IsEmpty);
+            Assert.IsNotNull(block.HenOnBlock, "She should lie on the block.");
+            Assert.IsTrue(hen.Carried, "Still out of the run while she's on the block.");
+
+            var axe = Homestead.Make<Pickup>("Axe");
+            axe.transform.position = hands.ViewPoint.position + hands.ViewPoint.forward * 0.5f;
+            yield return null;
+            hands.Give(axe);
+            yield return null;
+            int before = Chickens();
+            Assert.AreEqual("Swing the axe", block.PromptVerb(hands));
+            block.Interact(hands);
+            yield return new WaitForSeconds(0.7f);
             Assert.AreEqual(3, flock.Alive);
             Assert.AreEqual(before + 1, Chickens());
+            Assert.IsNull(block.HenOnBlock);
             Assert.IsFalse(hen.CanInteract(hands));
             // And it stays gone after a save.
             StringAssert.Contains("false", flock.Capture());
+        }
+
+        // Set her down anywhere but the block and she's back in the run.
+        [UnityTest]
+        public IEnumerator AHenLetGoGoesBackToTheRun()
+        {
+            var flock = Homestead.Find<Flock>();
+            Hen hen = HenInTheRun();
+            hen.Interact(hands);
+            yield return null;
+            hands.TakeHeld().Drop();
+            yield return null;
+            yield return null;
+            Assert.IsFalse(hen.Carried);
+            Assert.IsTrue(hen.GetComponentInChildren<Renderer>().enabled, "She should be back to see.");
+            Assert.AreEqual(0, Object.FindObjectsByType<LiveHen>().Length, "No hen left in your arms.");
+            Assert.AreEqual(4, flock.Alive);
         }
 
         [UnityTest]
