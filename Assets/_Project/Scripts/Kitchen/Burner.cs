@@ -33,6 +33,12 @@ namespace GrandmasHouse.Kitchen
             ShowHeat();
         }
 
+        // A pan left sitting on it in the house to start with (the skillet).
+        void Start()
+        {
+            if (Occupant == null) AfterLoad();
+        }
+
         public bool CanInteract(PlayerHands hands)
         {
             return Occupant == null && !hands.IsEmpty && hands.Held.GetComponent<Cookware>() != null;

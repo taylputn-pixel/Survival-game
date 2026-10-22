@@ -182,6 +182,10 @@ namespace GrandmasHouse.Stations
                 {
                     return ChoppedCount > 0 && pot.RoomForPieces > 0;
                 }
+                if (held.GetComponent<Skillet>() is Skillet pan)
+                {
+                    return ChoppedCount > 0 && pan.Room > 0 && pan.Served == 0;
+                }
                 if (held.OwnContainer != null)
                 {
                     return HasRoom && FirstChoppable(held.OwnContainer) != null;
@@ -203,6 +207,10 @@ namespace GrandmasHouse.Stations
                 else if (held.GetComponent<CookingPot>() is CookingPot pot)
                 {
                     ScrapeInto(pot);
+                }
+                else if (held.GetComponent<Skillet>() is Skillet pan)
+                {
+                    ScrapeInto(pan);
                 }
                 else if (held.OwnContainer != null)
                 {
@@ -234,6 +242,7 @@ namespace GrandmasHouse.Stations
                 Pickup held = hands.Held;
                 if (held.GetComponent<Handful>() != null) return "Put back";
                 if (held.GetComponent<CookingPot>() != null) return "Scrape into pot";
+                if (held.GetComponent<Skillet>() != null) return "Scrape into the skillet";
                 if (held.OwnContainer != null) return "Empty onto board";
                 return SlotFree ? "Lay on board" : "Set by board";
             }
@@ -416,6 +425,20 @@ namespace GrandmasHouse.Stations
             if (scraped.Count > 0)
             {
                 pot.AddPieces(scraped);
+            }
+        }
+
+        // The same, into the skillet.
+        void ScrapeInto(Skillet pan)
+        {
+            int room = pan.Room;
+            var scraped = new List<Transform>();
+            scraped.AddRange(TakeWedges(room));
+            scraped.AddRange(TakeSlices(room - scraped.Count));
+            scraped.AddRange(TakeCloves(room - scraped.Count));
+            if (scraped.Count > 0)
+            {
+                pan.AddPieces(scraped);
             }
         }
 
