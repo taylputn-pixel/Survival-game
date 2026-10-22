@@ -24,6 +24,27 @@ namespace GrandmasHouse.Tests
         public void PutSavesBack() => Homestead.RestoreRealSaves();
 
         [UnityTest]
+        public IEnumerator ANewGameFindsItPackedInThePantry()
+        {
+            yield return Homestead.Load(canningSetUp: false);
+            hands = Homestead.Find<PlayerHands>();
+            var kit = Homestead.Find<CanningKit>();
+            Assert.IsFalse(kit.IsSetUp, "Packed away to start with.");
+            Assert.IsFalse(Homestead.Find<CanningPutAway>().GetComponentInChildren<Collider>().enabled, "The counter is clear.");
+            var box = Homestead.Find<CanningBox>();
+            Assert.Less(Vector3.Distance(box.transform.position, new Vector3(5.6f, 0f, 5.2f)), 0.3f, "The box is on the pantry floor.");
+
+            // Carry it to the counter and set up.
+            hands.Give(box.GetComponent<Pickup>());
+            yield return new WaitForSeconds(0.3f);
+            var counter = Homestead.Find<CanningCounter>();
+            Assert.IsTrue(counter.CanInteract(hands));
+            counter.Interact(hands);
+            yield return null;
+            Assert.IsTrue(kit.IsSetUp);
+        }
+
+        [UnityTest]
         public IEnumerator PutAwayAndSetUpAgain()
         {
             var kit = Homestead.Find<CanningKit>();

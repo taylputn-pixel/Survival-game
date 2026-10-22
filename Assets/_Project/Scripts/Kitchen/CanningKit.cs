@@ -12,16 +12,24 @@ namespace GrandmasHouse.Kitchen
     // hot pad, the cooling towel and the label box. Put away, they free the
     // counter and the table for other work and pack into a box to carry
     // off; carry the box back to the counter to set up again. Anything
-    // left sitting on them stays where it was. Whether they're set up is
-    // saved, and shared in a game with friends; the box is an ordinary item.
+    // left sitting on them stays where it was. A new game finds them packed
+    // away in their box in the pantry. Whether they're set up is saved, and
+    // shared in a game with friends; the box is an ordinary item.
     public class CanningKit : MonoBehaviour, ISaveable
     {
         [Tooltip("Everything that packs away: the packing towel, hot pad, cooling towel and spots, label box.")]
         [SerializeField] GameObject[] parts;
         [Tooltip("The box they pack into.")]
         [SerializeField] Pickup boxPrefab;
+        [Tooltip("Set up on the counter when a new game starts (otherwise packed in the box).")]
+        [SerializeField] bool startsSetUp;
 
         public bool IsSetUp { get; private set; } = true;
+
+        void Awake()
+        {
+            if (!startsSetUp) Show(false);
+        }
         public static CanningKit Instance { get; private set; }
 
         void OnEnable() => Instance = this;
@@ -90,7 +98,7 @@ namespace GrandmasHouse.Kitchen
         [Serializable]
         class State
         {
-            public bool setUp = true;
+            public bool setUp;
         }
 
         public string SaveKey => "canning-kit";

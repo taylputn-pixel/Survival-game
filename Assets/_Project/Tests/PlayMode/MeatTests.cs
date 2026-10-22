@@ -146,6 +146,15 @@ namespace GrandmasHouse.Tests
             yield return null;
         }
 
+        static bool WellInside(Flock flock, Vector3 p)
+        {
+            foreach (var d in new[] { Vector3.left, Vector3.right, Vector3.forward, Vector3.back })
+            {
+                if (!flock.RunContains(p + d * 0.4f)) return false;
+            }
+            return true;
+        }
+
         // Set down out in the yard she stays loose there, pecking about;
         // carried back and set down in the run, she's home.
         [UnityTest]
@@ -177,8 +186,11 @@ namespace GrandmasHouse.Tests
             // Back in the run.
             hen.Interact(hands);
             yield return null;
-            yield return LetHerGoAt(flock.SpotInRun());
-            Assert.IsFalse(hen.Loose, "Set down in the run, she's home.");
+            // Well inside the fence, so where she lands can't come down on the edge.
+            Vector3 home = flock.SpotInRun();
+            for (int i = 0; i < 50 && !WellInside(flock, home); i++) home = flock.SpotInRun();
+            yield return LetHerGoAt(home);
+            Assert.IsFalse(hen.Loose, "Set down in the run, she's home (let go at " + home.ToString("F2") + ", landed at " + hen.transform.position.ToString("F2") + ").");
             Assert.IsTrue(flock.RunContains(hen.transform.position));
 
             flock.Restore(saved);

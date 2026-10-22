@@ -43,8 +43,9 @@ namespace GrandmasHouse.Tests
         }
 
         // Loads the scene and waits until it's ready to play: set up, and
-        // done loading a save if one was asked for.
-        public static IEnumerator Load()
+        // done loading a save if one was asked for. A new game starts with the
+        // canning things packed away; most kitchen tests want them set up.
+        public static IEnumerator Load(bool canningSetUp = true)
         {
             yield return SceneManager.LoadSceneAsync(Scene, LoadSceneMode.Single);
             yield return null;
@@ -55,6 +56,14 @@ namespace GrandmasHouse.Tests
                 || Object.FindAnyObjectByType<GrandmasHouse.Carrying.PlayerHands>() == null)
             {
                 Assert.Less(Time.realtimeSinceStartup, giveUp, "The Homestead never finished loading.");
+                yield return null;
+            }
+            var kit = Object.FindAnyObjectByType<GrandmasHouse.Kitchen.CanningKit>();
+            if (canningSetUp && kit != null && !kit.IsSetUp)
+            {
+                kit.Restore("{\"setUp\":true}");
+                // The box it came out of goes too.
+                foreach (var box in Object.FindObjectsByType<GrandmasHouse.Kitchen.CanningBox>()) Object.Destroy(box.gameObject);
                 yield return null;
             }
         }
