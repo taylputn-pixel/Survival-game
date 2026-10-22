@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Data.SurvivalSettings
   startHunger: 80
   startRest: 90
-  hungerPerHour: 4.1666665
+  hungerPerHour: 3.6
   hungerAsleep: 0.5
   hungryBelow: 25
   restPerHour: 5.5555553

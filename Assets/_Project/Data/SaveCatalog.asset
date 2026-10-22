@@ -99,6 +99,8 @@ MonoBehaviour:
     prefab: {fileID: 5237070889829467272, guid: 66087d92a65422b49b4df41000997e22, type: 3}
   - key: CanningBox
     prefab: {fileID: 5237070889829467272, guid: e529b635cbd9f8340812a64c89d2d4a1, type: 3}
+  - key: CannedBeans
+    prefab: {fileID: 767647525408192853, guid: eabdb7ee31e8f1f469d2c4f2c5164806, type: 3}
   crops:
   - {fileID: 11400000, guid: 5e15d42a32eb7a64e9c79284b28618b4, type: 2}
   - {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}

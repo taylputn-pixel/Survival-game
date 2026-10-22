@@ -122,9 +122,12 @@ namespace GrandmasHouse.DayCycle
                     text.Append("A cold snap is coming in. Bring in wood and stay by the stove. ");
                     warnedSnap = true;
                 }
-                if (!warnedFrost && d.low <= settings.killingFrost && !GroundFrozen)
+                // Frost is only called the day before: this coming dawn, or tomorrow's.
+                bool soon = i == 1 || (i == 0 && clock.Hour < settings.coldestHour);
+                if (!warnedFrost && soon && d.low <= settings.killingFrost && !GroundFrozen)
                 {
-                    text.Append((i == 0 ? "Killing frost tonight" : "Killing frost by then") + ": pick what's left in your garden. ");
+                    string when = i == 0 ? "Killing frost before dawn" : clock.Hour >= 12f ? "Killing frost tonight" : "Killing frost tomorrow morning";
+                    text.Append(when + ": pick what's left in your garden. ");
                     warnedFrost = true;
                 }
             }

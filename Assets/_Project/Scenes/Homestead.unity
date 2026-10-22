@@ -4496,6 +4496,10 @@ PrefabInstance:
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 567933051
       objectReference: {fileID: 0}
+    - target: {fileID: 4894611697122627491, guid: 301eda9251462b84db45ea6dd7bb1d57, type: 3}
+      propertyPath: seeds
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 5279983733664656755, guid: 301eda9251462b84db45ea6dd7bb1d57, type: 3}
       propertyPath: m_Name
       value: SquashSeeds
@@ -18970,6 +18974,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 815183201}
     m_Modifications:
+    - target: {fileID: 4894611697122627491, guid: 4eb5586c93b597443bbdb47c80d8904c, type: 3}
+      propertyPath: seeds
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 5279983733664656755, guid: 4eb5586c93b597443bbdb47c80d8904c, type: 3}
       propertyPath: m_Name
       value: Jalapeno Seeds
@@ -28278,35 +28286,7 @@ MonoBehaviour:
     restockPerDay: 0.3
     worth: 0
     setOutAt: []
-  - key: SeedPotatoes
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.2
-    worth: 0
-    setOutAt: []
-  - key: TomatoSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.2
-    worth: 0
-    setOutAt: []
-  - key: CucumberSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.2
-    worth: 0
-    setOutAt: []
   - key: OnionSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.2
-    worth: 0
-    setOutAt: []
-  - key: CabbageSeeds
     recipe: {fileID: 0}
     stock: 2
     maxStock: 2
@@ -28320,25 +28300,11 @@ MonoBehaviour:
     restockPerDay: 0.2
     worth: 0
     setOutAt: []
-  - key: SquashSeeds
+  - key: CannedBeans
     recipe: {fileID: 0}
     stock: 2
     maxStock: 2
-    restockPerDay: 0.2
-    worth: 0
-    setOutAt: []
-  - key: GarlicSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.2
-    worth: 0
-    setOutAt: []
-  - key: DillSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.2
+    restockPerDay: 0.5
     worth: 0
     setOutAt: []
   counter: {fileID: 2086933302}
@@ -43781,6 +43747,10 @@ PrefabInstance:
     - target: {fileID: 1321937581312769171, guid: 04c67d098258bb74186ae01a45e1f6df, type: 3}
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 3919758230
+      objectReference: {fileID: 0}
+    - target: {fileID: 4894611697122627491, guid: 04c67d098258bb74186ae01a45e1f6df, type: 3}
+      propertyPath: seeds
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 5279983733664656755, guid: 04c67d098258bb74186ae01a45e1f6df, type: 3}
       propertyPath: m_Name
@@ -81920,6 +81890,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 815183201}
     m_Modifications:
+    - target: {fileID: 4894611697122627491, guid: 9e12faa193f7f5a44891ff2caac1ef89, type: 3}
+      propertyPath: seeds
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 5279983733664656755, guid: 9e12faa193f7f5a44891ff2caac1ef89, type: 3}
       propertyPath: m_Name
       value: Marigold Seeds
@@ -94688,6 +94662,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 815183201}
     m_Modifications:
+    - target: {fileID: 4894611697122627491, guid: 166227e62d0a1464389dda82da6d5332, type: 3}
+      propertyPath: seeds
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 5279983733664656755, guid: 166227e62d0a1464389dda82da6d5332, type: 3}
       propertyPath: m_Name
       value: Garlic Seeds
@@ -114428,6 +114406,34 @@ MonoBehaviour:
     restockPerDay: 0
     worth: 4
     setOutAt: []
+  - key: CucumberSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.3
+    worth: 0
+    setOutAt: []
+  - key: DillSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.3
+    worth: 0
+    setOutAt: []
+  - key: GarlicSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.3
+    worth: 0
+    setOutAt: []
+  - key: SquashSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.3
+    worth: 0
+    setOutAt: []
   counter: {fileID: 513932309}
   handOver:
   - {fileID: 274273158}
@@ -118548,6 +118554,10 @@ PrefabInstance:
     - target: {fileID: 1321937581312769171, guid: c24e4a985a969064faa25b886423926e, type: 3}
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 338888574
+      objectReference: {fileID: 0}
+    - target: {fileID: 4894611697122627491, guid: c24e4a985a969064faa25b886423926e, type: 3}
+      propertyPath: seeds
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 5279983733664656755, guid: c24e4a985a969064faa25b886423926e, type: 3}
       propertyPath: m_Name
@@ -122755,6 +122765,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 815183201}
     m_Modifications:
+    - target: {fileID: 4894611697122627491, guid: 672c528a41ebcbb4aa39e6c96abf82e3, type: 3}
+      propertyPath: seeds
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 5279983733664656755, guid: 672c528a41ebcbb4aa39e6c96abf82e3, type: 3}
       propertyPath: m_Name
       value: Tomato Seeds
@@ -130252,6 +130266,10 @@ PrefabInstance:
     - target: {fileID: 1321937581312769171, guid: 7e0497a450342fc4eb5ab2d0d6e59b4a, type: 3}
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 899081060
+      objectReference: {fileID: 0}
+    - target: {fileID: 4894611697122627491, guid: 7e0497a450342fc4eb5ab2d0d6e59b4a, type: 3}
+      propertyPath: seeds
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5279983733664656755, guid: 7e0497a450342fc4eb5ab2d0d6e59b4a, type: 3}
       propertyPath: m_Name
@@ -140937,6 +140955,10 @@ PrefabInstance:
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 1184656591
       objectReference: {fileID: 0}
+    - target: {fileID: 4894611697122627491, guid: 73639deeeb8a90e43b80c991c6d316ac, type: 3}
+      propertyPath: seeds
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 5279983733664656755, guid: 73639deeeb8a90e43b80c991c6d316ac, type: 3}
       propertyPath: m_Name
       value: SeedPotatoes
@@ -146061,6 +146083,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4051415400679519486, guid: e0f6817d9b17a0541b4ab27bae8008ad, type: 3}
+      propertyPath: seeds
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 7014777335882246365, guid: e0f6817d9b17a0541b4ab27bae8008ad, type: 3}
       propertyPath: m_Name
       value: Dill Seeds
@@ -146109,6 +146135,10 @@ PrefabInstance:
     - target: {fileID: 3277339382817265353, guid: 5996480cf9678f7499b719b7d02eb0d3, type: 3}
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 4203416061
+      objectReference: {fileID: 0}
+    - target: {fileID: 4894611697122627491, guid: 5996480cf9678f7499b719b7d02eb0d3, type: 3}
+      propertyPath: seeds
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 5279983733664656755, guid: 5996480cf9678f7499b719b7d02eb0d3, type: 3}
       propertyPath: m_Name

@@ -180,7 +180,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Garden.SeedPacket
   crop: {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}
-  seeds: 20
+  seeds: 10
 --- !u!114 &6306953650404750413
 MonoBehaviour:
   m_ObjectHideFlags: 0

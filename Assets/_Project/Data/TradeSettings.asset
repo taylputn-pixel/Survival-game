@@ -150,6 +150,9 @@ MonoBehaviour:
     - 0.9
     - 1.2
     - 1.5
+  - key: CannedBeans
+    worth: 15
+    byMonth: []
   jars:
   - recipe: Dill Pickle Chips
     worth: 5
@@ -160,6 +163,11 @@ MonoBehaviour:
   - recipe: Salsa
     worth: 5
   sealedJarDefault: 5
+  ribbonWorth:
+  - 0.8
+  - 1
+  - 1.25
+  - 1.5
   emptyJar: 0.5
   curedBonus: 1.5
   turnedShare: 0.4
