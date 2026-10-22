@@ -252,6 +252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrandmasHouse.Stations.Sliceable
   fleshMaterial: {fileID: 2100000, guid: 15d3bbdd7826710498b7a3f5f015bfcd, type: 2}
+  cut: 2
 --- !u!114 &767647525408192853
 MonoBehaviour:
   m_ObjectHideFlags: 0

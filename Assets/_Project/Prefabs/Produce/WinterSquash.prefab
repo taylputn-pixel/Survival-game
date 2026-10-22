@@ -309,6 +309,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Stations.Sliceable
   fleshMaterial: {fileID: 2100000, guid: ebd4618fc94cb3a49b45025a848048c7, type: 2}
+  cut: 1
 --- !u!1 &9017966404935908941
 GameObject:
   m_ObjectHideFlags: 0

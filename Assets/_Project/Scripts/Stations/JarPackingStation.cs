@@ -172,9 +172,9 @@ namespace GrandmasHouse.Stations
                 {
                     yield return Lemon.transform.position;
                 }
-                if (dills.Count > 0)
+                foreach (var dill in dills)
                 {
-                    yield return dills[0].transform.position;
+                    yield return dill.transform.position;
                 }
                 if (Tin != null)
                 {
@@ -320,13 +320,25 @@ namespace GrandmasHouse.Stations
                 }
                 return true;
             }
-            if (dills.Count > 0 && CursorNear(dills[0].transform.position))
+            // Any head of dill on the towel, whichever the cursor is nearest.
+            Pickup nearDill = null;
+            float nearest = float.MaxValue;
+            foreach (var dill in dills)
+            {
+                float distance = CursorDistance(dill.transform.position);
+                if (CursorNear(dill.transform.position) && distance < nearest)
+                {
+                    nearDill = dill;
+                    nearest = distance;
+                }
+            }
+            if (nearDill != null)
             {
                 Hint("Pick up dill");
                 if (pressed)
                 {
-                    carriedDill = dills[0];
-                    dills.RemoveAt(0);
+                    carriedDill = nearDill;
+                    dills.Remove(nearDill);
                     carriedDill.OnPickedUp();
                     carriedDill.transform.SetParent(null, worldPositionStays: true);
                     carrying = Carrying.Dill;

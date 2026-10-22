@@ -540,12 +540,14 @@ namespace GrandmasHouse.Stations
                         size = known.size;
                     }
                 }
-                Transform slice = MakeRound(sliceName, look).transform;
+                bool cube = Sliceable.IsCube(sliceName);
+                Transform slice = (cube ? MakeCube(sliceName, look) : MakeRound(sliceName, look)).transform;
                 SlicePile pile = PileFor(sliceName);
                 slice.SetParent(pile.root, false);
-                slice.localScale = new Vector3(size.x, size.y / 2f, size.x);
+                float edge = Sliceable.CubeEdge(sliceName);
+                slice.localScale = cube ? Vector3.one * edge : new Vector3(size.x, size.y / 2f, size.x);
                 int n = pile.placed++;
-                slice.SetLocalPositionAndRotation(SliceSpot(n, size.x, size.y), SliceTurn(n));
+                slice.SetLocalPositionAndRotation(cube ? CubeSpot(n, edge) : SliceSpot(n, size.x, size.y), cube ? CubeTurn(n) : SliceTurn(n));
                 pile.slices.Add(slice);
             }
         }
@@ -769,12 +771,25 @@ namespace GrandmasHouse.Stations
             float thickness = to - from;
             thicknesses.Add(thickness);
 
-            var slice = MakeRound(item.DisplayName + " Slice", sliceable.FleshMaterial).transform;
-            slice.SetParent(itemSlot, false);
+            string pieceName = sliceable.PieceName(item.DisplayName);
             float d = sliceable.Diameter;
-            slice.localPosition = new Vector3((from + to) / 2f, d / 2f, 0f);
-            slice.localRotation = Quaternion.Euler(0f, 0f, 90f);
-            slice.localScale = new Vector3(d, thickness / 2f, d);
+            Transform slice;
+            if (Sliceable.IsCube(pieceName))
+            {
+                // Cut into cubes (or diced) right there on the board.
+                slice = MakeCube(pieceName, sliceable.FleshMaterial).transform;
+                slice.SetParent(itemSlot, false);
+                slice.localPosition = new Vector3((from + to) / 2f, d / 2f, 0f);
+                slice.localScale = Vector3.one * Sliceable.CubeEdge(pieceName);
+            }
+            else
+            {
+                slice = MakeRound(pieceName, sliceable.FleshMaterial).transform;
+                slice.SetParent(itemSlot, false);
+                slice.localPosition = new Vector3((from + to) / 2f, d / 2f, 0f);
+                slice.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                slice.localScale = new Vector3(d, thickness / 2f, d);
+            }
 
             AddToPile(slice, thickness);
         }
@@ -787,8 +802,21 @@ namespace GrandmasHouse.Stations
             int i = pile.placed++;
             slice.SetParent(pile.root, true);
             pile.slices.Add(slice);
-            StartCoroutine(Tumble(slice, SliceSpot(i, slice.localScale.x, thickness), SliceTurn(i)));
+            bool cube = Sliceable.IsCube(slice.name);
+            StartCoroutine(Tumble(slice, cube ? CubeSpot(i, slice.localScale.x) : SliceSpot(i, slice.localScale.x, thickness), cube ? CubeTurn(i) : SliceTurn(i)));
         }
+
+        // Cubes heap up in a small mound: a few across, then up.
+        static Vector3 CubeSpot(int i, float edge)
+        {
+            int layer = i / 9;
+            int k = i % 9;
+            float jitter = ((i * 37) % 7 - 3) * edge * 0.08f;
+            float shrink = 1f - layer * 0.18f;
+            return new Vector3(((k % 3) - 1) * edge * 1.05f * shrink + jitter, edge / 2f + layer * edge * 0.85f, ((k / 3) - 1) * edge * 1.05f * shrink - jitter);
+        }
+
+        static Quaternion CubeTurn(int i) => Quaternion.Euler((i * 23) % 17 - 8, i * 31f, (i * 13) % 11 - 5);
 
         SlicePile PileFor(string kind)
         {
@@ -1167,6 +1195,15 @@ namespace GrandmasHouse.Stations
             float aspect = (float)Screen.width / Screen.height;
             Vector2 offset = (Vector2)screen - CursorPoint;
             return screen.z > 0f && new Vector2(offset.x * aspect, offset.y).magnitude < radius;
+        }
+
+        static GameObject MakeCube(string name, Material material)
+        {
+            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = name;
+            Destroy(cube.GetComponent<Collider>());
+            cube.GetComponent<Renderer>().sharedMaterial = material;
+            return cube;
         }
 
         static GameObject MakeRound(string name, Material material)

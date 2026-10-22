@@ -648,12 +648,12 @@ namespace GrandmasHouse.Kitchen
             Heat = state.heat;
             ClearPieces();
             RebuildPieces("Tomato Wedge", tomatoPiece, state.tomato, new Vector3(0.034f, 0.026f, 0.036f));
-            RebuildPieces("Onion Slice", onionPiece, state.onion, new Vector3(0.05f, 0.004f, 0.05f));
+            RebuildPieces("Onion Cube", onionPiece, state.onion, Vector3.one * 0.012f);
             RebuildPieces("Jalapeño Slice", pepperPiece, state.pepper, new Vector3(0.022f, 0.004f, 0.022f));
             RebuildPieces("Clove", garlicPiece, state.garlic, new Vector3(0.014f, 0.012f, 0.024f));
-            RebuildPieces("Potato Slice", potatoPiece, state.potato, new Vector3(0.05f, 0.006f, 0.04f));
+            RebuildPieces("Potato Cube", potatoPiece, state.potato, Vector3.one * 0.02f);
             RebuildPieces("Carrot Slice", carrotPiece, state.carrot, new Vector3(0.026f, 0.005f, 0.026f));
-            RebuildPieces("Winter Squash Slice", squashPiece, state.squash, new Vector3(0.06f, 0.01f, 0.06f));
+            RebuildPieces("Winter Squash Cube", squashPiece, state.squash, Vector3.one * 0.024f);
             RebuildPieces("Egg", eggPiece, state.egg, new Vector3(0.042f, 0.055f, 0.042f));
             ShowLiquid();
         }
