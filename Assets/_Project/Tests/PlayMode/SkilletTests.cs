@@ -97,10 +97,15 @@ namespace GrandmasHouse.Tests
             burner.SetOn(false);
 
             yield return InHand("Bowl");
+            Assert.IsFalse(pan.CanInteract(hands), "Fry-ups go on a plate, not in a soup bowl.");
+            hands.TakeHeld().Drop();
+            yield return InHand("Plate");
+            Assert.IsTrue(pan.CanInteract(hands));
             Assert.AreEqual("Serve a plate", pan.PromptVerb(hands));
             float food = pan.FullFood;
             Assert.AreEqual(1, pan.Plates, "Two eggs and a potato feed one.");
             var bowl = hands.Held.GetComponent<Bowl>();
+            Assert.IsTrue(bowl.IsPlate);
             pan.Interact(hands);
             Assert.AreEqual(food, bowl.Food, 0.01f);
             Assert.AreEqual("Fried eggs and potatoes", bowl.Dish);
@@ -130,6 +135,53 @@ namespace GrandmasHouse.Tests
             pan.Restore(saved);
             Assert.IsTrue(pan.Burnt);
             Assert.AreEqual(3, pan.Counts().Count);
+        }
+
+        static Color Look(Transform piece, string part)
+        {
+            var block = new MaterialPropertyBlock();
+            foreach (var r in piece.GetComponentsInChildren<Renderer>())
+            {
+                if (r.name != part) continue;
+                r.GetPropertyBlock(block);
+                return block.GetColor("_BaseColor");
+            }
+            Assert.Fail("No " + part);
+            return default;
+        }
+
+        [UnityTest]
+        public IEnumerator YouCanSeeAnEggCook()
+        {
+            pan.AddEgg();
+            Transform egg = null;
+            foreach (var t in pan.GetComponentsInChildren<Transform>()) if (t.name == "Egg") egg = t;
+            Assert.AreEqual(Skillet.Doneness.Raw, pan.Stage);
+            Color rawWhite = Look(egg, "White"), rawYolk = Look(egg, "Yolk"), rawEdge = Look(egg, "Edge");
+            Assert.Less(rawWhite.r, 0.8f, "A raw white is still clear gray.");
+
+            yield return OnTheStove(true);
+            yield return new WaitForSeconds(0.5f);
+            Assert.AreEqual(Skillet.Doneness.Cooking, pan.Stage);
+            StringAssert.StartsWith("Half-cooked", pan.Dish);
+
+            yield return new WaitForSeconds(0.7f);
+            Assert.AreEqual(Skillet.Doneness.Done, pan.Stage);
+            Color white = Look(egg, "White"), yolk = Look(egg, "Yolk"), edge = Look(egg, "Edge");
+            Assert.Greater(white.r, 0.95f, "Set whites are white.");
+            Assert.Greater(yolk.g, rawYolk.g + 0.15f, "The yolk goes from deep orange to yellow.");
+            Assert.Less(edge.b, white.b - 0.3f, "The edges crisp golden.");
+
+            yield return new WaitForSeconds(1.2f);
+            Assert.AreEqual(Skillet.Doneness.Burning, pan.Stage, "Smoking before it's burnt.");
+            var smoke = pan.GetComponentInChildren<ParticleSystem>();
+            Assert.IsTrue(smoke != null && smoke.isEmitting, "It smokes as it starts to burn.");
+            Assert.Less(Look(egg, "White").r, white.r - 0.2f, "Browning.");
+
+            yield return new WaitForSeconds(0.8f);
+            Assert.AreEqual(Skillet.Doneness.Burnt, pan.Stage);
+            Assert.Less(Look(egg, "White").r, 0.3f, "Black when burnt.");
+            burner.SetOn(false);
         }
 
         [Test]

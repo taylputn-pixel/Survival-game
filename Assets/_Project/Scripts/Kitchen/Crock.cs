@@ -13,7 +13,7 @@ namespace GrandmasHouse.Kitchen
     // Grandma's stoneware crock, down in the root cellar, for sauerkraut.
     // Pack shredded cabbage in by the handful from the cutting board and
     // shake in salt; each night it ferments, and after about a week it's
-    // sauerkraut, which keeps all winter in the crock. Scoop it into a bowl
+    // sauerkraut, which keeps all winter in the crock. Scoop it into a bowl or onto a plate
     // to eat. Too little salt and it goes bad instead; scoop it too soon
     // and it's only salted cabbage.
     public class Crock : MonoBehaviour, IInteractable, ISharedUse, ISaveable
@@ -81,7 +81,7 @@ namespace GrandmasHouse.Kitchen
         {
             if (Handful.Held(hands) != null) return "Pack into the crock";
             if (hands.Held.GetComponent<Seasoning>() != null) return "Add a scoop of salt";
-            return "Scoop into the bowl";
+            return hands.Held.GetComponent<Bowl>().IsPlate ? "Scoop onto the plate" : "Scoop into the bowl";
         }
 
         public void Interact(PlayerHands hands)

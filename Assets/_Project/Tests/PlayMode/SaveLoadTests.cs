@@ -118,7 +118,8 @@ namespace GrandmasHouse.Tests
 
             Assert.AreEqual(jars, Object.FindObjectsByType<JarContents>().Length, "Jars went missing or doubled.");
             JarContents found = null;
-            foreach (var j in Object.FindObjectsByType<JarContents>()) if (j.IsLabeled) found = j;
+            // Grandma's own jars are labeled too; this one was up in the air.
+            foreach (var j in Object.FindObjectsByType<JarContents>()) if (j.IsLabeled && j.transform.position.y > 40f) found = j;
             Assert.IsNotNull(found, "The labeled jar didn't come back.");
             Assert.AreEqual("Dill Pickle Chips", found.Contents);
             Assert.IsTrue(found.IsSealed);

@@ -7,18 +7,29 @@ using UnityEngine;
 
 namespace GrandmasHouse.Food
 {
-    // A soup bowl. Hold it empty and look at a pot of soup to ladle some in;
-    // then eat it from your hands. It's still a bowl afterwards. Soup left
-    // sitting goes off like any food (keep it cold).
+    // A soup bowl or a dinner plate. Soup goes in a bowl: hold it empty and
+    // look at a pot of soup to ladle some in. Everything else (the skillet's
+    // fry-ups, sauerkraut) goes on a plate. Eat it from your hands; it's
+    // still a bowl or a plate afterwards. Food left sitting goes off like
+    // any food (keep it cold).
     [RequireComponent(typeof(Pickup))]
     public class Bowl : MonoBehaviour, IItemState, IEdible
     {
         [Tooltip("The soup's surface inside the bowl, hidden while it's empty.")]
         [SerializeField] Renderer soup;
+        [Tooltip("A flat plate rather than a bowl: for anything that isn't soup.")]
+        [SerializeField] bool plate;
 
         public string Dish { get; private set; }
         public float Food { get; private set; }
         public bool IsEmpty => Food <= 0f;
+        public bool IsPlate => plate;
+
+        // What you'd hold out at each: a bowl at the soup pot, a plate at the skillet.
+        public static bool EmptyBowl(PlayerHands hands) => Held(hands, false);
+        public static bool EmptyPlate(PlayerHands hands) => Held(hands, true);
+        static bool Held(PlayerHands hands, bool plate) =>
+            !hands.IsEmpty && hands.Held.TryGetComponent(out Bowl b) && b.plate == plate && b.IsEmpty;
 
         Perishable perishable;
         MaterialPropertyBlock block;

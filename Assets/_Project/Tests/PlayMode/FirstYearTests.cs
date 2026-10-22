@@ -91,6 +91,44 @@ namespace GrandmasHouse.Tests
             Assert.AreEqual(15f, settings.WorthOf(beans, 0), 0.01f, "Three times a jar of pickles.");
         }
 
+        [UnityTest]
+        public IEnumerator TheHouseStartsWithOnlyShelfStableFood()
+        {
+            yield return null;
+            // Grandma's fresh food went bad long ago: none is lying about.
+            foreach (var fresh in Object.FindObjectsByType<FreshFood>())
+            {
+                Assert.AreEqual("Canned Beans", fresh.GetComponent<Pickup>().DisplayName, fresh.name + " would have spoiled.");
+            }
+            // Her own jars, sealed and labeled, and two cans of beans: about three days' food.
+            float food = 0f;
+            int jars = 0;
+            foreach (var jar in Object.FindObjectsByType<Kitchen.GrandmasJar>())
+            {
+                var contents = jar.GetComponent<Kitchen.JarContents>();
+                Assert.IsTrue(contents.IsSealed, jar.name);
+                Assert.AreNotEqual("Don't eat!", contents.Recipe.displayName, jar.name);
+                food += jar.GetComponent<JarFood>().Nutrition;
+                jars++;
+            }
+            Assert.AreEqual(5, jars);
+            foreach (var fresh in Object.FindObjectsByType<FreshFood>()) food += fresh.Nutrition;
+            Assert.That(food, Is.InRange(150f, 220f), "About three days at ~60 a day.");
+        }
+
+        [Test]
+        public void SeedsAndTheWateringCanAreInTheShed()
+        {
+            var shed = GameObject.Find("Yard/Garden Shed").transform;
+            bool Inside(Vector3 p)
+            {
+                Vector3 local = shed.InverseTransformPoint(p);
+                return Mathf.Abs(local.x) < 1f && Mathf.Abs(local.z) < 0.8f && local.y < 2.2f;
+            }
+            foreach (var packet in Object.FindObjectsByType<SeedPacket>()) Assert.IsTrue(Inside(packet.transform.position), packet.name);
+            Assert.IsTrue(Inside(Object.FindAnyObjectByType<WateringCan>().transform.position));
+        }
+
         [Test]
         public void FrostIsCalledOnlyTheDayBefore()
         {

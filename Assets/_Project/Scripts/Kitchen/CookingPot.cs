@@ -172,7 +172,7 @@ namespace GrandmasHouse.Kitchen
             }
             if (hands.Held.TryGetComponent(out Food.Bowl bowl))
             {
-                return bowl.IsEmpty && IsSoup && IsSetDown;
+                return !bowl.IsPlate && bowl.IsEmpty && IsSoup && IsSetDown;
             }
             if (hands.Held.Category == ItemCategory.Egg || IsDried(hands.Held))
             {

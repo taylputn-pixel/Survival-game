@@ -1,4 +1,5 @@
 using System.Collections;
+using GrandmasHouse.Carrying;
 using GrandmasHouse.Food;
 using GrandmasHouse.Kitchen;
 using GrandmasHouse.Player;
@@ -29,6 +30,30 @@ namespace GrandmasHouse.Tests
             return pot;
         }
 
+        // A bowl, not one of the plates.
+        static Bowl SoupBowl()
+        {
+            foreach (var b in Object.FindObjectsByType<Bowl>()) if (!b.IsPlate) return b;
+            return null;
+        }
+
+        [UnityTest]
+        public IEnumerator SoupGoesInBowlsNotPlates()
+        {
+            var pot = SoupPot(cooked: true);
+            var hands = Homestead.Find<PlayerHands>();
+            Bowl plate = null;
+            foreach (var b in Object.FindObjectsByType<Bowl>()) if (b.IsPlate) plate = b;
+            Assert.IsNotNull(plate, "Grandma's plates are on the kitchen table.");
+            hands.Give(plate.GetComponent<Pickup>());
+            yield return new WaitForSeconds(0.2f);
+            Assert.IsFalse(pot.CanInteract(hands), "No ladling soup onto a plate.");
+            hands.TakeHeld().Drop();
+            hands.Give(SoupBowl().GetComponent<Pickup>());
+            yield return new WaitForSeconds(0.2f);
+            Assert.IsTrue(pot.CanInteract(hands));
+        }
+
         [UnityTest]
         public IEnumerator SoupIsLadledIntoABowlAndEaten()
         {
@@ -37,7 +62,7 @@ namespace GrandmasHouse.Tests
             Assert.IsTrue(pot.IsSoup);
             float before = pot.Fill;
 
-            var bowl = Homestead.Find<Bowl>();
+            var bowl = SoupBowl();
             Assert.IsTrue(bowl.IsEmpty);
             pot.Serve(bowl);
             Assert.IsFalse(bowl.IsEmpty);
@@ -56,7 +81,7 @@ namespace GrandmasHouse.Tests
         [UnityTest]
         public IEnumerator ACookedBowlFeedsMoreThanTheSameVegetablesRaw()
         {
-            var bowl = Homestead.Find<Bowl>();
+            var bowl = SoupBowl();
             var pot = SoupPot(cooked: true);
             yield return null;
             pot.Serve(bowl);

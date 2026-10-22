@@ -103,6 +103,8 @@ MonoBehaviour:
     prefab: {fileID: 767647525408192853, guid: eabdb7ee31e8f1f469d2c4f2c5164806, type: 3}
   - key: Skillet
     prefab: {fileID: 2411204137799612233, guid: dc249b1de4c7b9e41a7fd5b1e76e71d2, type: 3}
+  - key: Plate
+    prefab: {fileID: 5615410797289817445, guid: bfe8b7d6c399d64418189b164ec86659, type: 3}
   crops:
   - {fileID: 11400000, guid: 5e15d42a32eb7a64e9c79284b28618b4, type: 2}
   - {fileID: 11400000, guid: 027946eed155fe24c9eb29d84effeabc, type: 2}

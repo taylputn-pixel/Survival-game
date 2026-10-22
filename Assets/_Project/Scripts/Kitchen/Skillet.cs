@@ -13,8 +13,11 @@ namespace GrandmasHouse.Kitchen
     // eggs cracked in, sliced potatoes, onion, squash or chicken off the
     // cutting board (carry the skillet to the board and scrape them in, or
     // drop in a handful), a pinch of salt. Set it on a lit burner and it
-    // fries in a little while; leave it on much longer and it burns. Hold an
-    // empty bowl and look at it to serve a plate. Food works like the pot's
+    // cooks in a little while; leave it on much longer and it burns. You
+    // tell by looking: egg whites go from clear-gray to white with golden
+    // edges and the yolk turns from deep orange to yellow; potatoes and the
+    // rest go golden. Past done it steams, then smokes and darkens, then
+    // it's burnt. Hold an empty plate and look at it to serve. Food works like the pot's
     // (MealSettings): each piece's worth, a bonus for variety, salt helps,
     // and frying makes it worth a little less per piece than soup.
     [RequireComponent(typeof(Cookware))]
@@ -39,18 +42,27 @@ namespace GrandmasHouse.Kitchen
         [SerializeField] Look[] looks;
         [SerializeField] Material eggWhite;
         [SerializeField] Material eggYolk;
+        [Tooltip("Wisps off the pan: steam while it cooks, smoke as it starts to burn.")]
+        [SerializeField] ParticleSystem smoke;
 
         readonly List<string> kinds = new List<string>();
         readonly List<Transform> shown = new List<Transform>();
         Cookware cookware;
         SoundLoop sizzle;
         MaterialPropertyBlock block;
+        float tinted = -1f;
 
         public float Frying { get; private set; }
         public int Salt { get; private set; }
         public int Served { get; private set; }
         public bool Fried => Frying >= fryAfter;
         public bool Burnt => Frying >= burnAfter;
+        // 0 raw to 1 done, then 0 done to 1 burnt.
+        public float Cooked => fryAfter > 0f ? Mathf.Clamp01(Frying / fryAfter) : 1f;
+        public float Charred => Mathf.Clamp01(Mathf.InverseLerp(fryAfter, burnAfter, Frying));
+        public enum Doneness { Raw, Cooking, Done, Burning, Burnt }
+        public Doneness Stage => Burnt ? Doneness.Burnt : Charred >= 0.6f ? Doneness.Burning
+            : Fried ? Doneness.Done : Frying >= fryAfter * 0.35f ? Doneness.Cooking : Doneness.Raw;
         public bool HasFood => kinds.Count > 0;
         public int Room => Mathf.Max(0, capacity - Size);
         int Size { get { int n = 0; foreach (var k in kinds) n += k == "Egg" ? 2 : 1; return n; } }
@@ -77,9 +89,29 @@ namespace GrandmasHouse.Kitchen
             sizzle.Set(cooking ? (Burnt ? 0.4f : 1f) : 0f);
             sizzle.Pitch(1.6f);
             if (!cooking || !Net.ItemNet.Runs(this)) return;
-            bool wasFried = Fried, wasBurnt = Burnt;
             Frying += Time.deltaTime;
-            if (Fried != wasFried || Burnt != wasBurnt) Tint();
+        }
+
+        void LateUpdate()
+        {
+            // The look follows the cooking a little at a time (guests' pans too).
+            if (Mathf.Abs(Cooked + Charred - tinted) > 0.02f) Tint();
+            Wisps(HasFood && cookware.IsHot && Frying >= fryAfter * 0.5f);
+        }
+
+        void Wisps(bool on)
+        {
+            if (smoke == null) return;
+            if (on)
+            {
+                var main = smoke.main;
+                // Steam while it cooks, gray then dark smoke as it burns.
+                main.startColor = Color.Lerp(new Color(1f, 1f, 1f, 0.35f), new Color(0.2f, 0.2f, 0.2f, 0.8f), Mathf.InverseLerp(0.4f, 1f, Charred));
+                var emission = smoke.emission;
+                emission.rateOverTimeMultiplier = Mathf.Lerp(3f, 18f, Charred);
+                if (!smoke.isEmitting) smoke.Play();
+            }
+            else if (smoke.isEmitting) smoke.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
         // ---- What's in it ----
@@ -119,8 +151,13 @@ namespace GrandmasHouse.Kitchen
                     : Has("Winter") ? (Has("Onion") ? "Fried squash and onions" : "Fried squash")
                     : Has("Potato") ? "Fried potatoes"
                     : "Fried vegetables";
-                if (Burnt) return "Burnt " + name.ToLowerInvariant();
-                return Fried ? name : "Uncooked " + name.ToLowerInvariant();
+                switch (Stage)
+                {
+                    case Doneness.Burnt: return "Burnt " + name.ToLowerInvariant();
+                    case Doneness.Done: case Doneness.Burning: return name;
+                    case Doneness.Cooking: return "Half-cooked " + name.ToLowerInvariant();
+                    default: return "Uncooked " + name.ToLowerInvariant();
+                }
             }
         }
 
@@ -133,7 +170,7 @@ namespace GrandmasHouse.Kitchen
             if (hands.IsEmpty || InHands) return false;
             if (Handful.Held(hands) != null) return Room > 0 && Served == 0;
             if (HoldingEgg(hands)) return Room >= 2 && Served == 0;
-            if (hands.Held.TryGetComponent(out Food.Bowl bowl)) return bowl.IsEmpty && HasFood;
+            if (hands.Held.TryGetComponent(out Food.Bowl bowl)) return bowl.IsPlate && bowl.IsEmpty && HasFood;
             if (hands.Held.TryGetComponent(out Seasoning salt)) return salt.Kind == Seasoning.Type.Salt && !salt.IsEmpty && HasFood && Served == 0;
             return false;
         }
@@ -194,12 +231,12 @@ namespace GrandmasHouse.Kitchen
             Frying = Mathf.Min(Frying, fryAfter * 0.5f);
         }
 
-        // One plate's worth onto an empty bowl; the last plate empties the pan.
+        // One plate's worth onto an empty plate; the last plate empties the pan.
         public void Serve(Food.Bowl bowl)
         {
             if (!HasFood) return;
             int plates = Plates;
-            bowl.Fill(Dish, FullFood / plates, Burnt ? new Color(0.15f, 0.12f, 0.1f) : new Color(0.78f, 0.6f, 0.32f));
+            bowl.Fill(Dish, FullFood / plates, Burnt ? new Color(0.15f, 0.12f, 0.1f) : Fried ? new Color(0.82f, 0.63f, 0.33f) : new Color(0.85f, 0.8f, 0.62f));
             Sfx.Play(SoundId.SetDown, transform.position, 0.7f, 0.1f);
             Served++;
             if (Served >= plates) Empty();
@@ -244,6 +281,7 @@ namespace GrandmasHouse.Kitchen
         Transform MakeEgg()
         {
             var egg = new GameObject("Egg").transform;
+            Piece(egg, "Edge", new Vector3(0f, -0.0004f, 0f), new Vector3(0.078f, 0.0016f, 0.078f), eggWhite, PrimitiveType.Cylinder);
             Piece(egg, "White", Vector3.zero, new Vector3(0.07f, 0.002f, 0.07f), eggWhite, PrimitiveType.Cylinder);
             Piece(egg, "Yolk", new Vector3(0.006f, 0.004f, 0.004f), new Vector3(0.026f, 0.012f, 0.026f), eggYolk, PrimitiveType.Sphere);
             return egg;
@@ -270,22 +308,49 @@ namespace GrandmasHouse.Kitchen
             if (mat != null) go.GetComponent<Renderer>().sharedMaterial = mat;
         }
 
-        // Golden once fried, black when burnt.
+        // How done it looks. Egg whites start a clear gray and set white,
+        // their edges crisp golden; the yolk goes from deep orange to a
+        // cooked yellow. Everything else goes golden. Past done it browns,
+        // then goes black.
+        static readonly Color rawWhite = new Color(0.72f, 0.72f, 0.66f);
+        static readonly Color setWhite = new Color(0.98f, 0.97f, 0.93f);
+        static readonly Color rawYolk = new Color(1f, 0.52f, 0.02f);
+        static readonly Color setYolk = new Color(1f, 0.78f, 0.3f);
+        static readonly Color golden = new Color(0.8f, 0.55f, 0.22f);
+        static readonly Color browned = new Color(0.45f, 0.3f, 0.15f);
+        static readonly Color charred = new Color(0.09f, 0.07f, 0.06f);
+
+        Color Shade(string part, Color baseColor)
+        {
+            float c = Cooked, b = Charred;
+            Color done;
+            switch (part)
+            {
+                case "White": done = Color.Lerp(rawWhite, setWhite, c); break;
+                case "Edge": done = Color.Lerp(Color.Lerp(rawWhite, setWhite, c), golden, Mathf.InverseLerp(0.6f, 1f, c)); break;
+                case "Yolk": done = Color.Lerp(rawYolk, setYolk, c); break;
+                default: done = Color.Lerp(baseColor, golden, 0.45f * c); break;
+            }
+            Color shade = Color.Lerp(Color.Lerp(done, browned, Mathf.InverseLerp(0.25f, 0.6f, b)), charred, Mathf.InverseLerp(0.5f, 1f, b));
+            shade.a = 1f;
+            return shade;
+        }
+
         void Tint()
         {
-            float shade = Burnt ? 0.25f : Fried ? 0.78f : 1f;
+            tinted = Cooked + Charred;
             foreach (var piece in shown)
             {
                 if (piece == null) continue;
                 foreach (var look in piece.GetComponentsInChildren<Renderer>())
                 {
-                    if (look.sharedMaterial == null) continue;
-                    Color baseColor = look.sharedMaterial.HasProperty("_BaseColor") ? look.sharedMaterial.GetColor("_BaseColor") : Color.white;
-                    Color fried = Color.Lerp(baseColor, new Color(0.7f, 0.5f, 0.25f), Fried ? 0.35f : 0f) * shade;
-                    fried.a = 1f;
+                    Color baseColor = look.sharedMaterial != null && look.sharedMaterial.HasProperty("_BaseColor") ? look.sharedMaterial.GetColor("_BaseColor") : Color.white;
+                    string part = piece.name == "Egg" ? look.name : "";
                     look.GetPropertyBlock(block);
-                    block.SetColor("_BaseColor", fried);
+                    block.SetColor("_BaseColor", Shade(part, baseColor));
                     look.SetPropertyBlock(block);
+                    // A cooked yolk sits lower.
+                    if (part == "Yolk") look.transform.localScale = new Vector3(0.026f, Mathf.Lerp(0.012f, 0.008f, Cooked), 0.026f);
                 }
             }
         }
