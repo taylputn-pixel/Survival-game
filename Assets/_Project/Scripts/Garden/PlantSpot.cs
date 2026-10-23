@@ -10,9 +10,11 @@ using UnityEngine;
 namespace GrandmasHouse.Garden
 {
     // One place in a garden bed where a single plant can grow. A watered plant
-    // moves up one stage each night; a dry one just waits (it never dies in
-    // Cozy). Once ready, it holds its harvest for you to pick by hand. Some
-    // crops grow suckers or draw pests overnight, to take off by hand.
+    // moves up one stage each night. Once ready, it holds its harvest for you
+    // to pick by hand. Some crops grow suckers or draw pests overnight, to
+    // take off by hand. Where crops can die (survival), a plant left dry wilts
+    // and then dies, and one left with hornworms on it is chewed and then
+    // dies; a dead plant stands brown until something is planted over it.
     public class PlantSpot : MonoBehaviour, IAfterLoad
     {
         [SerializeField] Material soilMaterial;
@@ -29,6 +31,15 @@ namespace GrandmasHouse.Garden
         // -1 while it's still a seed; the last stage means ready to harvest.
         public int Stage { get; private set; } = -1;
         public bool IsReady => Crop != null && Stage == Crop.stages.Length - 1;
+        // Killed by drought or pests: it stands brown, and the spot can be planted again.
+        public bool IsDead { get; private set; }
+        // Nights in a row it went to bed dry, and with pests on it.
+        public int DryNights { get; private set; }
+        public int PestNights { get; private set; }
+        public bool IsWilted => !IsDead && DryNights > 0;
+        public bool IsChewed => !IsDead && PestNights > 0;
+        // Room to plant: nothing here, or only a dead plant.
+        public bool IsOpen => Crop == null || IsDead;
         public int RipeCount => ripe.Count;
         // On a guest's computer: the host grows this plant (see GardenBed).
         public bool Following { get; set; }
@@ -49,8 +60,8 @@ namespace GrandmasHouse.Garden
                 return bounds;
             }
         }
-        // Suckers or pests on it, so it isn't tended.
-        public bool HasTrouble => suckers.Count > 0 || pests.Count > 0;
+        // No suckers left on it: a pruned plant yields more.
+        public bool IsPruned => suckers.Count == 0;
         public IEnumerable<Pinchable> Pinchables
         {
             get
@@ -122,6 +133,9 @@ namespace GrandmasHouse.Garden
             public float yaw;
             public int suckers;
             public int pests;
+            public bool dead;
+            public int dryNights;
+            public int pestNights;
         }
 
         public State Capture() => new State
@@ -133,18 +147,28 @@ namespace GrandmasHouse.Garden
             yaw = plant != null ? plant.transform.localEulerAngles.y : 0f,
             suckers = suckers.Count,
             pests = pests.Count,
+            dead = IsDead,
+            dryNights = DryNights,
+            pestNights = PestNights,
         };
 
         // A killing frost: the plant and anything ripe on it are lost.
         public bool Frost()
         {
             if (Crop == null) return false;
+            bool living = !IsDead;
+            RemoveRipe();
+            Restore(new State());
+            return living;
+        }
+
+        void RemoveRipe()
+        {
             foreach (var item in ripe)
             {
                 if (item != null) Net.ItemNet.Remove(item.gameObject);
             }
-            Restore(new State());
-            return true;
+            ripe.Clear();
         }
 
         // Puts the plant back as it was; the picking on it comes back with the items.
@@ -163,6 +187,9 @@ namespace GrandmasHouse.Garden
             Crop = string.IsNullOrEmpty(state.crop) ? null : SaveManager.Catalog.Crop(state.crop);
             Water = state.water;
             harvested = state.harvested;
+            IsDead = Crop != null && state.dead;
+            DryNights = state.dryNights;
+            PestNights = state.pestNights;
             Stage = -1;
             marker.SetActive(Crop == null);
             if (Crop != null)
@@ -173,6 +200,7 @@ namespace GrandmasHouse.Garden
                     plant.transform.localRotation = Quaternion.Euler(0f, state.yaw, 0f);
                     for (int i = 0; i < state.suckers; i++) AddSucker();
                     for (int i = 0; i < state.pests; i++) AddPest();
+                    ShowHealth();
                 }
                 else
                 {
@@ -187,7 +215,8 @@ namespace GrandmasHouse.Garden
         public void ApplyShared(State state)
         {
             string crop = Crop != null ? Crop.name : "";
-            bool changed = crop != (state.crop ?? "") || Stage != state.stage || suckers.Count != state.suckers || pests.Count != state.pests;
+            bool changed = crop != (state.crop ?? "") || Stage != state.stage || suckers.Count != state.suckers || pests.Count != state.pests
+                || IsDead != state.dead || DryNights != state.dryNights || PestNights != state.pestNights;
             if (changed)
             {
                 Restore(state);
@@ -224,10 +253,22 @@ namespace GrandmasHouse.Garden
         }
 
         // Called once each night, before the soil dries out again. A tended
-        // plant (no weeds crowding it, no suckers or pests) yields more.
-        public void GrowOvernight(bool tended)
+        // plant (pruned, no weeds crowding it) yields more. Where crops can
+        // die, a growing plant left dry or with pests on it too many nights
+        // running dies; a single harvest that's ready only waits to be dug.
+        public void GrowOvernight(bool tended, bool canDie = false)
         {
-            if (Crop != null && Water >= settings.wateredEnough)
+            bool watered = Water >= settings.wateredEnough;
+            if (canDie && Crop != null && !IsDead && Stage >= 0 && !(Crop.singleHarvest && IsReady))
+            {
+                DryNights = watered ? 0 : DryNights + 1;
+                PestNights = pests.Count > 0 ? PestNights + 1 : 0;
+                if (DryNights >= settings.dryNightsToDie || PestNights >= settings.pestNightsToDie)
+                {
+                    Die();
+                }
+            }
+            if (Crop != null && !IsDead && watered)
             {
                 if (Stage < Crop.stages.Length - 1)
                 {
@@ -244,13 +285,63 @@ namespace GrandmasHouse.Garden
             }
             Water = 0f;
             ShowWater();
+            ShowHealth();
+        }
+
+        // Dried up or eaten: the pests and suckers go, anything ripe can still be picked.
+        void Die()
+        {
+            IsDead = true;
+            foreach (var thing in suckers) if (thing != null) Destroy(thing.gameObject);
+            foreach (var thing in pests) if (thing != null) Destroy(thing.gameObject);
+            suckers.Clear();
+            pests.Clear();
+        }
+
+        // A wilted plant leans and fades, a chewed one yellows, a dead one
+        // leans over brown. Only the plant: not its fruit or what's on it.
+        void ShowHealth()
+        {
+            if (plant == null)
+            {
+                return;
+            }
+            float lean = IsDead ? settings.deadLean : IsWilted ? settings.wiltedLean : 0f;
+            plant.transform.localRotation = Quaternion.Euler(lean, plant.transform.localEulerAngles.y, 0f);
+            Color tint = settings.deadColor;
+            float amount = IsDead ? settings.deadTint : 0f;
+            if (IsWilted)
+            {
+                tint = settings.wiltedColor;
+                amount = settings.wiltedTint;
+            }
+            else if (IsChewed)
+            {
+                tint = settings.chewedColor;
+                amount = settings.chewedTint;
+            }
+            foreach (var part in plant.GetComponentsInChildren<Renderer>())
+            {
+                if (part.GetComponentInParent<Pickup>() != null || part.GetComponentInParent<Pinchable>() != null)
+                {
+                    continue;
+                }
+                if (amount <= 0f || part.sharedMaterial == null)
+                {
+                    part.SetPropertyBlock(null);
+                    continue;
+                }
+                part.GetPropertyBlock(block);
+                block.SetColor("_BaseColor", Color.Lerp(part.sharedMaterial.color, tint, amount));
+                part.SetPropertyBlock(block);
+            }
         }
 
         // After growing: new suckers sprout, and pests may turn up, fewer with
         // a companion blooming nearby.
         public void TroubleOvernight(bool companionNearby)
         {
-            if (Crop == null || Stage < 0)
+            if (Crop == null || Stage < 0 || IsDead)
             {
                 return;
             }
@@ -269,7 +360,7 @@ namespace GrandmasHouse.Garden
 
         // Blooming and the kind of plant that draws the other's pests away.
         public bool IsCompanionFor(PlantSpot other) =>
-            IsReady && other.Crop != null && other.Crop.companions != null && System.Array.IndexOf(other.Crop.companions, Crop) >= 0;
+            IsReady && !IsDead && other.Crop != null && other.Crop.companions != null && System.Array.IndexOf(other.Crop.companions, Crop) >= 0;
 
         // Turned round to see the other side; it stays turned.
         public void Turn(float degrees)
@@ -317,6 +408,12 @@ namespace GrandmasHouse.Garden
         // Press a hole into the soil, drop the seed in, and cover it over.
         public void Plant(CropData crop, float seconds)
         {
+            if (IsDead)
+            {
+                // The dead plant is pulled out first.
+                RemoveRipe();
+                Clear();
+            }
             Crop = crop;
             Stage = -1;
             harvested = false;
@@ -364,6 +461,7 @@ namespace GrandmasHouse.Garden
             }
             for (int i = 0; i < keepSuckers; i++) AddSucker();
             for (int i = 0; i < keepPests; i++) AddPest();
+            ShowHealth();
         }
 
         void Ripen(int count)
@@ -417,6 +515,9 @@ namespace GrandmasHouse.Garden
             Crop = null;
             Stage = -1;
             harvested = false;
+            IsDead = false;
+            DryNights = 0;
+            PestNights = 0;
             marker.SetActive(true);
         }
 

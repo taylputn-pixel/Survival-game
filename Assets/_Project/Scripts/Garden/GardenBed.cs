@@ -189,7 +189,7 @@ namespace GrandmasHouse.Garden
         // The host doing a guest's work.
         public void PlantFor(int spot, string crop)
         {
-            if (spot < 0 || spot >= spots.Length || !spots[spot].IsEmpty) return;
+            if (spot < 0 || spot >= spots.Length || !spots[spot].IsOpen) return;
             CropData data = SaveManager.Catalog.Crop(crop);
             if (data != null) spots[spot].Plant(data, 0.35f);
         }
@@ -226,10 +226,13 @@ namespace GrandmasHouse.Garden
 
         void Overnight(int day)
         {
-            // Plants grow first, judged by how you left the bed at bedtime.
+            // Plants grow first, judged by how you left the bed at bedtime:
+            // pruned and clear of weeds yields more; dry or with pests on it
+            // too long, it dies (where crops can die).
+            bool canDie = clock.Mode != null && clock.Mode.cropsCanDie;
             foreach (var spot in spots)
             {
-                spot.GrowOvernight(!IsCrowded(spot) && !spot.HasTrouble);
+                spot.GrowOvernight(!IsCrowded(spot) && spot.IsPruned, canDie);
             }
             foreach (var spot in spots)
             {

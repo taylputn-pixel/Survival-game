@@ -27,6 +27,21 @@ namespace GrandmasHouse.Data
         [Tooltip("Weeds closer than this crowd a plant and it loses its tended bonus, in meters.")]
         public float crowdingRadius = 0.25f;
 
+        [Header("Neglect (where crops can die)")]
+        [Tooltip("Nights in a row a growing plant can go to bed dry: the first one wilts it, this many kills it.")]
+        public int dryNightsToDie = 2;
+        [Tooltip("Nights in a row a plant can go to bed with pests on it: the first one chews it, this many kills it.")]
+        public int pestNightsToDie = 2;
+        public Color wiltedColor = new Color(0.62f, 0.56f, 0.3f);
+        [Range(0f, 1f)] public float wiltedTint = 0.45f;
+        [Tooltip("How far a wilted plant leans over, in degrees.")]
+        public float wiltedLean = 14f;
+        public Color chewedColor = new Color(0.8f, 0.75f, 0.25f);
+        [Range(0f, 1f)] public float chewedTint = 0.4f;
+        public Color deadColor = new Color(0.33f, 0.23f, 0.13f);
+        [Range(0f, 1f)] public float deadTint = 0.85f;
+        public float deadLean = 30f;
+
         [Header("Suckers and pests")]
         [Tooltip("New suckers on each plant that grows them, each night.")]
         public int suckersPerNight = 1;

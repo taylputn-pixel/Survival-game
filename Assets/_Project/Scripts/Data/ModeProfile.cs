@@ -23,7 +23,7 @@ namespace GrandmasHouse.Data
         public bool coldHasPenalties;
         [Tooltip("Fresh food and open jars spoil over time.")]
         public bool foodSpoils;
-        [Tooltip("Not used yet. Neglected crops can die.")]
+        [Tooltip("Plants left dry, or with pests on them, die (GardenSettings).")]
         public bool cropsCanDie;
         [Tooltip("Not used yet. Sloppy jars can fail to seal and spoil later.")]
         public bool jarsCanFailToSeal;

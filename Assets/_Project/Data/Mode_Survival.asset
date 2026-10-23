@@ -18,6 +18,6 @@ MonoBehaviour:
   hungerHasPenalties: 1
   coldHasPenalties: 0
   foodSpoils: 1
-  cropsCanDie: 0
+  cropsCanDie: 1
   jarsCanFailToSeal: 0
   gameOver: 1

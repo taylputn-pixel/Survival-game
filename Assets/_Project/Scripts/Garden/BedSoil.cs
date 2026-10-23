@@ -76,7 +76,7 @@ namespace GrandmasHouse.Garden
             bed.Plant(spot, packet.Crop, plantSeconds);
         }
 
-        // The empty marked spot nearest where you're looking, if it's close.
+        // The open spot (empty, or a dead plant) nearest where you're looking, if it's close.
         PlantSpot SpotAt(PlayerHands hands)
         {
             if (!hands.HasLookPoint)
@@ -88,7 +88,7 @@ namespace GrandmasHouse.Garden
             foreach (var spot in bed.Spots)
             {
                 float distance = Vector3.ProjectOnPlane(spot.transform.position - hands.LookPoint, transform.up).magnitude;
-                if (spot.IsEmpty && distance < best)
+                if (spot.IsOpen && distance < best)
                 {
                     best = distance;
                     closest = spot;
