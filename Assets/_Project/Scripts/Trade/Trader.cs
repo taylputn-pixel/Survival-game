@@ -50,6 +50,10 @@ namespace GrandmasHouse.Trade
         [Tooltip("What a neighbor will take, by save key (\"Jar\" for any sealed jar). Ignored for the store.")]
         [SerializeField] List<string> wants = new List<string>();
         [SerializeField] List<Ware> wares = new List<Ware>();
+        [Tooltip("Given the first time you come to them (a save key), set out with the rest of their goods. Empty for none.")]
+        [SerializeField] string welcomeGift = "";
+        [Tooltip("What they say as they hand it over.")]
+        [TextArea(1, 3)] [SerializeField] string welcomeLine = "";
         [Tooltip("Restocked only when a delivery comes in (the store, in hard times): the chance of one each day, by month. Empty restocks a little every day.")]
         [SerializeField] float[] deliveryChanceByMonth = new float[0];
         [Tooltip("How much a delivery brings of each thing, as a share of the most they keep (at least, at most). Rounded, so it can bring none.")]
@@ -71,6 +75,8 @@ namespace GrandmasHouse.Trade
         public bool IsOpen => clock != null && !clock.IsNight;
         public int Month => calendar != null && clock != null ? calendar.DateOf(clock.Day).month : 0;
         public event Action Traded;
+        // Met you already (and gave the welcome gift, if they have one).
+        public bool Welcomed { get; private set; }
 
         readonly float[] restock = new float[32];
 
@@ -129,6 +135,13 @@ namespace GrandmasHouse.Trade
 
         public void Interact(PlayerHands hands)
         {
+            if (!Welcomed && !string.IsNullOrEmpty(welcomeGift))
+            {
+                var caption = FindAnyObjectByType<UI.Caption>();
+                if (caption != null && !string.IsNullOrEmpty(welcomeLine)) caption.Show(traderName + ": " + welcomeLine, 6f);
+                if (!Hosting && TryGetComponent(out TraderNet net)) net.Welcome();
+                else Welcome();
+            }
             var view = FindAnyObjectByType<UI.TradeView>();
             if (view != null) view.Open(this, hands);
         }
@@ -265,6 +278,15 @@ namespace GrandmasHouse.Trade
             }
         }
 
+        // The first meeting (the host): their gift goes out with the rest.
+        public void Welcome()
+        {
+            if (Welcomed) return;
+            Welcomed = true;
+            if (!string.IsNullOrEmpty(welcomeGift)) HandOver(welcomeGift, 0, handOver);
+            Traded?.Invoke();
+        }
+
         // ---- Saving (and sharing) ----
 
         [Serializable]
@@ -273,13 +295,14 @@ namespace GrandmasHouse.Trade
             public List<int> stock = new List<int>();
             public float credit;
             public int lastDelivery = -1;
+            public bool welcomed;
         }
 
         public string SaveKey => saveKey;
 
         public string Capture()
         {
-            var state = new State { credit = Mathf.Round(Credit * 100f) / 100f, lastDelivery = LastDelivery };
+            var state = new State { credit = Mathf.Round(Credit * 100f) / 100f, lastDelivery = LastDelivery, welcomed = Welcomed };
             foreach (var w in wares) state.stock.Add(w.stock);
             return JsonUtility.ToJson(state);
         }
@@ -289,6 +312,7 @@ namespace GrandmasHouse.Trade
             var state = JsonUtility.FromJson<State>(json);
             Credit = state.credit;
             LastDelivery = state.lastDelivery;
+            Welcomed = state.welcomed;
             for (int i = 0; i < wares.Count && i < state.stock.Count; i++) wares[i].stock = state.stock[i];
             Traded?.Invoke();
         }

@@ -17,6 +17,9 @@ namespace GrandmasHouse.Animals
     // her follow. With empty hands you can pick her up and carry her
     // (LiveHen); lay her on the chopping block and take the axe to her for a
     // chicken to cook or cure. Set her down and she stays where she's put.
+    // She may start as a chick (small, yellow, no comb): a chick eats less,
+    // lays nothing and isn't for the pot, and grows into a hen after enough
+    // fed nights (FlockSettings.daysToLay).
     public class Hen : MonoBehaviour, IInteractable, ISharedUse
     {
         [SerializeField] Flock flock;
@@ -38,6 +41,17 @@ namespace GrandmasHouse.Animals
         // Who has her (their client id; 0 playing alone).
         public ulong Carrier { get; private set; }
         public int DaysHungry { get; set; }
+        // Fed nights since she came as a chick (grown hens start grown).
+        public int AgeDays
+        {
+            get => ageDays;
+            set
+            {
+                ageDays = value;
+                Show();
+            }
+        }
+        public bool IsChick => flock != null && ageDays < flock.Settings.daysToLay;
         // Roosting in the coop for the night.
         public bool Inside { get; private set; }
         // Out of the run, wandering wherever she got to.
@@ -48,6 +62,9 @@ namespace GrandmasHouse.Animals
         public bool HeadingOut => wayOut.Count > 0;
 
         bool alive = true;
+        int ageDays = 999;
+        Vector3 grownScale = Vector3.one;
+        MaterialPropertyBlock block;
         Vector3 target;
         float peckUntil;
         Vector3 headRest;
@@ -57,6 +74,7 @@ namespace GrandmasHouse.Animals
 
         void Awake()
         {
+            grownScale = transform.localScale;
             headRest = head.localPosition;
             target = transform.position;
             lastPosition = transform.position;
@@ -68,7 +86,26 @@ namespace GrandmasHouse.Animals
         void Show()
         {
             bool seen = alive && !Carried;
-            foreach (var r in GetComponentsInChildren<Renderer>(true)) r.enabled = seen;
+            bool chick = IsChick;
+            var settings = flock != null ? flock.Settings : null;
+            transform.localScale = chick && settings != null ? grownScale * settings.chickScale : grownScale;
+            block ??= new MaterialPropertyBlock();
+            foreach (var r in GetComponentsInChildren<Renderer>(true))
+            {
+                // A chick has no comb yet, and is fluffy yellow all over but her beak and legs.
+                r.enabled = seen && !(chick && r.name == "Comb");
+                bool fluff = chick && r.name != "Beak" && r.name != "Leg" && settings != null;
+                if (fluff)
+                {
+                    r.GetPropertyBlock(block);
+                    block.SetColor("_BaseColor", settings.chickColor);
+                    r.SetPropertyBlock(block);
+                }
+                else
+                {
+                    r.SetPropertyBlock(null);
+                }
+            }
             foreach (var c in GetComponents<Collider>()) c.enabled = seen;
         }
 
@@ -213,7 +250,7 @@ namespace GrandmasHouse.Animals
         }
 
         public bool CanInteract(PlayerHands hands) => alive && !Inside && !Carried && hands.IsEmpty;
-        public string PromptVerb(PlayerHands hands) => "Pick her up";
+        public string PromptVerb(PlayerHands hands) => IsChick ? "Pick up the chick" : "Pick her up";
         public void Interact(PlayerHands hands) => flock.PickUp(this, hands);
 
         // A step toward a place; true once she's there.

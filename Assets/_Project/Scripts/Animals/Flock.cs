@@ -20,7 +20,9 @@ namespace GrandmasHouse.Animals
     // the run is loose (she fends for herself, lays nothing you'll find and
     // is the fox's first pick) until someone carries her back. In a shared
     // game the host keeps the flock; anyone can feed and water it
-    // (SharedState).
+    // (SharedState). A new game starts with an empty coop: hens come as
+    // chicks (a ChickBox from Ada), and each hen here is a place in the coop
+    // that's empty until a chick is let out into it.
     public class Flock : MonoBehaviour, ISaveable
     {
         [SerializeField] FlockSettings settings;
@@ -28,6 +30,8 @@ namespace GrandmasHouse.Animals
         [Tooltip("For the month: hens lay less in winter.")]
         [SerializeField] CalendarSettings calendar;
         [SerializeField] Hen[] hens;
+        [Tooltip("Grown hens already in the coop on a new game.")]
+        [SerializeField] int startingHens = 0;
         [SerializeField] HingedDoor coopDoor;
         [Tooltip("The run's gate; left open, hens may wander out.")]
         [SerializeField] HingedDoor gate;
@@ -60,6 +64,15 @@ namespace GrandmasHouse.Animals
 
         int feathersDay = -1;
         float nextLostCheck;
+
+        // Room in the coop for another bird.
+        public bool HasRoom { get { foreach (var h in hens) if (!h.Alive) return true; return false; } }
+        public IReadOnlyList<Hen> Hens => hens;
+
+        void Awake()
+        {
+            for (int i = startingHens; i < hens.Length; i++) hens[i].Alive = false;
+        }
 
         void OnEnable() => clock.NewDay += Night;
         void OnDisable() => clock.NewDay -= Night;
@@ -192,13 +205,17 @@ namespace GrandmasHouse.Animals
             {
                 // A hen out of the run forages for herself and lays where no one finds it.
                 if (!hen.Alive || hen.Loose || hen.Carried) continue;
-                bool fed = Feed >= settings.feedPerHen && Water >= settings.waterPerHen;
+                bool chick = hen.IsChick;
+                float share = chick ? settings.chickShare : 1f;
+                bool fed = Feed >= settings.feedPerHen * share && Water >= settings.waterPerHen * share;
                 if (fed)
                 {
-                    Feed -= settings.feedPerHen;
-                    Water -= settings.waterPerHen;
+                    Feed -= settings.feedPerHen * share;
+                    Water -= settings.waterPerHen * share;
                     hen.DaysHungry = 0;
-                    if ((layChance >= 1f || UnityEngine.Random.value < layChance) && Lay()) { laid++; DayCycle.YearTally.Add(DayCycle.YearTally.Count.Egg); }
+                    // A chick grows a night older; only a grown hen lays.
+                    if (chick) hen.AgeDays++;
+                    else if ((layChance >= 1f || UnityEngine.Random.value < layChance) && Lay()) { laid++; DayCycle.YearTally.Add(DayCycle.YearTally.Count.Egg); }
                 }
                 else if (++hen.DaysHungry >= settings.daysToStarve)
                 {
@@ -228,6 +245,36 @@ namespace GrandmasHouse.Animals
         }
 
         static int Exposed(Hen hen) => hen.Loose ? 2 : hen.Inside ? 0 : 1;
+
+        // ---- A new chick ----
+
+        // Let out of her box here: she takes an empty place in the coop, in
+        // the run if that's where, loose if not. The host does it; anyone
+        // else asks the host.
+        public void Adopt(Vector3 at)
+        {
+            if (!Hosting && TryGetComponent(out FlockNet net))
+            {
+                net.Adopt(at);
+                return;
+            }
+            AdoptHere(at);
+        }
+
+        public bool AdoptHere(Vector3 at)
+        {
+            foreach (var hen in hens)
+            {
+                if (hen.Alive) continue;
+                hen.DaysHungry = 0;
+                hen.AgeDays = 0;
+                hen.Alive = true;
+                hen.SetCarried(false, at);
+                Sfx.Play(SoundId.Cluck, at, 0.7f, 0.1f);
+                return true;
+            }
+            return false;
+        }
 
         // ---- Taking a hen for the pot ----
 
@@ -307,6 +354,8 @@ namespace GrandmasHouse.Animals
             public float water;
             public List<bool> alive = new List<bool>();
             public List<int> hungry = new List<int>();
+            // Fed nights since she came as a chick.
+            public List<int> ages = new List<int>();
             // Out of the run in someone's arms, and whose (a client id).
             public List<bool> carried = new List<bool>();
             public List<long> carrier = new List<long>();
@@ -325,6 +374,7 @@ namespace GrandmasHouse.Animals
             {
                 state.alive.Add(hen.Alive);
                 state.hungry.Add(hen.DaysHungry);
+                state.ages.Add(Mathf.Min(hen.AgeDays, settings.daysToLay));
                 state.carried.Add(hen.Carried);
                 state.carrier.Add((long)hen.Carrier);
                 state.loose.Add(hen.Loose);
@@ -344,6 +394,8 @@ namespace GrandmasHouse.Animals
             {
                 hens[i].Alive = state.alive[i];
                 hens[i].DaysHungry = state.hungry[i];
+                // Saved before chicks: grown.
+                hens[i].AgeDays = i < state.ages.Count ? state.ages[i] : settings.daysToLay;
                 // Picked up or let go on another computer.
                 bool carried = i < state.carried.Count && state.carried[i];
                 ulong carrier = i < state.carrier.Count ? (ulong)state.carrier[i] : 0;

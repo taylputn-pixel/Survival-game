@@ -60,19 +60,22 @@ namespace GrandmasHouse.Tests
         }
 
         [Test]
-        public void EachNeighborSellsTheirOwnSeeds()
+        public void EachNeighborHasTheirOwnTrade()
         {
             var june = Called("June");
             var ada = Called("Ada");
             var walt = Called("Walt");
-            foreach (var k in new[] { "TomatoSeeds", "CucumberSeeds", "DillSeeds", "GarlicSeeds", "SquashSeeds", "CabbageSeeds", "JalapenoSeeds", "MarigoldSeeds" })
+            // Seeds all come on the store's delivery truck.
+            foreach (var k in new[] { "TomatoSeeds", "CucumberSeeds", "DillSeeds", "GarlicSeeds", "SquashSeeds", "CabbageSeeds", "JalapenoSeeds", "MarigoldSeeds", "OnionSeeds", "CarrotSeeds", "SeedPotatoes" })
             {
-                Assert.IsTrue(Sells(ada, k), "Ada sells " + k);
-                Assert.IsFalse(Sells(june, k), "The store doesn't sell " + k);
+                Assert.IsTrue(Sells(june, k), "The store sells " + k);
+                Assert.IsFalse(Sells(ada, k) || Sells(walt, k), "Only the store sells " + k);
             }
-            Assert.IsTrue(Sells(june, "OnionSeeds") && Sells(june, "CarrotSeeds"));
-            Assert.IsTrue(Sells(walt, "SeedPotatoes"));
-            Assert.IsFalse(Sells(june, "SeedPotatoes"));
+            // Walt: wood. Ada: chicks.
+            foreach (var w in walt.Wares) Assert.IsTrue(w.recipe != null || w.key == "Log", "Walt only sells logs, not " + w.key);
+            foreach (var w in ada.Wares) Assert.IsTrue(w.recipe != null || w.key == "ChickBox", "Ada only sells chicks, not " + w.key);
+            Assert.IsTrue(Sells(ada, "ChickBox"));
+            Assert.IsFalse(Sells(walt, "ChickenFeed"));
             var packet = Homestead.Make<SeedPacket>("TomatoSeeds");
             Assert.AreEqual(10, packet.Seeds, "A bought packet holds 10.");
         }

@@ -126,11 +126,11 @@ namespace GrandmasHouse.Tests
             var walt = Named("Walt");
             yield return OnCounter(walt, "Egg");
             var counts = new int[walt.Wares.Count];
-            counts[Ware(walt, "ChickenFeed")] = 1;
-            int stock = walt.Wares[Ware(walt, "ChickenFeed")].stock;
+            counts[Ware(walt, "Log")] = 1;
+            int stock = walt.Wares[Ware(walt, "Log")].stock;
             walt.Deal(counts);
             yield return null;
-            Assert.AreEqual(stock, walt.Wares[Ware(walt, "ChickenFeed")].stock, "One egg isn't worth a sack of feed.");
+            Assert.AreEqual(stock, walt.Wares[Ware(walt, "Log")].stock, "One egg isn't worth a log.");
             Assert.AreEqual(1, walt.OnCounter().Count, "The egg stays.");
         }
 

@@ -12,6 +12,11 @@ namespace GrandmasHouse.Trade
 
         public void Deal(int[] counts) => DealRpc(counts);
 
+        public void Welcome() => WelcomeRpc();
+
+        [Rpc(SendTo.Server)]
+        void WelcomeRpc() => trader.Welcome();
+
         [Rpc(SendTo.Server)]
         void DealRpc(int[] counts) => trader.DealHere(counts, null);
     }

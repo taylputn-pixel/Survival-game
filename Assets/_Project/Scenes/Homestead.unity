@@ -12446,6 +12446,7 @@ MonoBehaviour:
   - {fileID: 44262360}
   - {fileID: 368951909}
   - {fileID: 1624000822}
+  startingHens: 0
   coopDoor: {fileID: 1666075875}
   gate: {fileID: 764439867}
   gateInside: {fileID: 882885544}
@@ -29197,6 +29198,71 @@ MonoBehaviour:
     restockPerDay: 0.5
     worth: 0
     setOutAt: []
+  - key: SeedPotatoes
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.2
+    worth: 0
+    setOutAt: []
+  - key: TomatoSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.2
+    worth: 0
+    setOutAt: []
+  - key: CucumberSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.2
+    worth: 0
+    setOutAt: []
+  - key: DillSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.2
+    worth: 0
+    setOutAt: []
+  - key: GarlicSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.2
+    worth: 0
+    setOutAt: []
+  - key: SquashSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.2
+    worth: 0
+    setOutAt: []
+  - key: CabbageSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.2
+    worth: 0
+    setOutAt: []
+  - key: JalapenoSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.2
+    worth: 0
+    setOutAt: []
+  - key: MarigoldSeeds
+    recipe: {fileID: 0}
+    stock: 2
+    maxStock: 2
+    restockPerDay: 0.2
+    worth: 0
+    setOutAt: []
+  welcomeGift: 
+  welcomeLine: 
   deliveryChanceByMonth:
   - 0.5
   - 0.5
@@ -115914,8 +115980,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Trade.Trader
   traderName: Ada
   placeName: the Sorensen place
-  greeting: Fresh vegetables I'll always take. I've seeds put by, and a recipe or
-    two if you're the cooking kind.
+  greeting: Fresh vegetables I'll always take. I raise chicks, if you want layers,
+    and I've a recipe or two if you're the cooking kind.
   clock: {fileID: 2003454500}
   calendar: {fileID: 11400000, guid: ebd007af040a4984eb52a42b028a302a, type: 2}
   settings: {fileID: 11400000, guid: 152e6448022038547a4811587948f5aa, type: 2}
@@ -115928,34 +115994,6 @@ MonoBehaviour:
   - GarlicBulb
   - Egg
   wares:
-  - key: MarigoldSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.3
-    worth: 0
-    setOutAt: []
-  - key: JalapenoSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.3
-    worth: 0
-    setOutAt: []
-  - key: TomatoSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.3
-    worth: 0
-    setOutAt: []
-  - key: CabbageSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.3
-    worth: 0
-    setOutAt: []
   - key: 
     recipe: {fileID: 11400000, guid: f6ad41f19eb5f164680e62613d5c2dc9, type: 2}
     stock: 1
@@ -115963,34 +116001,16 @@ MonoBehaviour:
     restockPerDay: 0
     worth: 4
     setOutAt: []
-  - key: CucumberSeeds
+  - key: ChickBox
     recipe: {fileID: 0}
     stock: 2
     maxStock: 2
     restockPerDay: 0.3
     worth: 0
     setOutAt: []
-  - key: DillSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.3
-    worth: 0
-    setOutAt: []
-  - key: GarlicSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.3
-    worth: 0
-    setOutAt: []
-  - key: SquashSeeds
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.3
-    worth: 0
-    setOutAt: []
+  welcomeGift: ChickBox
+  welcomeLine: You're her grandkid? She always kept a few hens. Here, take a chick
+    to start you off. There's more where she came from, if you've something to trade.
   deliveryChanceByMonth: []
   deliveryShare: {x: 0.2, y: 0.8}
   counter: {fileID: 513932309}
@@ -125550,8 +125570,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Trade.Trader
   traderName: Walt
   placeName: the Hansen place
-  greeting: Eggs, if you've got them. My birds quit laying. I've got feed I can spare,
-    and logs off the woodlot. You'll want the truck for those.
+  greeting: Eggs, if you've got them. My birds quit laying. All I've got is logs
+    off the woodlot. You'll want the truck for those.
   clock: {fileID: 2003454500}
   calendar: {fileID: 11400000, guid: ebd007af040a4984eb52a42b028a302a, type: 2}
   settings: {fileID: 11400000, guid: 152e6448022038547a4811587948f5aa, type: 2}
@@ -125579,20 +125599,6 @@ MonoBehaviour:
     - {fileID: 798890599}
     - {fileID: 117263255}
     - {fileID: 1530367857}
-  - key: ChickenFeed
-    recipe: {fileID: 0}
-    stock: 3
-    maxStock: 3
-    restockPerDay: 0.4
-    worth: 0
-    setOutAt: []
-  - key: SeedPotatoes
-    recipe: {fileID: 0}
-    stock: 2
-    maxStock: 2
-    restockPerDay: 0.2
-    worth: 0
-    setOutAt: []
   - key: 
     recipe: {fileID: 11400000, guid: ce672712557128345b11aba21a0366e0, type: 2}
     stock: 1
@@ -125600,6 +125606,8 @@ MonoBehaviour:
     restockPerDay: 0
     worth: 5
     setOutAt: []
+  welcomeGift: 
+  welcomeLine: 
   deliveryChanceByMonth: []
   deliveryShare: {x: 0.2, y: 0.8}
   counter: {fileID: 388784860}

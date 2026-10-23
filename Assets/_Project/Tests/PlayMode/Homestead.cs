@@ -44,8 +44,9 @@ namespace GrandmasHouse.Tests
 
         // Loads the scene and waits until it's ready to play: set up, and
         // done loading a save if one was asked for. A new game starts with the
-        // canning things packed away; most kitchen tests want them set up.
-        public static IEnumerator Load(bool canningSetUp = true)
+        // canning things packed away and an empty coop; most kitchen tests
+        // want the canning things set up, and most tests want a grown flock.
+        public static IEnumerator Load(bool canningSetUp = true, bool hens = true)
         {
             yield return SceneManager.LoadSceneAsync(Scene, LoadSceneMode.Single);
             yield return null;
@@ -64,6 +65,18 @@ namespace GrandmasHouse.Tests
                 kit.Restore("{\"setUp\":true}");
                 // The box it came out of goes too.
                 foreach (var box in Object.FindObjectsByType<GrandmasHouse.Kitchen.CanningBox>()) Object.Destroy(box.gameObject);
+                yield return null;
+            }
+            var flock = Object.FindAnyObjectByType<GrandmasHouse.Animals.Flock>();
+            if (hens && flock != null && flock.Alive == 0)
+            {
+                // Every place in the coop holds a grown hen.
+                int n = flock.Hens.Count;
+                string Repeat(string v) => string.Join(",", System.Linq.Enumerable.Repeat(v, n));
+                string grown = flock.Settings.daysToLay.ToString();
+                flock.Restore("{\"feed\":" + flock.Feed.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    + ",\"water\":" + flock.Water.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    + ",\"alive\":[" + Repeat("true") + "],\"hungry\":[" + Repeat("0") + "],\"ages\":[" + Repeat(grown) + "],\"feathersDay\":-1}");
                 yield return null;
             }
         }

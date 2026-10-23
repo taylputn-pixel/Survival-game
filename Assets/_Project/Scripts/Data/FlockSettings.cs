@@ -19,6 +19,15 @@ namespace GrandmasHouse.Data
         [Tooltip("Chance a fed hen lays overnight, by month (spring, summer, fall, winter). Short cold days mean fewer eggs.")]
         public float[] layChance = { 1f, 1f, 0.6f, 0.25f };
 
+        [Header("Chicks")]
+        [Tooltip("Fed nights before a chick is a grown hen and starts laying.")]
+        public int daysToLay = 5;
+        [Tooltip("A chick's share of a hen's feed and water each night.")]
+        [Range(0f, 1f)] public float chickShare = 0.5f;
+        [Tooltip("How big a chick is next to a hen.")]
+        public float chickScale = 0.5f;
+        public Color chickColor = new Color(1f, 0.86f, 0.35f);
+
         [Header("The fox")]
         [Tooltip("Chance each night that the fox takes a hen when the coop door is left open.")]
         [Range(0f, 1f)] public float foxChanceDoorOpen = 0.35f;

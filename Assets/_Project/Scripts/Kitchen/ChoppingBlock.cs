@@ -32,10 +32,14 @@ namespace GrandmasHouse.Kitchen
 
         static bool Holding<T>(PlayerHands hands) where T : Component => !hands.IsEmpty && hands.Held.GetComponent<T>() != null;
 
+        // A grown hen, not a chick: a chick isn't for the pot.
+        static bool HoldingHen(PlayerHands hands) => Holding<Animals.LiveHen>(hands) && !hands.Held.GetComponent<Animals.LiveHen>().Hen.IsChick;
+
         public bool CanInteract(PlayerHands hands)
         {
             if (swinging) return false;
-            if (Holding<Log>(hands) || Holding<Animals.LiveHen>(hands)) return Empty;
+            if (Holding<Animals.LiveHen>(hands)) return HoldingHen(hands) && Empty;
+            if (Holding<Log>(hands)) return Empty;
             return Holding<Axe>(hands) && !Empty;
         }
 

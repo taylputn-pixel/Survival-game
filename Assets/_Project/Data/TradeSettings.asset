@@ -153,6 +153,9 @@ MonoBehaviour:
   - key: CannedBeans
     worth: 15
     byMonth: []
+  - key: ChickBox
+    worth: 6
+    byMonth: []
   jars:
   - recipe: Dill Pickle Chips
     worth: 5

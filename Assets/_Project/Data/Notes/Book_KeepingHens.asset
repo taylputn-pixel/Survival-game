@@ -18,8 +18,13 @@ MonoBehaviour:
   body: 
   marginNote: 
   pages:
-  - Four good hens will give you an egg apiece most mornings, if you keep them fed,
-    watered and shut in at night. That's all a hen asks of you.
+  - 'Four good hens will give you an egg apiece most mornings, if you keep them fed,
+    watered and shut in at night. That''s all a hen asks of you.
+
+
+    They start as
+    chicks. A chick eats half what a hen does, and after five good days of feed
+    and water she''s grown and laying.'
   - 'Feed and water
 
 
