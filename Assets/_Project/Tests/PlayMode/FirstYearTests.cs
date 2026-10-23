@@ -144,10 +144,10 @@ namespace GrandmasHouse.Tests
                     // The frost falls on day d's morning: nothing said two days out ...
                     clock.Restore("{\"day\":" + (d - 2) + ",\"hour\":9}");
                     bool earlier = weather.Model.DayOf(d - 1).low <= weather.Settings.killingFrost;
-                    if (!earlier && !weather.GroundFrozen) StringAssert.DoesNotContain("Killing frost", weather.Forecast(), "Too early on seed " + s);
+                    if (!earlier && !weather.GroundFrozen) { StringAssert.DoesNotContain("Killing frost", weather.Forecast(), "Too early on seed " + s); StringAssert.DoesNotContain("Hard freeze", weather.Forecast(), "Too early on seed " + s); }
                     // ... and called the evening before.
                     clock.Restore("{\"day\":" + (d - 1) + ",\"hour\":19}");
-                    if (!weather.GroundFrozen) StringAssert.Contains("Killing frost tonight", weather.Forecast());
+                    if (!weather.GroundFrozen) Assert.That(weather.Forecast(), Does.Contain("Killing frost tonight").Or.Contain("Hard freeze tonight"));
                     return;
                 }
             }

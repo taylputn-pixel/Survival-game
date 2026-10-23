@@ -19,5 +19,5 @@ MonoBehaviour:
   coldHasPenalties: 0
   foodSpoils: 1
   cropsCanDie: 1
-  jarsCanFailToSeal: 0
+  jarsCanFailToSeal: 1
   gameOver: 1

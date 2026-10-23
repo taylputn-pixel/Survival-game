@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 5083986953430407118}
   - component: {fileID: 2464668790579839784}
   - component: {fileID: 5489148629635740117}
-  - component: {fileID: 5635767621015126704}
+  - component: {fileID: 8794901610229179834}
   m_Layer: 9
   m_Name: Firewood
   m_TagString: Untagged
@@ -36,7 +36,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.12, y: 0.2, z: 0.12}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -48,7 +48,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4179608177185108136}
-  m_Mesh: {fileID: 10203, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 4300000, guid: ee9c8f13515585648b8ee736f7f0b6cf, type: 2}
 --- !u!23 &226815081043021284
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -74,7 +74,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 18344ceb5cab4de44baf3be39576cfe8, type: 2}
+  - {fileID: 2100000, guid: ce080ac6164fcdf468462d1f3407fe2d, type: 2}
+  - {fileID: 2100000, guid: 1bcb81880547c97498a172a5fea760c2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -256,8 +257,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7d0d98a9074f0f4293c86ddcb7c8abd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GrandmasHouse::GrandmasHouse.Kitchen.Firewood
---- !u!136 &5635767621015126704
-CapsuleCollider:
+--- !u!64 &8794901610229179834
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -274,8 +275,7 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: ee9c8f13515585648b8ee736f7f0b6cf, type: 2}

@@ -47,7 +47,7 @@ namespace GrandmasHouse.Stations
         }
 
         public override bool CanInteract(PlayerHands player) =>
-            (player.IsEmpty || Basket(player) != null) && PlantInView(player) != null;
+            !bed.Covered && (player.IsEmpty || Basket(player) != null) && PlantInView(player) != null;
 
         public override string PromptVerb(PlayerHands player) => "Look closer";
 

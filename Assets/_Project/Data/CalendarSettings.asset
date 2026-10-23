@@ -23,5 +23,5 @@ MonoBehaviour:
     days: 5
     color: {r: 0.75, g: 0.38, b: 0.18, a: 1}
   - name: Winter
-    days: 5
+    days: 7
     color: {r: 0.4, g: 0.55, b: 0.72, a: 1}

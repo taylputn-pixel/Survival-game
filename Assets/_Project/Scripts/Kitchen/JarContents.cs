@@ -20,6 +20,10 @@ namespace GrandmasHouse.Kitchen
     [RequireComponent(typeof(Pickup))]
     public class JarContents : MonoBehaviour, IItemState, IEmptyable, IPickupGuard, IInteractable, IAltInteractable, GrandmasHouse.Interaction.ISharedUse
     {
+        [Tooltip("Where jars can fail to seal (survival): the chance a well-filled jar's lid doesn't take.")]
+        [Range(0f, 1f)] [SerializeField] float sealFailChance = 0.04f;
+        [Tooltip("The chance for a jar not filled to the line (too much or too little headspace).")]
+        [Range(0f, 1f)] [SerializeField] float badHeadspaceSealFail = 0.6f;
         [Tooltip("The bottom of the inside of the jar.")]
         [SerializeField] Transform inside;
         [SerializeField] float innerHeight = 0.12f;
@@ -264,6 +268,14 @@ namespace GrandmasHouse.Kitchen
         IEnumerator Cooling(float seconds)
         {
             yield return new WaitForSeconds(seconds);
+            // Sometimes a lid doesn't take, most often on a jar not filled to
+            // the line: no ping, the jar isn't sealed and will spoil like
+            // fresh food, and it can go through the canner again.
+            if (FailsToSeal())
+            {
+                IsProcessed = false;
+                yield break;
+            }
             // Ping: the center of the lid pulls down as it seals.
             Vector3 size = lid.localScale;
             for (float time = 0f; time < 0.15f; time += Time.deltaTime)
@@ -275,6 +287,15 @@ namespace GrandmasHouse.Kitchen
             IsSealed = true;
             Sfx.Play(SoundId.LidPing, lid.position, 1f, 0.03f);
             if (Net.ItemNet.Runs(this)) DayCycle.YearTally.Add(DayCycle.YearTally.Count.Jar);
+        }
+
+        bool FailsToSeal()
+        {
+            var clock = FindAnyObjectByType<DayCycle.DayClock>();
+            if (clock == null || clock.Mode == null || !clock.Mode.jarsCanFailToSeal) return false;
+            RecipeData recipe = Recipe;
+            float chance = recipe != null && JarQuality.HeadspaceOff(recipe, Makings) ? badHeadspaceSealFail : sealFailChance;
+            return Random.value < chance;
         }
 
         [System.Serializable]

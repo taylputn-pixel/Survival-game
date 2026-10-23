@@ -38,7 +38,7 @@ namespace GrandmasHouse.Garden
 
         public bool CanInteract(PlayerHands hands)
         {
-            if (watering || hands.IsEmpty)
+            if (watering || hands.IsEmpty || bed.Covered)
             {
                 return false;
             }

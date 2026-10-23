@@ -102,6 +102,11 @@ namespace GrandmasHouse.Net
         [Rpc(SendTo.Server)]
         void PullRpc(Vector3 localPosition) => bed.PullFor(localPosition);
 
+        public void SendCover(bool covered) => CoverRpc(covered);
+
+        [Rpc(SendTo.Server)]
+        void CoverRpc(bool covered) => bed.CoverFor(covered);
+
         public void SendTakeOff(int spot, bool pest) => TakeOffRpc(spot, pest);
 
         [Rpc(SendTo.Server)]

@@ -35,6 +35,7 @@ namespace GrandmasHouse.DayCycle
 
         float nextCheck;
         bool frostedTonight;
+        bool hardTonight;
 
         void Awake()
         {
@@ -53,16 +54,25 @@ namespace GrandmasHouse.DayCycle
         {
             if (Time.time < nextCheck) return;
             nextCheck = Time.time + 0.5f;
-            bool frost = Outside <= settings.killingFrost;
-            if (frost && !frostedTonight && Hosting) Frost();
+            float outside = Outside;
+            bool frost = outside <= settings.killingFrost;
+            bool hard = outside <= HardFreeze;
+            if (Hosting && ((frost && !frostedTonight) || (hard && !hardTonight))) Frost(hard);
             frostedTonight = frost;
+            hardTonight = hard;
         }
 
-        // Everything still growing outside dies.
-        public void Frost()
+        // Colder than a frost cloth keeps off.
+        public float HardFreeze => settings.killingFrost - settings.coverHolds;
+
+        // Everything still growing outside dies, except under a frost cloth
+        // when it isn't a hard freeze.
+        public void Frost() => Frost(Outside <= HardFreeze);
+
+        public void Frost(bool hardFreeze)
         {
             int killed = 0;
-            foreach (var bed in FindObjectsByType<GardenBed>(FindObjectsSortMode.None)) killed += bed.Frost();
+            foreach (var bed in FindObjectsByType<GardenBed>(FindObjectsSortMode.None)) killed += bed.Frost(hardFreeze);
             if (killed > 0) Frosted?.Invoke();
         }
 
@@ -126,8 +136,10 @@ namespace GrandmasHouse.DayCycle
                 bool soon = i == 1 || (i == 0 && clock.Hour < settings.coldestHour);
                 if (!warnedFrost && soon && d.low <= settings.killingFrost && !GroundFrozen)
                 {
-                    string when = i == 0 ? "Killing frost before dawn" : clock.Hour >= 12f ? "Killing frost tonight" : "Killing frost tomorrow morning";
-                    text.Append(when + ": pick what's left in your garden. ");
+                    bool hard = d.low <= HardFreeze;
+                    string kind = hard ? "Hard freeze" : "Killing frost";
+                    string when = i == 0 ? kind + " before dawn" : clock.Hour >= 12f ? kind + " tonight" : kind + " tomorrow morning";
+                    text.Append(when + (hard ? ": pick what's left in your garden. " : ": cover the garden or pick what's left. "));
                     warnedFrost = true;
                 }
             }

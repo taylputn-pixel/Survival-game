@@ -39,6 +39,10 @@ namespace GrandmasHouse.Garden
             }
         }
         public Plane Soil => new Plane(transform.up, spots[0].transform.position);
+        // The frost cloth pulled over the bed: it keeps off a light frost, but
+        // nothing can be planted, watered or picked under it.
+        public bool Covered { get; private set; }
+        public event System.Action CoverChanged;
         // Set in a shared game (GardenNet).
         public GardenNet Shared { get; set; }
         // On a guest's computer: the host grows this bed, and it only shows
@@ -78,13 +82,14 @@ namespace GrandmasHouse.Garden
         {
             public List<PlantSpot.State> spots = new List<PlantSpot.State>();
             public List<WeedState> weeds = new List<WeedState>();
+            public bool covered;
         }
 
         public string SaveKey => "garden:" + name;
 
         public string Capture()
         {
-            var state = new State();
+            var state = new State { covered = Covered };
             foreach (var spot in spots)
             {
                 state.spots.Add(spot.Capture());
@@ -104,6 +109,7 @@ namespace GrandmasHouse.Garden
                 spots[i].Restore(state.spots[i]);
             }
             RebuildWeeds(state.weeds);
+            ShowCovered(state.covered);
         }
 
         void RebuildWeeds(List<WeedState> saved)
@@ -136,6 +142,7 @@ namespace GrandmasHouse.Garden
             {
                 RebuildWeeds(state.weeds);
             }
+            ShowCovered(state.covered);
         }
 
         bool SameWeeds(List<WeedState> other)
@@ -151,9 +158,12 @@ namespace GrandmasHouse.Garden
             return true;
         }
 
-        // A killing frost (the host): everything growing dies. Says how many plants were lost.
-        public int Frost()
+        // A killing frost (the host): everything growing dies, unless the
+        // frost cloth is over it and it isn't a hard freeze. Says how many
+        // plants were lost.
+        public int Frost(bool hardFreeze = true)
         {
+            if (Covered && !hardFreeze) return 0;
             int killed = 0;
             foreach (var spot in spots) if (spot.Frost()) killed++;
             return killed;
@@ -165,6 +175,21 @@ namespace GrandmasHouse.Garden
         {
             spot.Plant(crop, seconds);
             if (Guest) Shared.SendPlant(System.Array.IndexOf(spots, spot), crop.name);
+        }
+
+        public void Cover(bool covered)
+        {
+            ShowCovered(covered);
+            if (Guest) Shared.SendCover(covered);
+        }
+
+        public void CoverFor(bool covered) => ShowCovered(covered);
+
+        void ShowCovered(bool covered)
+        {
+            if (Covered == covered) return;
+            Covered = covered;
+            CoverChanged?.Invoke();
         }
 
         public void Water(PlantSpot spot, float amount)

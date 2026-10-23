@@ -64,6 +64,10 @@ namespace GrandmasHouse.Data
             return FromMarks(count);
         }
 
+        // Not filled to the line under the lid: such a jar often fails to seal.
+        public static bool HeadspaceOff(RecipeData recipe, JarMakings jar) =>
+            jar.level < recipe.brineLine - recipe.lineTolerance || jar.level > recipe.brineLine + recipe.lineTolerance;
+
         // What a mark means for next time, as you'd say it tasting the jar.
         public static string Advice(string mark)
         {

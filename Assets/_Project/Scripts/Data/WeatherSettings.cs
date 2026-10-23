@@ -32,6 +32,8 @@ namespace GrandmasHouse.Data
         [Header("Frost")]
         [Tooltip("At or below this, plants left out in the garden die.")]
         public float killingFrost = 28f;
+        [Tooltip("How many degrees colder than a killing frost a bed under its frost cloth can take. Below that is a hard freeze, and it dies anyway.")]
+        public float coverHolds = 5f;
         [Tooltip("A day whose high doesn't get above this has frozen ground: nothing can be planted.")]
         public float groundFrozenBelow = 36f;
 

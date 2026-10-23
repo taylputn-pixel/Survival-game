@@ -123,7 +123,8 @@ namespace GrandmasHouse.Tests
         {
             var crop = Crop("Crop_Tomato");
             var spot = EmptySpot();
-            yield return Grown(spot, crop, 1);
+            // Hornworms find a tomato once it's grown leafy (stage 2).
+            yield return Grown(spot, crop, 2);
             Random.InitState(3);
             int tries = 0;
             while (!HasPest(spot) && tries++ < 200) spot.TroubleOvernight(false);
@@ -146,7 +147,8 @@ namespace GrandmasHouse.Tests
         {
             var crop = Crop("Crop_Tomato");
             var spot = EmptySpot();
-            yield return Grown(spot, crop, 1);
+            // Hornworms find a tomato once it's grown leafy (stage 2).
+            yield return Grown(spot, crop, 2);
             Random.InitState(3);
             int tries = 0;
             while (!HasPest(spot) && tries++ < 200) spot.TroubleOvernight(false);

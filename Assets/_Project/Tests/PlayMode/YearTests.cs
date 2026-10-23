@@ -53,7 +53,7 @@ namespace GrandmasHouse.Tests
             var tally = Homestead.Find<YearTally>();
             var calendar = Homestead.Find<Weather>().Calendar;
             var clock = Homestead.Find<DayClock>();
-            Assert.AreEqual(20, calendar.DaysInYear, "The playtest year is four five-day months.");
+            Assert.AreEqual(22, calendar.DaysInYear, "The playtest year: three five-day months and a seven-day winter.");
 
             YearTally.Add(YearTally.Count.Jar, 3);
             YearTally.Add(YearTally.Count.Egg, 12);

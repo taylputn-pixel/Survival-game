@@ -50,6 +50,10 @@ namespace GrandmasHouse.Trade
         [Tooltip("What a neighbor will take, by save key (\"Jar\" for any sealed jar). Ignored for the store.")]
         [SerializeField] List<string> wants = new List<string>();
         [SerializeField] List<Ware> wares = new List<Ware>();
+        [Tooltip("Restocked only when a delivery comes in (the store, in hard times): the chance of one each day, by month. Empty restocks a little every day.")]
+        [SerializeField] float[] deliveryChanceByMonth = new float[0];
+        [Tooltip("How much a delivery brings of each thing, as a share of the most they keep (at least, at most). Rounded, so it can bring none.")]
+        [SerializeField] Vector2 deliveryShare = new Vector2(0.2f, 0.8f);
         [Tooltip("Where your goods go: the counter top, as a box.")]
         [SerializeField] BoxCollider counter;
         [Tooltip("Where their goods are set out for you.")]
@@ -80,9 +84,20 @@ namespace GrandmasHouse.Trade
 
         static bool Hosting => NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
 
+        public bool HasDeliveries => deliveryChanceByMonth != null && deliveryChanceByMonth.Length > 0;
+        // The day the last delivery came in (-1 for none yet).
+        public int LastDelivery { get; private set; } = -1;
+
         void Restock(int day)
         {
             if (!Hosting) return;
+            if (HasDeliveries)
+            {
+                int month = calendar != null ? calendar.DateOf(day).month : 0;
+                float chance = deliveryChanceByMonth[Mathf.Clamp(month, 0, deliveryChanceByMonth.Length - 1)];
+                if (UnityEngine.Random.value < chance) Deliver(day);
+                return;
+            }
             for (int i = 0; i < wares.Count && i < restock.Length; i++)
             {
                 var w = wares[i];
@@ -91,6 +106,20 @@ namespace GrandmasHouse.Trade
                 int whole = Mathf.FloorToInt(restock[i]);
                 if (whole > 0) { w.stock = Mathf.Min(w.maxStock, w.stock + whole); restock[i] -= whole; }
             }
+        }
+
+        // The truck came in: each thing comes back by some share of the most
+        // they keep, never sure how much (or whether any).
+        public void Deliver(int day)
+        {
+            LastDelivery = day;
+            foreach (var w in wares)
+            {
+                if (w.recipe != null) continue;
+                int brought = Mathf.RoundToInt(w.maxStock * UnityEngine.Random.Range(deliveryShare.x, deliveryShare.y));
+                w.stock = Mathf.Min(w.maxStock, w.stock + brought);
+            }
+            Traded?.Invoke();
         }
 
         // ---- Talking to them ----
@@ -243,13 +272,14 @@ namespace GrandmasHouse.Trade
         {
             public List<int> stock = new List<int>();
             public float credit;
+            public int lastDelivery = -1;
         }
 
         public string SaveKey => saveKey;
 
         public string Capture()
         {
-            var state = new State { credit = Mathf.Round(Credit * 100f) / 100f };
+            var state = new State { credit = Mathf.Round(Credit * 100f) / 100f, lastDelivery = LastDelivery };
             foreach (var w in wares) state.stock.Add(w.stock);
             return JsonUtility.ToJson(state);
         }
@@ -258,6 +288,7 @@ namespace GrandmasHouse.Trade
         {
             var state = JsonUtility.FromJson<State>(json);
             Credit = state.credit;
+            LastDelivery = state.lastDelivery;
             for (int i = 0; i < wares.Count && i < state.stock.Count; i++) wares[i].stock = state.stock[i];
             Traded?.Invoke();
         }

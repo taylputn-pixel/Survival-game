@@ -25,7 +25,7 @@ namespace GrandmasHouse.Data
         public bool foodSpoils;
         [Tooltip("Plants left dry, or with pests on them, die (GardenSettings).")]
         public bool cropsCanDie;
-        [Tooltip("Not used yet. Sloppy jars can fail to seal and spoil later.")]
+        [Tooltip("A lid can fail to seal, most often on a jar not filled to the line (JarContents).")]
         public bool jarsCanFailToSeal;
         [Tooltip("Starving for too long ends the game.")]
         public bool gameOver;
